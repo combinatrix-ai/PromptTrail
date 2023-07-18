@@ -1,0 +1,62 @@
+[project]
+name = "prompttrail"
+version = "0.1.0"
+description = "Add a short description here"
+authors = [
+    { name = "hmirin", email = "hmirin@example.com" }
+]
+dependencies = [
+    "openai>=0.27.8",
+    "pydantic>=2.0.2",
+    "google-generativeai>=0.1.0",
+]
+readme = "README.md"
+requires-python = ">= 3.11"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "mypy>=1.4.1",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "autoflake>=2.2.0",
+    "pyproject-autoflake>=1.0.2",
+    "ipython>=8.14.0",
+    "faiss-cpu>=1.7.4",
+    "jinja2>=3.1.2",
+]
+
+[tool.rye.scripts]
+lint = { chain = ["lint:black", "lint:autoflake", "lint:isort"] }
+"lint:black" = "black src tests examples"
+"lint:autoflake" = "pautoflake src tests examples"
+"lint:isort" = "isort src tests"
+test = "python -m unittest discover -s tests examples"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.black]
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+
+[tool.autoflake]
+# run with pautoflake
+in-place = true
+recursive = true
+exclude = ".venv,.git,__pycache__,.mypy_cache,.pytest_cache"
+# expand wildcard star imports with undefined names; this only triggers if there is only one star import in
+# the file; this is skipped if there are any uses of `__all__` or `del` in the file
+expand-star-imports = true
+# remove all unused imports (not just those from the standard library)
+remove-all-unused-imports = true
+# exclude __init__.py when removing unused imports
+ignore-init-module-imports = true
+remove-duplicate-keys = true
+remove-unused-variables = true
