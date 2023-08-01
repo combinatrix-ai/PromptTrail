@@ -1,5 +1,5 @@
 from logging import getLogger
-from pprint import pprint
+from pprint import pformat
 from typing import List, Optional
 
 import google.generativeai as palm  # type: ignore
@@ -59,7 +59,7 @@ class GoogleCloudChatModel(Model):
             top_k=parameters.top_k,
             prompt=None,  # TODO: Figure out this is the best way to handle this
         )
-        logger.debug(pprint(response))  # type: ignore
+        logger.debug(pformat(object=response))  # type: ignore
         if len(response.candidates) == 0:  # type: ignore
             if hasattr(response, "filters") and len(response.filters) > 0:  # type: ignore
                 raise ProviderResponseError(f"Blocked: {response.filters}", response=response)  # type: ignore

@@ -1,9 +1,12 @@
+import logging
 from typing import Dict, Generator, List, Optional, Tuple
 
 import openai
 
 from ..core import Configuration, Message, Model, Parameters, Session, TextMessage
 from ..error import ParameterValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIModelConfiguration(Configuration):

@@ -1,14 +1,14 @@
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeAlias
+from pprint import pformat
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.prompttrail.core import Message, Model, Parameters, Session
 
 logger = logging.getLogger(__name__)
 
-TemplateId: TypeAlias = str
 
 if TYPE_CHECKING:
-    from src.prompttrail.flow.templates import Template
+    from src.prompttrail.flow.templates import TemplateLike
 
 
 class StatefulMessage(Message):
@@ -21,21 +21,34 @@ class StatefulSession(Session):
     messages: List[StatefulMessage] = []
 
 
+class ControlMessage(StatefulMessage):
+    content: Any = None
+
+    # ControlMessage is not expected to edit by human, so kill the edit method.
+    def __init__(self, sender: str, template_id: str, data: Dict[str, Any]):
+        self.template_id = template_id
+        self.data = data
+        self.sender = sender
+
+
 class FlowState(object):
+    """FlowState hold the all state of the conversation."""
+
     def __init__(
         self,
         model: Model,
         parameters: Parameters,
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
-        jump: Optional["TemplateId | Template"] = None,
+        current_template: Optional["TemplateLike"] = None,
+        jump: Optional["TemplateLike"] = None,
     ):
         self.data = data
         self.model = model
         self.parameters = parameters
         self.session_history = session_history
-        self.current_template: Optional["Template"] = None
-        self.jump: "TemplateId | Template | None" = jump
+        self.current_template = current_template
+        self.jump = jump
 
     def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
@@ -45,13 +58,46 @@ class FlowState(object):
     def get_current_data(self) -> Dict[str, Any]:
         return self.data
 
-    def get_jump(self) -> "TemplateId | Template | None":
+    def get_jump(self) -> Optional["TemplateLike"]:
         return self.jump
 
-    def set_jump(self, jump: "TemplateId | Template | None") -> None:
+    def set_jump(self, jump: Optional["TemplateLike"]) -> None:
         self.jump = jump
 
-    def get_current_template(self) -> "Template":
+    def get_current_template(self) -> "TemplateLike":
         if self.current_template is None:
             raise Exception("Current template is not set.")
         return self.current_template
+
+    def __str__(self):
+        # Create PrettyPrinted string
+        data_json_line_list = "\n".join(
+            ["    " + line for line in pformat(self.data).splitlines()]
+        )
+        message_history_json = "\n".join(
+            [
+                "    " + line
+                for line in pformat(
+                    [
+                        {"content": mes.content, "sender": mes.sender}
+                        for mes in self.session_history.messages
+                    ]
+                ).splitlines()
+            ]
+        )
+        current_template_json = pformat(
+            self.current_template.template_id
+            if self.current_template is not None
+            and not isinstance(self.current_template, str)
+            else self.current_template
+        )
+        jump_json = pformat(self.jump)
+
+        return f"""FlowState(
+    data=
+    {data_json_line_list},
+    message_history=
+    {message_history_json},
+    current_template={current_template_json},
+    jump={jump_json},
+)"""

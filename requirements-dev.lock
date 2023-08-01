@@ -9,12 +9,14 @@
 -e file:.
 aiohttp==3.8.4
 aiosignal==1.3.1
+alabaster==0.7.13
 annotated-types==0.5.0
 appnope==0.1.3
 asttokens==2.2.1
 async-timeout==4.0.2
 attrs==23.1.0
 autoflake==2.2.0
+babel==2.12.1
 backcall==0.2.0
 black==23.7.0
 cachetools==5.3.1
@@ -22,6 +24,7 @@ certifi==2023.5.7
 charset-normalizer==3.2.0
 click==8.1.4
 decorator==5.1.1
+docutils==0.20.1
 executing==1.2.0
 faiss-cpu==1.7.4
 frozenlist==1.4.0
@@ -33,6 +36,7 @@ googleapis-common-protos==1.59.1
 grpcio==1.56.0
 grpcio-status==1.56.0
 idna==3.4
+imagesize==1.4.1
 ipython==8.14.0
 isort==5.12.0
 jedi==0.18.2
@@ -64,6 +68,14 @@ pyproject-autoflake==1.0.2
 requests==2.31.0
 rsa==4.9
 six==1.16.0
+snowballstemmer==2.2.0
+sphinx==7.1.1
+sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-serializinghtml==1.1.5
 stack-data==0.6.2
 toml==0.10.2
 tqdm==4.65.0

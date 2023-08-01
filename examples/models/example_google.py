@@ -29,9 +29,6 @@ session = Session(
 config = GoogleCloudConfiguration(api_key=api_key)
 parameters = GoogleCloudChatParameters(model_name="models/chat-bison-001")
 model = GoogleCloudChatModel(configuration=config)
-print(model.list_models())
 message = model.send(parameters=parameters, session=session)
 
-from IPython import embed  # type: ignore
-
-embed()
+print(message)

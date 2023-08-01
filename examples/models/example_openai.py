@@ -28,6 +28,4 @@ session = Session(
 
 message = model.send(parameters=parameters, session=session)
 
-from IPython import embed  # type: ignore
-
-embed()
+print(message)

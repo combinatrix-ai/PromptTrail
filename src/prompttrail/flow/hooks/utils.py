@@ -1,6 +1,8 @@
+import logging
 import re
 
 from src.prompttrail.flow.core import FlowState
+from src.prompttrail.util import hook_logger
 
 from .core import TransformHook
 
@@ -29,8 +31,13 @@ class EvaluatePythonCodeHook(TransformHook):
     def hook(self, flow_state: FlowState) -> FlowState:
         python_segment = flow_state.data[self.code_key]
         if python_segment is None:
-            logger = self.get_logger(__name__ + "." + self.__class__.__name__)
-            logger.warning(f"No code block found for key {self.key}")
+            # TODO: Hook must know which template it is in, to let user know which template is failing.
+            hook_logger(
+                self,
+                flow_state,
+                f"No code block found for key {self.key}",
+                level=logging.WARNING,
+            )
             return flow_state
         answer = eval(python_segment)  # TODO: security check
         flow_state.data[self.key] = answer

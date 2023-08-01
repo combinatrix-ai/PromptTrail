@@ -1,6 +1,6 @@
 # PromptTrail
 
-PromptTrail is an lightweight library to interact with LLM.
+PromptTrail is a lightweight library to interact with LLM.
 
 ## Why bother yet another LLM library?
 
@@ -15,17 +15,17 @@ PromptTrail is an lightweight library to interact with LLM.
     - OpenAI
     - Google Cloud
     - [TODO] Local LLMs
-  - PytorchLightning-like interface for your prompt programming
-    - Agent
-    - Interaction
-    - Task Definition
+  - PytorchLightning-like hook-based interface for your prompt programming
+    - Agent (We call it Flow)
+    - Calling other APIs other than LLMs (Tooling)
+    - [TODO] Vector Search
 - Provide thin layer of abstraction for LLMs
   - Message
   - Session
   - Model
   - Template
-  - [TODO] Agent
-- Unified interface to build/parse LLM input/output and agent.
+  - Agent (Flow)
+- [TODO] Unified interface to build/parse LLM input/output and agent for function calling.
   - [TODO] QueryBuilder
   - [TODO] OutputParser
 
@@ -160,17 +160,22 @@ runner.run()
 ## Design Principles
 
 - If you know what is LLM, you must be able to use PromptTrail.
-  - Unified interface
--  Agent/Control flow that can be written in one place by code
-  - Hook-based agent definition like PyTorch Lightning
-- Everything evolves fast here. You can't be sure what is right now. So explicit is better than implicit. Code is better than document.
-  - No hidden templates and configurations
-  - Every parameter should be passed explicitly and be able to understood by types
-    - Easy to work with on VSCode and JetBrains IDEs
-- Everything must be clear by class inhetitance and types. I don't want to read docs.
-  - Unified access to templates, parameters of agents
-  - Hook-based agent definition
-  - More default values
+- Agent (Flow) as Code
+  - Agent that can be written in one place by code
+    - Hook-based agent definition like PyTorch Lightning
+- Provide an easy way to debug prompt program
+  - Turn-based execution
+  - Record everything for later inspection
+  - Easy to read error messages with template id, hook name etc... is included
+- Intuitive and explicit (but sometimes convention)
+  - Everything evolves fast here. You can't be sure what is right now. So explicit is better than implicit. Code is better than document.
+    - No hidden templates and configurations
+    - Every parameter should be passed explicitly and be able to understood by types
+      - Easy to work with on VSCode and JetBrains IDEs
+  - Everything must be clear by class inhetitance and types. I don't want to read docs.
+    - Unified access to templates, parameters of agents
+    - Hook-based agent definition
+    - More default values
 
 
 ## Next
@@ -178,4 +183,3 @@ runner.run()
 - [ ] Offer repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
-

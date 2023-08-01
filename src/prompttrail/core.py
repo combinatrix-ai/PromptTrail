@@ -4,21 +4,38 @@ from typing import Any, Generator, List, Optional, Sequence, Tuple, TypeAlias
 
 from pydantic import BaseModel
 
+from src.prompttrail.util import logger_multiline
+
 logger = logging.getLogger(__name__)
 
 
 class Message(BaseModel):
+    """A message represents a single message from a user, model, or API etc..."""
+
     # We may soon get non-textual messages maybe, so we should prepare for that.
     content: Any
     sender: Optional[str] = None
 
 
 class TextMessage(Message):
+    """A message that accepts only text."""
+
     # However, text is the most common message type, so we should have a shortcut for it.
     content: str
 
+    def __str__(self) -> str:
+        if "\n" in self.content:
+            content_part = 'content="""\n' + self.content + '\n"""'
+        else:
+            content_part = 'content="' + self.content + '"'
+        if self.sender is None:
+            return "TextMessage(" + content_part + '")'
+        return "TextMessage(" + content_part + ', sender="' + self.sender + '")'
+
 
 class Session(BaseModel):
+    """A session represents a conversation between a user and a model, or API etc..."""
+
     # Session is a list of messages with some metadata
     # Sequence is used to ensure that the session is covariant with the message type.
     messages: Sequence[Message] = []
@@ -59,6 +76,12 @@ class Model(BaseModel):
     ) -> Tuple[UpdatedParameters, UpdatedSession]:
         if session is None:
             session = Session()
+        # TODO: decide what to do with MetaTemplate
+        # from IPython import embed; embed()
+        session.messages = [
+            message for message in session.messages if message.sender != "prompttrail"
+        ]
+
         self.validate_configuration(self.configuration, False)
         self.validate_parameters(parameters, False)
         self.validate_session(session, False)
@@ -77,6 +100,7 @@ class Model(BaseModel):
     def send(self, parameters: Parameters, session: Session) -> Message:
         parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
+        logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)
         message_ = self.after_send(parameters, session, message, False)
         if message_ is not None:
             message = message_

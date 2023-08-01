@@ -3,23 +3,44 @@ from abc import abstractmethod
 from typing import Dict, Optional, Sequence
 
 from src.prompttrail.core import Model, Parameters
-from src.prompttrail.flow.core import FlowState, StatefulSession, TemplateId
-from src.prompttrail.flow.templates import Template
+from src.prompttrail.flow.core import FlowState, StatefulSession
+from src.prompttrail.flow.templates import Template, TemplateId, TemplateLike
+from src.prompttrail.util import MAX_TEMPLATE_LOOP, logger_multiline
 
 logger = logging.getLogger(__name__)
 
 
+def get_id(template_like: TemplateLike) -> TemplateId:
+    if isinstance(template_like, Template):
+        return template_like.template_id
+    return template_like
+
+
 class Runner(object):
     @abstractmethod
-    def run(
+    def _run(
         self,
-        start_template: Optional["Template | TemplateId"] = None,
+        start_template: Optional[TemplateLike] = None,
         flow_state: Optional[FlowState] = None,
     ) -> FlowState:
         raise NotImplementedError("run method is not implemented")
 
+    # @staticmethod
+    # def build_template_graph(templates: List["Template"]):
+    #     template_dict: Dict[TemplateId, Template] = {}
+    #     visited_templates: Sequence[Template]= []
+    #     for template in templates:
+    #         next_template = template
+    #         while next_template := next_template.walk(visited_templates):
+    #             if next_template.template_id in template_dict:
+    #                 raise ValueError(f"Template id {next_template.template_id} is duplicated.")
+    #             template_dict[next_template.template_id] = next_template
+    #     return template_dict
 
-class CommanLineRunner(Runner):
+    # def turn(self, template) -> Tuple[Message, NextTemplate, FlowState]:
+
+
+class CommandLineRunner(Runner):
     def __init__(
         self,
         model: Model,
@@ -33,14 +54,18 @@ class CommanLineRunner(Runner):
         self.templates = templates
         self.flow_state = flow_state
         self.template_dict: Dict[TemplateId, Template] = {}
-        for template in self.templates:
-            if template.id in self.template_dict:
-                raise ValueError(f"Template id {template.id} is duplicated.")
-            self.template_dict[template.id] = template
+        visited_templates: Sequence[Template] = []
+        for template in templates:
+            for next_template in template.walk(visited_templates):
+                if next_template.template_id in self.template_dict:
+                    raise ValueError(
+                        f"Template id {next_template.template_id} is duplicated."
+                    )
+                self.template_dict[next_template.template_id] = next_template  # type: ignore
 
     def run(
         self,
-        start_template: Optional["Template | TemplateId"] = None,
+        start_template: Optional[TemplateLike] = None,
         flow_state: Optional[FlowState] = None,
     ) -> FlowState:
         if flow_state is None:
@@ -58,22 +83,59 @@ class CommanLineRunner(Runner):
                 raise TypeError("start_template must be Template or TemplateId.")
 
         template = start_template if start_template is not None else self.templates[0]
-        while 1:
-            flow_state = template.render(flow_state)
-            print(flow_state.get_last_message().content)
-            from IPython import embed
 
-            embed()
+        last_template = template
+        same_template_count = 0
+        while 1:
+            logger_multiline(
+                logger, f"Current template: {template.template_id}", logging.DEBUG
+            )
+            logger_multiline(
+                logger, f"Current flow state:\n{flow_state}", logging.DEBUG
+            )
+
+            flow_state = template.render(flow_state)
+            logger_multiline(
+                logger, f"Updated flow state:\n{flow_state}", logging.DEBUG
+            )
+
+            # calculate next template
+            next_template = None
             if flow_state.jump is not None:
-                if not isinstance(flow_state.jump, "Template"):
-                    template = self._search_template(flow_state.jump)
+                logger.info(msg=f"Jump is set to {flow_state.jump}.")
+                if get_id(flow_state.jump) == "END":
+                    logger.info(f"Flow is finished.")
+                    break
+                if not isinstance(flow_state.jump, Template):
+                    next_template = self._search_template(flow_state.jump)
                 flow_state.jump = None
             else:
+                if flow_state.current_template is not None:
+                    current_template = flow_state.current_template
+                    next_template = self._search_template(
+                        current_template
+                    ).next_template_default
+                    if next_template is not None:
+                        next_template = self._search_template(next_template)
+            if next_template is None:
                 logger.info(f"No jump is set. Flow is finished.")
                 break
+            if last_template == next_template:
+                same_template_count += 1
+                if same_template_count > MAX_TEMPLATE_LOOP:
+                    raise RuntimeError(
+                        f"Same template is rendered consecutively more than {MAX_TEMPLATE_LOOP} times. This may be caused by infinite loop?"
+                    )
+            template = next_template
         return flow_state
 
-    def _search_template(self, template_id: TemplateId) -> "Template":
-        if template_id not in self.template_dict:
-            raise ValueError(f"Template id {template_id} is not found.")
-        return self.template_dict[template_id]
+    def _search_template(self, template_like: TemplateLike) -> "Template":
+        if isinstance(template_like, Template):
+            return template_like
+        if template_like not in self.template_dict:
+            raise ValueError(f"Template id {template_like} is not found.")
+        return self.template_dict[template_like]
+
+
+# TODO
+# - Delete rescursive template search!

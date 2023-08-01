@@ -1,12 +1,13 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Callable, Optional, TypeAlias
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
-TemplateId: TypeAlias = str
-
 from src.prompttrail.flow.core import FlowState
+
+if TYPE_CHECKING:
+    from src.prompttrail.flow.templates import TemplateId
 
 
 class FeatherChainHook(object):
@@ -32,10 +33,10 @@ class BooleanHook(FeatherChainHook):
 
 
 class JumpHook(FeatherChainHook):
-    def __init__(self, function: Callable[[FlowState], Optional[TemplateId]]):
+    def __init__(self, function: Callable[[FlowState], Optional["TemplateId"]]):
         self.function = function
 
-    def hook(self, flow_state: FlowState) -> Optional[TemplateId]:
+    def hook(self, flow_state: FlowState) -> Optional["TemplateId"]:
         raise NotImplementedError("hook method is not implemented")
 
 
@@ -43,18 +44,22 @@ class IfJumpHook(JumpHook):
     def __init__(
         self,
         condition: Callable[[FlowState], bool],
-        true_template: Optional[TemplateId],
-        false_template: Optional[TemplateId],
+        true_template: "TemplateId",
+        false_template: Optional["TemplateId"] = None,
     ):
         self.condition = condition
         self.true_template = true_template
         self.false_template = false_template
 
-    def hook(self, flow_state: FlowState) -> Optional[TemplateId]:
+    def hook(self, flow_state: FlowState) -> Optional["TemplateId"]:
         if self.condition(flow_state):
-            return flow_state.set_jump(self.true_template)
+            flow_state.set_jump(self.true_template)
+            return self.true_template
         else:
-            return flow_state.set_jump(self.false_template)
+            if self.false_template is None:
+                return None
+            flow_state.set_jump(self.false_template)
+            return self.false_template
 
 
 # TODO: Ask and Generate should be treated differently from other hooks
