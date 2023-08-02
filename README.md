@@ -226,11 +226,24 @@ runner.run()
 
 
 ## Next
-- [ ] yaml input/output for templates
-- [ ] Offer repository for templates
+
+### Before the first release
+- [ ] Examples
+- [ ] Documentation
+- [ ] Runner
+  - [ ] Sophisticated CLI experience for intuitive demo
+  - [ ] Turn-based execution that can be used by other libraries
+- [ ] Vector Search Integration
+- [ ] Better error messages that helps debugging
+- [ ] Provide a way to export / import sessions
+
+### Big Features
+- [ ] toml input/output for templates
+- [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
-
+- [ ] Tooling
+- [ ] Local LLMs
 ## License
 
 - This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
