@@ -15,6 +15,21 @@ class StatefulMessage(Message):
     data: Dict[str, Any] = {}
     template_id: Optional[str] = None
 
+    def __str__(self) -> str:
+        # construct json
+        return (
+            "StatefulMessage(\n"
+            + pformat(
+                {
+                    "content": self.content,
+                    "data": self.data,
+                    "template_id": self.template_id,
+                    "sender": self.sender,
+                }
+            )
+            + ",\n)"
+        )
+
 
 class StatefulSession(Session):
     data: Dict[str, Any] = {}

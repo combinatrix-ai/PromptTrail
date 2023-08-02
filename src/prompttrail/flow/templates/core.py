@@ -6,16 +6,14 @@ from uuid import uuid4
 
 import jinja2
 
-from prompttrail.flow.hooks.core import IfJumpHook
+from src.prompttrail.flow.core import FlowState, StatefulMessage
+from src.prompttrail.flow.hooks import BooleanHook, JumpHook, TransformHook
+from src.prompttrail.flow.hooks.core import IfJumpHook
 
 logger = logging.getLogger(__name__)
 
 TemplateId: TypeAlias = str
 TemplateLike: TypeAlias = "Template | TemplateId"
-
-
-from src.prompttrail.flow.core import FlowState, StatefulMessage
-from src.prompttrail.flow.hooks import BooleanHook, JumpHook, TransformHook
 
 
 def is_same_template(template1: TemplateLike, template2: TemplateLike) -> bool:
@@ -131,8 +129,6 @@ class MessageTemplate(Template):
             flow_state = hook.hook(flow_state)
         # after_jump
         for hook in self.after_control:
-            print(flow_state.current_template.template_id)
-            print(hook.__class__)  # TODO: Remove this
             next_template_id: str | None = hook.hook(flow_state)
             if next_template_id is not None:
                 flow_state.jump = next_template_id
@@ -196,12 +192,6 @@ class MetaTemplate(MessageTemplate):
     def list_child_templates(self) -> List[Template]:
         return [self]
 
-    # @abstractmethod
-    # def register_child_template_link(self) -> List[TemplateId]:
-    #     # This method take care of the link between child templates.
-    #     # And return the leafest templates that should be taken care of by the parent template.
-    #     raise NotImplementedError("register_static_template method is not implemented")
-
     @abstractmethod
     def walk(
         self, visited_templates: Sequence["Template"] = []
@@ -234,11 +224,6 @@ class LoopTemplate(MetaTemplate):
         self.next_template_default = templates[0]
         self.role = "prompttrail"
 
-        # self.before_transform = before_transform
-        # self.after_transform = after_transform
-        # self.before_control = before_control
-        # self.after_control = after_control
-
         # set loop link
         for template, next_template in zip(self.templates, self.templates[1:]):
             template.next_template_default = next_template
@@ -263,11 +248,6 @@ class LoopTemplate(MetaTemplate):
     def list_child_templates(self) -> List[Template]:
         return [self] + [template for template in self.templates]
 
-    # def register_child_template_link(self) -> List[TemplateId]:
-    #     self.next_template = self.templates[0]
-    #     for child_template, next_template in zip(self.templates[:-1], self.templates[1:]):
-    #         child_template.next_template = next_template
-
     def walk(
         self, visited_templates: Sequence["Template"] = []
     ) -> Generator["Template", None, None]:
@@ -286,10 +266,6 @@ class IfTemplate(MetaTemplate):
         false_template: Template,
         condition: BooleanHook,
         template_id: Optional[TemplateId] = None,
-        # before_transform: Sequence[TransformHook] = [],
-        # after_transform: Sequence[TransformHook] = [],
-        # before_control: Sequence[JumpHook] = [],
-        # after_control: Sequence[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -301,11 +277,6 @@ class IfTemplate(MetaTemplate):
         self.condition = condition
         self.next_template_default = None
         self.role = "prompttrail"
-
-        # self.before_transform = before_transform
-        # self.after_transform = after_transform
-        # self.before_control = before_control
-        # self.after_control = after_control
 
     def _render(self, flow_state: FlowState) -> FlowState:
         message = StatefulMessage(

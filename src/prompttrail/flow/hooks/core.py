@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from src.prompttrail.flow.templates import TemplateId
 
 
-class FeatherChainHook(object):
+class Hook(object):
     @abstractmethod
     def hook(self, flow_state: FlowState) -> Any:
         raise NotImplementedError("hook method is not implemented")
 
 
-class TransformHook(FeatherChainHook):
+class TransformHook(Hook):
     def __init__(self, function: Callable[[FlowState], FlowState]):
         self.function = function
 
@@ -24,7 +24,7 @@ class TransformHook(FeatherChainHook):
         return self.function(flow_state)
 
 
-class BooleanHook(FeatherChainHook):
+class BooleanHook(Hook):
     def __init__(self, condition: Callable[[FlowState], bool]):
         self.condition = condition
 
@@ -32,7 +32,7 @@ class BooleanHook(FeatherChainHook):
         return self.condition(flow_state)
 
 
-class JumpHook(FeatherChainHook):
+class JumpHook(Hook):
     def __init__(self, function: Callable[[FlowState], Optional["TemplateId"]]):
         self.function = function
 
@@ -76,7 +76,7 @@ class AskUserHook(TransformHook):
 
     def hook(self, flow_state: FlowState) -> FlowState:
         # show user a prompt on console
-        raw = input(self.description)
+        raw = input(self.description).strip()
         if raw == "":
             raw = self.default
         flow_state.data[self.key] = raw

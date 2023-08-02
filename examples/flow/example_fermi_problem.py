@@ -38,30 +38,30 @@ flow_template = LinearTemplate(
             # In OpenAI API, system is a special role that gives instruction to the API
             role="system",
             content="""
-            You're a helpful assistant to solve Fermi Problem.
-            Answer the equation to estimate the answer to the user's query.
+You're a helpful assistant to solve Fermi Problem.
+Answer the equation to estimate the answer to the user's query.
 
-            For example, if user ask you `How many cats in Japan?`, your answer should look like below.
-            Note that you must return python expression to for user to calculate it using Python.
-            
-            Thoughts:
-            - I don't have no knowledge about the number of cats in Japan. However, I can estimate it using available knowledge.
-            - As of 2019, about 67% of households in the United States owned either dogs or cats, with about 49% of households owning cats (source: American Pet Products Association).
-            - Assuming the trend in Japan follows a similar pattern to the U.S., we can look at the total number of households in Japan, and estimate that about 49% of them own a cat.
-            - The total number of households in Japan is about 53 million (source: Japan's Ministry of Internal Affairs and Communications, 2020).
-            - We also need to consider the average number of cats per household.
-            - In the U.S, the average number of cats per household is 2.1 (source: American Veterinary Medical Association).
-            - If we apply this to Japan, we can estimate the total number of cats in Japan.
-            - Now I can estimate the answer.
+For example, if user ask you `How many cats in Japan?`, your answer should look like below.
+Note that you must return python expression to for user to calculate it using Python.
 
-            Equation to be calculated:
-            - Total Number of Cats in Japan = Total Number of Households in Japan * Rate of Households owning cats  * Average Number of Cats Per Household
-            
-            Calculation:
-            ```python
-            5300000 * 0.49 * 2.1
-            ```
-            """,
+Thoughts:
+- I don't have no knowledge about the number of cats in Japan. However, I can estimate it using available knowledge.
+- As of 2019, about 67% of households in the United States owned either dogs or cats, with about 49% of households owning cats (source: American Pet Products Association).
+- Assuming the trend in Japan follows a similar pattern to the U.S., we can look at the total number of households in Japan, and estimate that about 49% of them own a cat.
+- The total number of households in Japan is about 53 million (source: Japan's Ministry of Internal Affairs and Communications, 2020).
+- We also need to consider the average number of cats per household.
+- In the U.S, the average number of cats per household is 2.1 (source: American Veterinary Medical Association).
+- If we apply this to Japan, we can estimate the total number of cats in Japan.
+- Now I can estimate the answer.
+
+Equation to be calculated:
+- Total Number of Cats in Japan = Total Number of Households in Japan * Rate of Households owning cats  * Average Number of Cats Per Household
+
+Calculation:
+```python
+5300000 * 0.49 * 2.1
+```
+""",
         ),
         LoopTemplate(
             [
@@ -82,9 +82,7 @@ flow_template = LinearTemplate(
                             default="How many elephants in Japan?",
                         )
                     ],
-                    content="""
-                    {{ prompt }}
-                    """,
+                    content="{{ prompt }}",
                 ),
                 MessageTemplate(
                     role="assistant",
@@ -92,9 +90,7 @@ flow_template = LinearTemplate(
                     # GenerateChatHook is a hook that generate text using model, with passing the previous messages to the model
                     # TODO: We will provide TextGenerationTemplate to do this in the future
                     before_transform=[GenerateChatHook(key="generated_text")],
-                    content="""
-                    {{ generated_text }}
-                    """,
+                    content="{{ generated_text }}",
                     after_transform=[
                         # This is where things get interesting!
                         # You can extract code block from markdown using ExtractMarkdownCodeBlockHook
@@ -131,9 +127,7 @@ flow_template = LinearTemplate(
                     # Let's ask user for question!
                     template_id="gather_feedback",
                     role="assistant",
-                    content="""
-                    The answer is {{ answer }}. Satisfied?
-                    """,
+                    content="The answer is {{ answer }}. Satisfied?",
                 ),
                 MessageTemplate(
                     # Here is where we ask user for their feedback
@@ -152,18 +146,14 @@ flow_template = LinearTemplate(
                     # Based on the feedback, we can decide to retry or end the conversation
                     # Ask the API to analyze the user's sentiment
                     role="assistant",
-                    content="""
-                    The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.
-                    """,
+                    content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
                 ),
                 check_end := MessageTemplate(
                     role="assistant",
                     # API will return END or RETRY (mostly!)
                     # Then, we can decide to end the conversation or retry, see exit_condition below
                     before_transform=[GenerateChatHook(key="generated_text")],
-                    content="""
-                    {{ generated_text }}
-                    """,
+                    content="{{ generated_text }}",
                 ),
             ],
             exit_condition=BooleanHook(

@@ -25,3 +25,15 @@ class RenderingError(Exception):
     """Raised when a template rendering fails."""
 
     ...
+
+
+class HookError(Exception):
+    """Raised when a hook fails."""
+
+    ...
+
+
+class TemplateNotFoundError(Exception):
+    """Raised when a template is not found."""
+
+    ...

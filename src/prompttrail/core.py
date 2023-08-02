@@ -76,11 +76,6 @@ class Model(BaseModel):
     ) -> Tuple[UpdatedParameters, UpdatedSession]:
         if session is None:
             session = Session()
-        # TODO: decide what to do with MetaTemplate
-        # from IPython import embed; embed()
-        session.messages = [
-            message for message in session.messages if message.sender != "prompttrail"
-        ]
 
         self.validate_configuration(self.configuration, False)
         self.validate_parameters(parameters, False)

@@ -5,7 +5,7 @@ from typing import Dict, Optional, Sequence
 from src.prompttrail.core import Model, Parameters
 from src.prompttrail.flow.core import FlowState, StatefulSession
 from src.prompttrail.flow.templates import Template, TemplateId, TemplateLike
-from src.prompttrail.util import MAX_TEMPLATE_LOOP, logger_multiline
+from src.prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 
 logger = logging.getLogger(__name__)
 
@@ -86,24 +86,30 @@ class CommandLineRunner(Runner):
 
         last_template = template
         same_template_count = 0
+        next_message_index_to_show = 0
         while 1:
-            logger_multiline(
-                logger, f"Current template: {template.template_id}", logging.DEBUG
-            )
-            logger_multiline(
-                logger, f"Current flow state:\n{flow_state}", logging.DEBUG
-            )
-
+            # logger_multiline(
+            #     logger, f"Current template: {template.template_id}", logging.DEBUG
+            # )
+            # logger_multiline(
+            #     logger, f"flow state (before rendering):\n{flow_state}", logging.DEBUG
+            # )
             flow_state = template.render(flow_state)
-            logger_multiline(
-                logger, f"Updated flow state:\n{flow_state}", logging.DEBUG
-            )
+            # logger_multiline(
+            #     logger, f"flow state (after rendering):\n{flow_state}", logging.DEBUG
+            # )
+            new_messages = flow_state.session_history.messages[
+                next_message_index_to_show:
+            ]
+            for message in new_messages:
+                print(message)
+            next_message_index_to_show = len(flow_state.session_history.messages)
 
             # calculate next template
             next_template = None
             if flow_state.jump is not None:
                 logger.info(msg=f"Jump is set to {flow_state.jump}.")
-                if get_id(flow_state.jump) == "END":
+                if get_id(flow_state.jump) == END_TEMPLATE_ID:
                     logger.info(f"Flow is finished.")
                     break
                 if not isinstance(flow_state.jump, Template):

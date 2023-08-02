@@ -81,7 +81,8 @@ class OpenAIChatCompletionModel(Model):
             )
         if any(
             [
-                message.sender not in ["system", "assistant", "user"]
+                message.sender not in ["system", "assistant", "user", "prompttrail"]
+                # TODO: decide what to do with MetaTemplate (role=prompttrail)
                 for message in session.messages
             ]
         ):
@@ -91,12 +92,16 @@ class OpenAIChatCompletionModel(Model):
 
     @staticmethod
     def _session_to_openai_messages(session: Session) -> List[Dict[str, str]]:
+        # TODO: decide what to do with MetaTemplate (role=prompttrail)
+        messages = [
+            message for message in session.messages if message.sender != "prompttrail"
+        ]
         return [
             {
                 "content": message.content,
                 "role": message.sender,  # type: ignore (See validate_session)
             }
-            for message in session.messages
+            for message in messages
         ]
 
     def list_models(self) -> List[str]:
