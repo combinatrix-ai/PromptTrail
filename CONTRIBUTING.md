@@ -26,6 +26,8 @@ Welcome to the PromptTrail project! We're so glad you're thinking about contribu
   - `rye test`
 - Please make sure that your code passes all lint checks and auto-formatted.
   - `rye lint`
+- Please build documentation if you change the public interface.
+  - `rye docs`
 
 ## License
 

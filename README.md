@@ -2,6 +2,18 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
+- [Documentation (WIP)](https://combinatrix-ai.github.io/PromptTrail/)
+
+# Installation
+
+```bash
+git clone https://github.com/combinatrix-ai/PromptTrail.git
+cd PromptTrail
+pip install -e .
+```
+
+When we release the first version, we will publish this package to PyPI.
+
 ## Why bother yet another LLM library?
 
 - PromptTrail is designed to be lightweight and easy to use.
