@@ -11,8 +11,15 @@ from pydantic import BaseModel  # type: ignore
 
 logger = getLogger(__name__)
 
-from ..core import Configuration, Message, Model, Parameters, Session, TextMessage
-from ..error import ParameterValidationError, ProviderResponseError
+from prompttrail.core import (
+    Configuration,
+    Message,
+    Model,
+    Parameters,
+    Session,
+    TextMessage,
+)
+from prompttrail.error import ParameterValidationError, ProviderResponseError
 
 
 class GoogleCloudConfiguration(Configuration):

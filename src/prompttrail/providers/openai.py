@@ -3,9 +3,16 @@ from typing import Dict, Generator, List, Optional, Tuple
 
 import openai
 
-from ..core import Configuration, Message, Model, Parameters, Session, TextMessage
-from ..error import ParameterValidationError
-from ..mock import MockModel, MockProvider
+from prompttrail.core import (
+    Configuration,
+    Message,
+    Model,
+    Parameters,
+    Session,
+    TextMessage,
+)
+from prompttrail.error import ParameterValidationError
+from prompttrail.mock import MockModel, MockProvider
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +39,12 @@ class OpenAIChatCompletionModel(Model):
     def before_send(
         self, parameters: Parameters, session: Optional[Session], is_async: bool
     ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
-        openai.api_key = self.configuration.api_key
-        openai.organization = self.configuration.organization_id
+        openai.api_key = self.configuration.api_key  # type: ignore
+        openai.organization = self.configuration.organization_id  # type: ignore
         if self.configuration.api_base is not None:
-            openai.api_base = self.configuration.api_base
+            openai.api_base = self.configuration.api_base  # type: ignore
         if self.configuration.api_version is not None:
-            openai.api_version = self.configuration.api_version
+            openai.api_version = self.configuration.api_version  # type: ignore
         return (None, None, None)
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
@@ -103,7 +110,7 @@ class OpenAIChatCompletionModel(Model):
         return [
             {
                 "content": message.content,
-                "role": message.sender,  # type: ignore (See validate_session)
+                "role": message.sender,  # type: ignore
             }
             for message in messages
         ]

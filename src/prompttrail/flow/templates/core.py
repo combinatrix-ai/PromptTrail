@@ -104,16 +104,16 @@ class MessageTemplate(Template):
         self.role = role
         self.before_transform = before_transform
         self.after_transform = after_transform
-        self.before_control: Sequence[JumpHook] = before_control
-        self.after_control: Sequence[JumpHook] = after_control
+        self.before_control = before_control
+        self.after_control = after_control
 
     def _render(self, flow_state: "FlowState") -> "FlowState":
         # before_transform
-        for hook in self.before_transform:
-            flow_state = hook.hook(flow_state)
+        for before_transform_hook in self.before_transform:
+            flow_state = before_transform_hook.hook(flow_state)
         # before_jump
-        for hook in self.before_control:
-            next_template_id = hook.hook(flow_state)
+        for before_jump_hook in self.before_control:
+            next_template_id = before_jump_hook.hook(flow_state)
             if next_template_id is not None:
                 flow_state.jump = next_template_id
                 return flow_state
@@ -124,11 +124,11 @@ class MessageTemplate(Template):
         )
         flow_state.session_history.messages.append(message)
         # after_transform
-        for hook in self.after_transform:
-            flow_state = hook.hook(flow_state)
+        for after_transform_hook in self.after_transform:
+            flow_state = after_transform_hook.hook(flow_state)
         # after_jump
-        for hook in self.after_control:
-            next_template_id: str | None = hook.hook(flow_state)
+        for after_jump_hook in self.after_control:
+            next_template_id = after_jump_hook.hook(flow_state)
             if next_template_id is not None:
                 flow_state.jump = next_template_id
                 return flow_state

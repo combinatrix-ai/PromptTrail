@@ -22,12 +22,14 @@ Welcome to the PromptTrail project! We're so glad you're thinking about contribu
 
 ## Before you make PRs
 
-- Please make sure that your code passes all tests.
-  - `rye test`
-- Please make sure that your code passes all lint checks and auto-formatted.
-  - `rye lint`
-- Please build documentation if you change the public interface.
-  - `rye docs`
+- Please make sure that your code passes all tests. (adding tests is always welcome!)
+  - `rye run test`
+- Please make sure that your code is auto-formatted. (black, autoflake, isort)
+  - `rye run format`
+- Please make sure that your code passes the lint check. (mypy)
+  - `rye run lint`
+- Please build documentation if you change the public interface. (sphinx)
+  - `rye run doc`
 
 ## License
 

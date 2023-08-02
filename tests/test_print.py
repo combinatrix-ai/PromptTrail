@@ -1,4 +1,4 @@
-from src.prompttrail.core import Session, TextMessage
+from prompttrail.core import Session, TextMessage
 
 print(TextMessage(content="Hello", sender="User"))
 print(TextMessage(content="He\nllo", sender="User"))

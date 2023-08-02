@@ -77,7 +77,7 @@ class AskUserHook(TransformHook):
     def hook(self, flow_state: FlowState) -> FlowState:
         # show user a prompt on console
         raw = input(self.description).strip()
-        if raw == "":
+        if raw == "" and self.default is not None:
             raw = self.default
         flow_state.data[self.key] = raw
         return flow_state

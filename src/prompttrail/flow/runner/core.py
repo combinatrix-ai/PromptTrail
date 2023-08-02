@@ -25,20 +25,6 @@ class Runner(object):
     ) -> FlowState:
         raise NotImplementedError("run method is not implemented")
 
-    # @staticmethod
-    # def build_template_graph(templates: List["Template"]):
-    #     template_dict: Dict[TemplateId, Template] = {}
-    #     visited_templates: Sequence[Template]= []
-    #     for template in templates:
-    #         next_template = template
-    #         while next_template := next_template.walk(visited_templates):
-    #             if next_template.template_id in template_dict:
-    #                 raise ValueError(f"Template id {next_template.template_id} is duplicated.")
-    #             template_dict[next_template.template_id] = next_template
-    #     return template_dict
-
-    # def turn(self, template) -> Tuple[Message, NextTemplate, FlowState]:
-
 
 class CommandLineRunner(Runner):
     def __init__(
@@ -87,6 +73,7 @@ class CommandLineRunner(Runner):
         last_template = template
         same_template_count = 0
         next_message_index_to_show = 0
+        next_template = None
         while 1:
             # logger_multiline(
             #     logger, f"Current template: {template.template_id}", logging.DEBUG
@@ -106,7 +93,6 @@ class CommandLineRunner(Runner):
             next_message_index_to_show = len(flow_state.session_history.messages)
 
             # calculate next template
-            next_template = None
             if flow_state.jump is not None:
                 logger.info(msg=f"Jump is set to {flow_state.jump}.")
                 if get_id(flow_state.jump) == END_TEMPLATE_ID:
@@ -118,9 +104,14 @@ class CommandLineRunner(Runner):
             else:
                 if flow_state.current_template is not None:
                     current_template = flow_state.current_template
-                    next_template = self._search_template(
+                    next_template_like = self._search_template(
                         current_template
                     ).next_template_default
+                    next_template = (
+                        self._search_template(next_template_like)
+                        if isinstance(next_template_like, TemplateId)
+                        else next_template
+                    )
                     if next_template is not None:
                         next_template = self._search_template(next_template)
             if next_template is None:
