@@ -29,6 +29,7 @@ dev-dependencies = [
     "faiss-cpu>=1.7.4",
     "jinja2>=3.1.2",
     "sphinx>=7.1.1",
+    "pylint>=2.17.5",
 ]
 
 [tool.rye.scripts]
@@ -40,6 +41,7 @@ test = "python -m unittest discover -s tests examples"
 sphinx = { chain = ["sphinx:apidoc", "sphinx:build"] }
 "sphinx:apidoc" = "sphinx-apidoc -F -o docs src"
 "sphinx:build" = "sphinx-build -b html docs docs/_build"
+"pyreverse" = "pyreverse src.prompttrail -o png"
 
 [tool.hatch.metadata]
 allow-direct-references = true

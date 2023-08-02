@@ -5,6 +5,7 @@ import openai
 
 from ..core import Configuration, Message, Model, Parameters, Session, TextMessage
 from ..error import ParameterValidationError
+from ..mock import MockModel, MockProvider
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ class OpenAIModelParameters(Parameters):
     model_name: str
     temperature: Optional[float] = 0
     max_tokens: Optional[int] = 1000
+
+    class Config:
+        protected_namespaces = ()
 
 
 class OpenAIChatCompletionModel(Model):
@@ -107,3 +111,15 @@ class OpenAIChatCompletionModel(Model):
     def list_models(self) -> List[str]:
         response = openai.Model.list()  # type: ignore
         return [model.id for model in response.data]  # type: ignore
+
+
+class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
+    def setup(self, mock_provider: MockProvider) -> None:
+        self.mock_provider: MockProvider = mock_provider
+
+    def _send(self, parameters: Parameters, session: Session) -> Message:
+        if not isinstance(parameters, OpenAIModelParameters):
+            raise ParameterValidationError(
+                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+            )
+        return self.mock_provider.call(session)
