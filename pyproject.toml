@@ -47,6 +47,7 @@ doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:buil
 "doc:build" = "sphinx-build -b html docs/sphinx docs/"
 "doc:touch" = "touch docs/.nojekyll"
 "pyreverse" = "pyreverse src.prompttrail -o png"
+"all" = { chain = ["lint", "test", "doc"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

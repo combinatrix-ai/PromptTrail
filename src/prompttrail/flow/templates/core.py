@@ -183,8 +183,8 @@ class MetaTemplate(MessageTemplate):
         self.next_template_default = next_template_default
         self.before_transform = before_transform
         self.after_transform = after_transform
-        self.before_jump: Sequence[JumpHook] = before_control
-        self.after_jump: Sequence[JumpHook] = after_control
+        self.before_jump = before_control
+        self.after_jump = after_control
         self.role = "prompttrail"
 
     @abstractmethod
@@ -206,6 +206,7 @@ class LoopTemplate(MetaTemplate):
         jump_to: Optional[TemplateId] = None,
         template_id: Optional[TemplateId] = None,
         exit_loop_count: Optional[int] = None,
+        # TODO: Should MetaTemplate have these hooks?
         # before_transform: Sequence[TransformHook] = [],
         # after_transform: Sequence[TransformHook] = [],
         # before_control: Sequence[JumpHook] = [],

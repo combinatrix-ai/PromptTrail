@@ -142,16 +142,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">role</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">before_transform</span> <span class="o">=</span> <span class="n">before_transform</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">after_transform</span> <span class="o">=</span> <span class="n">after_transform</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">before_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="n">before_control</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">after_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="n">after_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before_control</span> <span class="o">=</span> <span class="n">before_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after_control</span> <span class="o">=</span> <span class="n">after_control</span>
 
     <span class="k">def</span> <span class="nf">_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="s2">&quot;FlowState&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FlowState&quot;</span><span class="p">:</span>
         <span class="c1"># before_transform</span>
-        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">before_transform</span><span class="p">:</span>
-            <span class="n">flow_state</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">before_transform_hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">before_transform</span><span class="p">:</span>
+            <span class="n">flow_state</span> <span class="o">=</span> <span class="n">before_transform_hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
         <span class="c1"># before_jump</span>
-        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">before_control</span><span class="p">:</span>
-            <span class="n">next_template_id</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">before_jump_hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">before_control</span><span class="p">:</span>
+            <span class="n">next_template_id</span> <span class="o">=</span> <span class="n">before_jump_hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">next_template_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">next_template_id</span>
                 <span class="k">return</span> <span class="n">flow_state</span>
@@ -162,11 +162,11 @@
         <span class="p">)</span>
         <span class="n">flow_state</span><span class="o">.</span><span class="n">session_history</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
         <span class="c1"># after_transform</span>
-        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_transform</span><span class="p">:</span>
-            <span class="n">flow_state</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">after_transform_hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_transform</span><span class="p">:</span>
+            <span class="n">flow_state</span> <span class="o">=</span> <span class="n">after_transform_hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
         <span class="c1"># after_jump</span>
-        <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_control</span><span class="p">:</span>
-            <span class="n">next_template_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">after_jump_hook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">after_control</span><span class="p">:</span>
+            <span class="n">next_template_id</span> <span class="o">=</span> <span class="n">after_jump_hook</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">next_template_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">next_template_id</span>
                 <span class="k">return</span> <span class="n">flow_state</span>
@@ -221,8 +221,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">next_template_default</span> <span class="o">=</span> <span class="n">next_template_default</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">before_transform</span> <span class="o">=</span> <span class="n">before_transform</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">after_transform</span> <span class="o">=</span> <span class="n">after_transform</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">before_jump</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="n">before_control</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">after_jump</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="n">after_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before_jump</span> <span class="o">=</span> <span class="n">before_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after_jump</span> <span class="o">=</span> <span class="n">after_control</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;prompttrail&quot;</span>
 
 <div class="viewcode-block" id="MetaTemplate.list_child_templates"><a class="viewcode-back" href="../../../../prompttrail.flow.templates.html#prompttrail.flow.templates.core.MetaTemplate.list_child_templates">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -244,6 +244,7 @@
         <span class="n">jump_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">template_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exit_loop_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="c1"># TODO: Should MetaTemplate have these hooks?</span>
         <span class="c1"># before_transform: Sequence[TransformHook] = [],</span>
         <span class="c1"># after_transform: Sequence[TransformHook] = [],</span>
         <span class="c1"># before_control: Sequence[JumpHook] = [],</span>

@@ -132,7 +132,3 @@ class CommandLineRunner(Runner):
         if template_like not in self.template_dict:
             raise ValueError(f"Template id {template_like} is not found.")
         return self.template_dict[template_like]
-
-
-# TODO
-# - Delete rescursive template search!

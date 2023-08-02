@@ -63,20 +63,6 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlowState</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;run method is not implemented&quot;</span><span class="p">)</span></div>
 
-    <span class="c1"># @staticmethod</span>
-    <span class="c1"># def build_template_graph(templates: List[&quot;Template&quot;]):</span>
-    <span class="c1">#     template_dict: Dict[TemplateId, Template] = {}</span>
-    <span class="c1">#     visited_templates: Sequence[Template]= []</span>
-    <span class="c1">#     for template in templates:</span>
-    <span class="c1">#         next_template = template</span>
-    <span class="c1">#         while next_template := next_template.walk(visited_templates):</span>
-    <span class="c1">#             if next_template.template_id in template_dict:</span>
-    <span class="c1">#                 raise ValueError(f&quot;Template id {next_template.template_id} is duplicated.&quot;)</span>
-    <span class="c1">#             template_dict[next_template.template_id] = next_template</span>
-    <span class="c1">#     return template_dict</span>
-
-    <span class="c1"># def turn(self, template) -&gt; Tuple[Message, NextTemplate, FlowState]:</span>
-
 
 <div class="viewcode-block" id="CommandLineRunner"><a class="viewcode-back" href="../../../../prompttrail.flow.runner.html#prompttrail.flow.runner.core.CommandLineRunner">[docs]</a><span class="k">class</span> <span class="nc">CommandLineRunner</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -125,6 +111,7 @@
         <span class="n">last_template</span> <span class="o">=</span> <span class="n">template</span>
         <span class="n">same_template_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">next_message_index_to_show</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">next_template</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># logger_multiline(</span>
             <span class="c1">#     logger, f&quot;Current template: {template.template_id}&quot;, logging.DEBUG</span>
@@ -144,7 +131,6 @@
             <span class="n">next_message_index_to_show</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">flow_state</span><span class="o">.</span><span class="n">session_history</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
 
             <span class="c1"># calculate next template</span>
-            <span class="n">next_template</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Jump is set to </span><span class="si">{</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">get_id</span><span class="p">(</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="p">)</span> <span class="o">==</span> <span class="n">END_TEMPLATE_ID</span><span class="p">:</span>
@@ -156,9 +142,14 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">current_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">current_template</span> <span class="o">=</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">current_template</span>
-                    <span class="n">next_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span>
+                    <span class="n">next_template_like</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span>
                         <span class="n">current_template</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">next_template_default</span>
+                    <span class="n">next_template</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span><span class="n">next_template_like</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_template_like</span><span class="p">,</span> <span class="n">TemplateId</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="n">next_template</span>
+                    <span class="p">)</span>
                     <span class="k">if</span> <span class="n">next_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">next_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span><span class="n">next_template</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">next_template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -179,10 +170,6 @@
         <span class="k">if</span> <span class="n">template_like</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_dict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Template id </span><span class="si">{</span><span class="n">template_like</span><span class="si">}</span><span class="s2"> is not found.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_dict</span><span class="p">[</span><span class="n">template_like</span><span class="p">]</span></div>
-
-
-<span class="c1"># TODO</span>
-<span class="c1"># - Delete rescursive template search!</span>
 </pre></div>
 
             <div class="clearer"></div>

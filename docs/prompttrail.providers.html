@@ -85,7 +85,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models">
 <span class="sig-name descname"><span class="pre">list_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatModel.list_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>list_models method define the concrete procedure to list models. You can override this method to add list_models logic.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.model_config">
@@ -100,7 +101,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session">
 <span class="sig-name descname"><span class="pre">validate_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatModel.validate_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>validate_session method define the concrete procedure to validate session. You can override this method to add validation logic.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -191,7 +193,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.before_send">
 <span class="sig-name descname"><span class="pre">before_send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><span class="pre">Parameters</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.html#prompttrail.core.Configuration" title="prompttrail.core.Configuration"><span class="pre">Configuration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><span class="pre">Parameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.before_send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.before_send" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>before_send method define the concrete procedure to pre-process parameters and session. You can override this method to add pre-processing logic.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.configuration">
@@ -201,7 +204,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.list_models">
 <span class="sig-name descname"><span class="pre">list_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.list_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.list_models" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>list_models method define the concrete procedure to list models. You can override this method to add list_models logic.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.model_config">
@@ -216,7 +220,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.validate_session">
 <span class="sig-name descname"><span class="pre">validate_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.validate_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.validate_session" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>validate_session method define the concrete procedure to validate session. You can override this method to add validation logic.</p>
+</dd></dl>
 
 </dd></dl>
 

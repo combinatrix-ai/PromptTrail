@@ -31,6 +31,8 @@ Welcome to the PromptTrail project! We're so glad you're thinking about contribu
 - Please build documentation if you change the public interface. (sphinx)
   - `rye run doc`
 
+Note: You can run all of these commands at once by `rye run all`.
+
 ## License
 
 - This project is currently licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
