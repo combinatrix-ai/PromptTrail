@@ -11,52 +11,86 @@ PromptTrail is a lightweight library to interact with LLM.
 ## What PromptTrail can do?
 
 - PromptTrail offers below features:
-  - Unified interface to various LLMs
+  - Thin layer of abstraction for LLMs you can intuitively understand
+    - Message
+    - Session
+    - Model
+  - Unified interface to various LLMs)
     - OpenAI
     - Google Cloud
     - [TODO] Local LLMs
-  - PytorchLightning-like hook-based interface for your prompt programming
-    - Agent (We call it Flow)
-    - Calling other APIs other than LLMs (Tooling)
-    - [TODO] Vector Search
-- Provide thin layer of abstraction for LLMs
-  - Message
-  - Session
-  - Model
-  - Template
-  - Agent (Flow)
-- [TODO] Unified interface to build/parse LLM input/output and agent for function calling.
-  - [TODO] QueryBuilder
-  - [TODO] OutputParser
+  - Tools for basic prompt programming
+    - Mocking LLMs for testing
+    - [TODO] Logging
+    - [TODO] Debugging
+  - Everything you need to do "Agent as Code"
+    - Template
+    - Runner
+    - Agent
+    - Hooks
+      - PytorchLightning-like hook-based agent definition is supported
+    - [TODO] Calling other APIs other than LLMs (Tooling)
+      - [TODO] Vector Search
+    - [TODO] Multiple Conversation Flow
+      - [TODO] Concurrent Execution
+    - [TODO] Unified interface to build/parse LLM input/output and agent for function calling.
+      - [TODO] QueryBuilder
+      - [TODO] OutputParser
 
 ## Example
 
 ## LLM API Call
 
 ```python
-import os
-from src.prompttrail.core import Session, Message
-from src.prompttrail.providers.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
+> import os
+> from src.prompttrail.core import Session, Message
+> from src.prompttrail.providers.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
+> 
+> api_key = os.environ["OPENAI_API_KEY"]
+> config = OpenAIModelConfiguration(api_key=api_key)
+> parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+> model = OpenAIChatCompletionModel(configuration=config)
+> session = Session(
+>   messages=[
+>     TextMessage(content="Hey", sender="user"),
+>   ]
+> )
+> message = model.send(parameters=parameters, session=session)
 
-api_key = os.environ["OPENAI_API_KEY"]
-config = OpenAIModelConfiguration(api_key=api_key)
-parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
-model = OpenAIChatCompletionModel(configuration=config)
-session = Session(
-    messages=[
-        TextMessage(content="Hey", sender="user"),
-    ]
-)
-message = model.send(parameters=parameters, session=session)
+TextMessage(content="Hello! How can I assist you today?", sender="assistant")
 ```
 
-If you want streaming output, you can use `send_async` method. Currently, only OpenAI offers streaming option.
+
+
+If you want streaming output, you can use `send_async` method if the provider offers the feature.
+ ```python
+> message_genrator = model.send_async(parameters=parameters, session=session)
+> for message in message_genrator:
+>     print(message.content)
+```
+
+If you want to mock LLM, you can use various mock models: 
 ```python
-message_genrator = model.send_async(parameters=parameters, session=session)
-for message in message_genrator:
-    print(message.content)
-```
+> model = OpenAIChatCompletionModelMock(configuration=config)
+> model.setup(
+>     mock_provider=OneTurnConversationMockProvider(
+>         conversation_table={
+>             "1+1": "1215973652716",
+>         },
+>         sender="assistant",
+>     )
+> )
+> session = Session(
+>     messages=[
+>         Message(content="1+1", sender="user"),
+>     ]
+> )
+> # Mocking API provider and return message based on last message using the table
+> message = model.send(parameters=parameters, session=session)
+> print(message)
 
+> TextMessage(content="1215973652716", sender="assistant")
+```
 ## Agent
 
 You can write a simple agent like this:
