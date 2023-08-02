@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>prompttrail.providers.google_cloud &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.providers.google_cloud</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for prompttrail.providers.google_cloud</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">google.generativeai</span> <span class="k">as</span> <span class="nn">palm</span>  <span class="c1"># type: ignore</span>
+<span class="kn">from</span> <span class="nn">google.generativeai.types.discuss_types</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># type: ignore</span>
+    <span class="n">ChatResponse</span><span class="p">,</span>
+    <span class="n">MessageDict</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>  <span class="c1"># type: ignore</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">..core</span> <span class="kn">import</span> <span class="n">Configuration</span><span class="p">,</span> <span class="n">Message</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">Session</span><span class="p">,</span> <span class="n">TextMessage</span>
+<span class="kn">from</span> <span class="nn">..error</span> <span class="kn">import</span> <span class="n">ParameterValidationError</span><span class="p">,</span> <span class="n">ProviderResponseError</span>
+
+
+<div class="viewcode-block" id="GoogleCloudConfiguration"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudConfiguration">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudConfiguration</span><span class="p">(</span><span class="n">Configuration</span><span class="p">):</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<div class="viewcode-block" id="GoogleCloudChatExample"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudChatExample">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudChatExample</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">response</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<div class="viewcode-block" id="GoogleCloudChatParameters"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudChatParameters">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudChatParameters</span><span class="p">(</span><span class="n">Parameters</span><span class="p">):</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;models/chat-bison-001&quot;</span>
+    <span class="n">temperature</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_output_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">top_p</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">top_k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">candidate_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GoogleCloudChatExample</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GoogleCloudChatModel"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudChatModel">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudChatModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">configuration</span><span class="p">:</span> <span class="n">GoogleCloudConfiguration</span>
+
+    <span class="k">def</span> <span class="nf">_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Message</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">GoogleCloudChatParameters</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">GoogleCloudChatParameters</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is expected, but </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is given.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">response</span><span class="p">:</span> <span class="n">ChatResponse</span> <span class="o">=</span> <span class="n">palm</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">context</span><span class="p">,</span>
+            <span class="n">examples</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">prompt</span><span class="p">,</span> <span class="n">example</span><span class="o">.</span><span class="n">response</span><span class="p">)</span> <span class="k">for</span> <span class="n">example</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">examples</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">examples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span><span class="o">.</span><span class="n">examples</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">MessageDict</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">],</span>  <span class="c1"># type: ignore #TODO: More robust error handling</span>
+            <span class="n">temperature</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span>
+            <span class="n">candidate_count</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">candidate_count</span><span class="p">,</span>
+            <span class="n">top_p</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">top_p</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
+            <span class="n">prompt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># TODO: Figure out this is the best way to handle this</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">pformat</span><span class="p">(</span><span class="nb">object</span><span class="o">=</span><span class="n">response</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s2">&quot;filters&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+                <span class="k">raise</span> <span class="n">ProviderResponseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Blocked: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">filters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">raise</span> <span class="n">ProviderResponseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No candidates returned.&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+        <span class="n">message</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># type: ignore #TODO: More robust error handling</span>
+        <span class="k">return</span> <span class="n">TextMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">],</span> <span class="n">sender</span><span class="o">=</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore #TODO: More robust error handling</span>
+
+<div class="viewcode-block" id="GoogleCloudChatModel.validate_session"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session">[docs]</a>    <span class="k">def</span> <span class="nf">validate_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: All message in a session should be string.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">message</span><span class="o">.</span><span class="n">sender</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: All message in a session should have sender.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">message</span><span class="o">.</span><span class="n">sender</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: Sender should be one of &#39;system&#39;, &#39;assistant&#39;, &#39;user&#39; for all message in a session.&quot;</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GoogleCloudChatModel.list_models"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models">[docs]</a>    <span class="k">def</span> <span class="nf">list_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">palm</span><span class="o">.</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="n">palm</span><span class="o">.</span><span class="n">list_models</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">response</span><span class="p">]</span>  <span class="c1"># type: ignore</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.providers.google_cloud</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>prompttrail.flow.hooks package &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prompttrail.flow.runner package" href="prompttrail.flow.runner.html" />
+    <link rel="prev" title="prompttrail.flow package" href="prompttrail.flow.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.runner.html" title="prompttrail.flow.runner package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.html" title="prompttrail.flow package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" accesskey="U">prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.hooks package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="prompttrail-flow-hooks-package">
+<h1>prompttrail.flow.hooks package<a class="headerlink" href="#prompttrail-flow-hooks-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-prompttrail.flow.hooks.code">
+<span id="prompttrail-flow-hooks-code-module"></span><h2>prompttrail.flow.hooks.code module<a class="headerlink" href="#module-prompttrail.flow.hooks.code" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.code.EvaluatePythonCodeHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.code.</span></span><span class="sig-name descname"><span class="pre">EvaluatePythonCodeHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/code.html#EvaluatePythonCodeHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.code.EvaluatePythonCodeHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformHook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.code.EvaluatePythonCodeHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/code.html#EvaluatePythonCodeHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.code.EvaluatePythonCodeHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.code.</span></span><span class="sig-name descname"><span class="pre">ExtractMarkdownCodeBlockHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/code.html#ExtractMarkdownCodeBlockHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformHook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/code.html#ExtractMarkdownCodeBlockHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prompttrail.flow.hooks.core">
+<span id="prompttrail-flow-hooks-core-module"></span><h2>prompttrail.flow.hooks.core module<a class="headerlink" href="#module-prompttrail.flow.hooks.core" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.AskUserHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">AskUserHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#AskUserHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.AskUserHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformHook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.AskUserHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#AskUserHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.AskUserHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.BooleanHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">BooleanHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#BooleanHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.BooleanHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.Hook" title="prompttrail.flow.hooks.core.Hook"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.BooleanHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#BooleanHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.BooleanHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.GenerateChatHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">GenerateChatHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#GenerateChatHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.GenerateChatHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformHook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.GenerateChatHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#GenerateChatHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.GenerateChatHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.Hook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">Hook</span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#Hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.Hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.Hook.hook">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#Hook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.Hook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.IfJumpHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">IfJumpHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TemplateId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TemplateId</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#IfJumpHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.IfJumpHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.JumpHook" title="prompttrail.flow.hooks.core.JumpHook"><code class="xref py py-class docutils literal notranslate"><span class="pre">JumpHook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.IfJumpHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TemplateId</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#IfJumpHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.IfJumpHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.JumpHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">JumpHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TemplateId</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#JumpHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.JumpHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.Hook" title="prompttrail.flow.hooks.core.Hook"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.JumpHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TemplateId</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#JumpHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.JumpHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.TransformHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.hooks.core.</span></span><span class="sig-name descname"><span class="pre">TransformHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#TransformHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.TransformHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.hooks.core.Hook" title="prompttrail.flow.hooks.core.Hook"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hook</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.hooks.core.TransformHook.hook">
+<span class="sig-name descname"><span class="pre">hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/hooks/core.html#TransformHook.hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.hooks.core.TransformHook.hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prompttrail.flow.hooks">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-prompttrail.flow.hooks" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">prompttrail.flow.hooks package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-prompttrail.flow.hooks.code">prompttrail.flow.hooks.code module</a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.code.EvaluatePythonCodeHook"><code class="docutils literal notranslate"><span class="pre">EvaluatePythonCodeHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.code.EvaluatePythonCodeHook.hook"><code class="docutils literal notranslate"><span class="pre">EvaluatePythonCodeHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook"><code class="docutils literal notranslate"><span class="pre">ExtractMarkdownCodeBlockHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.code.ExtractMarkdownCodeBlockHook.hook"><code class="docutils literal notranslate"><span class="pre">ExtractMarkdownCodeBlockHook.hook()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prompttrail.flow.hooks.core">prompttrail.flow.hooks.core module</a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.AskUserHook"><code class="docutils literal notranslate"><span class="pre">AskUserHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.AskUserHook.hook"><code class="docutils literal notranslate"><span class="pre">AskUserHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.BooleanHook"><code class="docutils literal notranslate"><span class="pre">BooleanHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.BooleanHook.hook"><code class="docutils literal notranslate"><span class="pre">BooleanHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.GenerateChatHook"><code class="docutils literal notranslate"><span class="pre">GenerateChatHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.GenerateChatHook.hook"><code class="docutils literal notranslate"><span class="pre">GenerateChatHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.Hook"><code class="docutils literal notranslate"><span class="pre">Hook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.Hook.hook"><code class="docutils literal notranslate"><span class="pre">Hook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.IfJumpHook"><code class="docutils literal notranslate"><span class="pre">IfJumpHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.IfJumpHook.hook"><code class="docutils literal notranslate"><span class="pre">IfJumpHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.JumpHook"><code class="docutils literal notranslate"><span class="pre">JumpHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.JumpHook.hook"><code class="docutils literal notranslate"><span class="pre">JumpHook.hook()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook"><code class="docutils literal notranslate"><span class="pre">TransformHook</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.hooks.core.TransformHook.hook"><code class="docutils literal notranslate"><span class="pre">TransformHook.hook()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prompttrail.flow.hooks">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="prompttrail.flow.html"
+                          title="previous chapter">prompttrail.flow package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="prompttrail.flow.runner.html"
+                          title="next chapter">prompttrail.flow.runner package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/prompttrail.flow.hooks.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.runner.html" title="prompttrail.flow.runner package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.html" title="prompttrail.flow package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" >prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.hooks package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

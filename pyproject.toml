@@ -38,11 +38,12 @@ lint = { chain = ["lint:black", "lint:autoflake", "lint:isort"] }
 "lint:autoflake" = "pautoflake src tests examples"
 "lint:isort" = "isort src tests"
 test = "python -m unittest discover -s tests examples"
-sphinx = { chain = ["sphinx:clean_build", "sphinx:clean_autodoc", "sphinx:apidoc", "sphinx:build"] }
+sphinx = { chain = ["sphinx:clean_build", "sphinx:clean_autodoc", "sphinx:apidoc", "sphinx:build", "sphinx:touch"] }
 "sphinx:clean_build" = "find docs -depth 1 ! -path docs/sphinx -exec rm  -rf {} +"
 "sphinx:clean_autodoc" = "find docs/sphinx -name '*.rst' ! -name 'index.rst' -exec rm  -f {} +"
 "sphinx:apidoc" = "sphinx-apidoc --implicit-namespaces -F -o docs/sphinx src/prompttrail"
 "sphinx:build" = "sphinx-build -b html docs/sphinx docs/"
+"sphinx:touch" = "touch docs/.nojekyll"
 "pyreverse" = "pyreverse src.prompttrail -o png"
 
 [tool.hatch.metadata]

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>prompttrail.flow.core &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.core</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for prompttrail.flow.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">prompttrail.core</span> <span class="kn">import</span> <span class="n">Message</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">Session</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">prompttrail.flow.templates</span> <span class="kn">import</span> <span class="n">TemplateLike</span>
+
+
+<div class="viewcode-block" id="StatefulMessage"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.StatefulMessage">[docs]</a><span class="k">class</span> <span class="nc">StatefulMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="c1"># construct json</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;StatefulMessage(</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="n">pformat</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="s2">&quot;template_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_id</span><span class="p">,</span>
+                    <span class="s2">&quot;sender&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">)&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StatefulSession"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.StatefulSession">[docs]</a><span class="k">class</span> <span class="nc">StatefulSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">StatefulMessage</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="ControlMessage"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.ControlMessage">[docs]</a><span class="k">class</span> <span class="nc">ControlMessage</span><span class="p">(</span><span class="n">StatefulMessage</span><span class="p">):</span>
+    <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># ControlMessage is not expected to edit by human, so kill the edit method.</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_id</span> <span class="o">=</span> <span class="n">template_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sender</span> <span class="o">=</span> <span class="n">sender</span></div>
+
+
+<div class="viewcode-block" id="FlowState"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState">[docs]</a><span class="k">class</span> <span class="nc">FlowState</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;FlowState hold the all state of the conversation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="n">session_history</span><span class="p">:</span> <span class="n">StatefulSession</span> <span class="o">=</span> <span class="n">StatefulSession</span><span class="p">(),</span>
+        <span class="n">current_template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateLike&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jump</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateLike&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_history</span> <span class="o">=</span> <span class="n">session_history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span> <span class="o">=</span> <span class="n">current_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">jump</span>
+
+<div class="viewcode-block" id="FlowState.get_last_message"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState.get_last_message">[docs]</a>    <span class="k">def</span> <span class="nf">get_last_message</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatefulMessage</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_history</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Session has no message.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_history</span><span class="o">.</span><span class="n">messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="FlowState.get_current_data"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState.get_current_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="FlowState.get_jump"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState.get_jump">[docs]</a>    <span class="k">def</span> <span class="nf">get_jump</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateLike&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump</span></div>
+
+<div class="viewcode-block" id="FlowState.set_jump"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState.set_jump">[docs]</a>    <span class="k">def</span> <span class="nf">set_jump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jump</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateLike&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jump</span> <span class="o">=</span> <span class="n">jump</span></div>
+
+<div class="viewcode-block" id="FlowState.get_current_template"><a class="viewcode-back" href="../../../prompttrail.flow.html#prompttrail.flow.core.FlowState.get_current_template">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_template</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TemplateLike&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Current template is not set.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Create PrettyPrinted string</span>
+        <span class="n">data_json_line_list</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;    &quot;</span> <span class="o">+</span> <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">pformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+        <span class="p">)</span>
+        <span class="n">message_history_json</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;    &quot;</span> <span class="o">+</span> <span class="n">line</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">pformat</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">mes</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="s2">&quot;sender&quot;</span><span class="p">:</span> <span class="n">mes</span><span class="o">.</span><span class="n">sender</span><span class="p">}</span>
+                        <span class="k">for</span> <span class="n">mes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_history</span><span class="o">.</span><span class="n">messages</span>
+                    <span class="p">]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">current_template_json</span> <span class="o">=</span> <span class="n">pformat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span><span class="o">.</span><span class="n">template_id</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_template</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_template</span>
+        <span class="p">)</span>
+        <span class="n">jump_json</span> <span class="o">=</span> <span class="n">pformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jump</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;FlowState(</span>
+<span class="s2">    data=</span>
+<span class="s2">    </span><span class="si">{</span><span class="n">data_json_line_list</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    message_history=</span>
+<span class="s2">    </span><span class="si">{</span><span class="n">message_history_json</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    current_template=</span><span class="si">{</span><span class="n">current_template_json</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    jump=</span><span class="si">{</span><span class="n">jump_json</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">)&quot;&quot;&quot;</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.core</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>prompttrail.providers namespace &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="prompttrail.flow.templates package" href="prompttrail.flow.templates.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.templates.html" title="prompttrail.flow.templates package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" accesskey="U">prompttrail package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.providers namespace</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-prompttrail.providers">
+<span id="prompttrail-providers-namespace"></span><h1>prompttrail.providers namespace<a class="headerlink" href="#module-prompttrail.providers" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-prompttrail.providers.google_cloud">
+<span id="prompttrail-providers-google-cloud-module"></span><h2>prompttrail.providers.google_cloud module<a class="headerlink" href="#module-prompttrail.providers.google_cloud" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatExample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.google_cloud.</span></span><span class="sig-name descname"><span class="pre">GoogleCloudChatExample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatExample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatExample.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatExample.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'prompt':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'response':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatExample.prompt">
+<span class="sig-name descname"><span class="pre">prompt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.prompt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatExample.response">
+<span class="sig-name descname"><span class="pre">response</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.response" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.google_cloud.</span></span><span class="sig-name descname"><span class="pre">GoogleCloudChatModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration" title="prompttrail.providers.google_cloud.GoogleCloudConfiguration"><span class="pre">GoogleCloudConfiguration</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Model" title="prompttrail.core.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.configuration">
+<span class="sig-name descname"><span class="pre">configuration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration" title="prompttrail.providers.google_cloud.GoogleCloudConfiguration"><span class="pre">GoogleCloudConfiguration</span></a></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models">
+<span class="sig-name descname"><span class="pre">list_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatModel.list_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'configuration':</span> <span class="pre">FieldInfo(annotation=GoogleCloudConfiguration,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session">
+<span class="sig-name descname"><span class="pre">validate_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatModel.validate_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.google_cloud.</span></span><span class="sig-name descname"><span class="pre">GoogleCloudChatParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'models/chat-bison-001'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_output_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample" title="prompttrail.providers.google_cloud.GoogleCloudChatExample"><span class="pre">GoogleCloudChatExample</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudChatParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.candidate_count">
+<span class="sig-name descname"><span class="pre">candidate_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.candidate_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.context">
+<span class="sig-name descname"><span class="pre">context</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.examples">
+<span class="sig-name descname"><span class="pre">examples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample" title="prompttrail.providers.google_cloud.GoogleCloudChatExample"><span class="pre">GoogleCloudChatExample</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.examples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.max_output_tokens">
+<span class="sig-name descname"><span class="pre">max_output_tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.max_output_tokens" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'candidate_count':</span> <span class="pre">FieldInfo(annotation=Union[int,</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'context':</span> <span class="pre">FieldInfo(annotation=Union[str,</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'examples':</span> <span class="pre">FieldInfo(annotation=Union[List[GoogleCloudChatExample],</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'max_output_tokens':</span> <span class="pre">FieldInfo(annotation=Union[int,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=1000),</span> <span class="pre">'model_name':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=False,</span> <span class="pre">default='models/chat-bison-001'),</span> <span class="pre">'temperature':</span> <span class="pre">FieldInfo(annotation=Union[float,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=0),</span> <span class="pre">'top_k':</span> <span class="pre">FieldInfo(annotation=Union[int,</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'top_p':</span> <span class="pre">FieldInfo(annotation=Union[float,</span> <span class="pre">NoneType],</span> <span class="pre">required=False)}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_name">
+<span class="sig-name descname"><span class="pre">model_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.temperature">
+<span class="sig-name descname"><span class="pre">temperature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.temperature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_k">
+<span class="sig-name descname"><span class="pre">top_k</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_k" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_p">
+<span class="sig-name descname"><span class="pre">top_p</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_p" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudConfiguration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.google_cloud.</span></span><span class="sig-name descname"><span class="pre">GoogleCloudConfiguration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/google_cloud.html#GoogleCloudConfiguration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Configuration" title="prompttrail.core.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Configuration</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudConfiguration.api_key">
+<span class="sig-name descname"><span class="pre">api_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.api_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'api_key':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prompttrail.providers.openai">
+<span id="prompttrail-providers-openai-module"></span><h2>prompttrail.providers.openai module<a class="headerlink" href="#module-prompttrail.providers.openai" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.openai.</span></span><span class="sig-name descname"><span class="pre">OpenAIChatCompletionModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration" title="prompttrail.providers.openai.OpenAIModelConfiguration"><span class="pre">OpenAIModelConfiguration</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Model" title="prompttrail.core.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.before_send">
+<span class="sig-name descname"><span class="pre">before_send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><span class="pre">Parameters</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.html#prompttrail.core.Configuration" title="prompttrail.core.Configuration"><span class="pre">Configuration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><span class="pre">Parameters</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.before_send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.before_send" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.configuration">
+<span class="sig-name descname"><span class="pre">configuration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration" title="prompttrail.providers.openai.OpenAIModelConfiguration"><span class="pre">OpenAIModelConfiguration</span></a></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.list_models">
+<span class="sig-name descname"><span class="pre">list_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.list_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.list_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'configuration':</span> <span class="pre">FieldInfo(annotation=OpenAIModelConfiguration,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModel.validate_session">
+<span class="sig-name descname"><span class="pre">validate_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Session" title="prompttrail.core.Session"><span class="pre">Session</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_async</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModel.validate_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.validate_session" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModelMock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.openai.</span></span><span class="sig-name descname"><span class="pre">OpenAIChatCompletionModelMock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.mock.MockProvider" title="prompttrail.mock.MockProvider"><span class="pre">MockProvider</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration" title="prompttrail.providers.openai.OpenAIModelConfiguration"><span class="pre">OpenAIModelConfiguration</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModelMock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel" title="prompttrail.providers.openai.OpenAIChatCompletionModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel</span></code></a>, <a class="reference internal" href="prompttrail.html#prompttrail.mock.MockModel" title="prompttrail.mock.MockModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MockModel</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'configuration':</span> <span class="pre">FieldInfo(annotation=OpenAIModelConfiguration,</span> <span class="pre">required=True),</span> <span class="pre">'mock_provider':</span> <span class="pre">FieldInfo(annotation=Union[MockProvider,</span> <span class="pre">NoneType],</span> <span class="pre">required=False)}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIChatCompletionModelMock.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mock_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.mock.MockProvider" title="prompttrail.mock.MockProvider"><span class="pre">MockProvider</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIChatCompletionModelMock.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>A mock model use the same interface as the model. To override the behavior of the model, you must implement the setup method to inject the mock provider.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.openai.</span></span><span class="sig-name descname"><span class="pre">OpenAIModelConfiguration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">organization_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIModelConfiguration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Configuration" title="prompttrail.core.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">Configuration</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.api_base">
+<span class="sig-name descname"><span class="pre">api_base</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_base" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.api_key">
+<span class="sig-name descname"><span class="pre">api_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.api_version">
+<span class="sig-name descname"><span class="pre">api_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'api_base':</span> <span class="pre">FieldInfo(annotation=Union[str,</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'api_key':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'api_version':</span> <span class="pre">FieldInfo(annotation=Union[str,</span> <span class="pre">NoneType],</span> <span class="pre">required=False),</span> <span class="pre">'organization_id':</span> <span class="pre">FieldInfo(annotation=Union[str,</span> <span class="pre">NoneType],</span> <span class="pre">required=False)}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelConfiguration.organization_id">
+<span class="sig-name descname"><span class="pre">organization_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelConfiguration.organization_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.providers.openai.</span></span><span class="sig-name descname"><span class="pre">OpenAIModelParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIModelParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="_modules/prompttrail/providers/openai.html#OpenAIModelParameters.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.Config.protected_namespaces">
+<span class="sig-name descname"><span class="pre">protected_namespaces</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.Config.protected_namespaces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.max_tokens">
+<span class="sig-name descname"><span class="pre">max_tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.max_tokens" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'protected_namespaces':</span> <span class="pre">()}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.model_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'max_tokens':</span> <span class="pre">FieldInfo(annotation=Union[int,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=1000),</span> <span class="pre">'model_name':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'temperature':</span> <span class="pre">FieldInfo(annotation=Union[float,</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=0)}</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.model_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.model_name">
+<span class="sig-name descname"><span class="pre">model_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.model_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.providers.openai.OpenAIModelParameters.temperature">
+<span class="sig-name descname"><span class="pre">temperature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#prompttrail.providers.openai.OpenAIModelParameters.temperature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">prompttrail.providers namespace</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-prompttrail.providers.google_cloud">prompttrail.providers.google_cloud module</a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatExample</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.model_config"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatExample.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.model_fields"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatExample.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.prompt"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatExample.prompt</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatExample.response"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatExample.response</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.configuration"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel.configuration</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.list_models"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel.list_models()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.model_config"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.model_fields"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatModel.validate_session"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatModel.validate_session()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.candidate_count"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.candidate_count</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.context"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.context</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.examples"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.examples</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.max_output_tokens"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.max_output_tokens</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_config"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_fields"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.model_name"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.model_name</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.temperature"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.temperature</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_k"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.top_k</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudChatParameters.top_p"><code class="docutils literal notranslate"><span class="pre">GoogleCloudChatParameters.top_p</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration"><code class="docutils literal notranslate"><span class="pre">GoogleCloudConfiguration</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.api_key"><code class="docutils literal notranslate"><span class="pre">GoogleCloudConfiguration.api_key</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_config"><code class="docutils literal notranslate"><span class="pre">GoogleCloudConfiguration.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.google_cloud.GoogleCloudConfiguration.model_fields"><code class="docutils literal notranslate"><span class="pre">GoogleCloudConfiguration.model_fields</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prompttrail.providers.openai">prompttrail.providers.openai module</a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.before_send"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.before_send()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.configuration"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.configuration</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.list_models"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.list_models()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.model_config"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.model_fields"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModel.validate_session"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModel.validate_session()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModelMock</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_config"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModelMock.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.model_fields"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModelMock.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIChatCompletionModelMock.setup"><code class="docutils literal notranslate"><span class="pre">OpenAIChatCompletionModelMock.setup()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_base"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.api_base</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_key"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.api_key</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.api_version"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.api_version</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.model_config"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.model_fields"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelConfiguration.organization_id"><code class="docutils literal notranslate"><span class="pre">OpenAIModelConfiguration.organization_id</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.Config"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.Config</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.Config.protected_namespaces"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.Config.protected_namespaces</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.max_tokens"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.max_tokens</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.model_config"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.model_config</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.model_fields"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.model_fields</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.model_name"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.model_name</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.providers.openai.OpenAIModelParameters.temperature"><code class="docutils literal notranslate"><span class="pre">OpenAIModelParameters.temperature</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="prompttrail.flow.templates.html"
+                          title="previous chapter">prompttrail.flow.templates package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/prompttrail.providers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.templates.html" title="prompttrail.flow.templates package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.providers namespace</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

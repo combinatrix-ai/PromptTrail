@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>prompttrail.flow.templates package &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prompttrail.providers namespace" href="prompttrail.providers.html" />
+    <link rel="prev" title="prompttrail.flow.runner package" href="prompttrail.flow.runner.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.providers.html" title="prompttrail.providers namespace"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.runner.html" title="prompttrail.flow.runner package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" accesskey="U">prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.templates package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="prompttrail-flow-templates-package">
+<h1>prompttrail.flow.templates package<a class="headerlink" href="#prompttrail-flow-templates-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-prompttrail.flow.templates.core">
+<span id="prompttrail-flow-templates-core-module"></span><h2>prompttrail.flow.templates.core module<a class="headerlink" href="#module-prompttrail.flow.templates.core" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.IfTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">IfTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">true_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.BooleanHook" title="prompttrail.flow.hooks.core.BooleanHook"><span class="pre">BooleanHook</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#IfTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.IfTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate" title="prompttrail.flow.templates.core.MetaTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetaTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.IfTemplate.list_child_templates">
+<span class="sig-name descname"><span class="pre">list_child_templates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#IfTemplate.list_child_templates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.IfTemplate.list_child_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.IfTemplate.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visited_templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#IfTemplate.walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.IfTemplate.walk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LinearTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">LinearTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_template_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LinearTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LinearTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate" title="prompttrail.flow.templates.core.MetaTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetaTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LinearTemplate.list_child_templates">
+<span class="sig-name descname"><span class="pre">list_child_templates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LinearTemplate.list_child_templates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LinearTemplate.list_child_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LinearTemplate.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visited_templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LinearTemplate.walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LinearTemplate.walk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LoopTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">LoopTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.BooleanHook" title="prompttrail.flow.hooks.core.BooleanHook"><span class="pre">BooleanHook</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_to</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_loop_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LoopTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LoopTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate" title="prompttrail.flow.templates.core.MetaTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetaTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LoopTemplate.list_child_templates">
+<span class="sig-name descname"><span class="pre">list_child_templates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LoopTemplate.list_child_templates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LoopTemplate.list_child_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.LoopTemplate.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visited_templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#LoopTemplate.walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.LoopTemplate.walk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.MessageTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">MessageTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_template_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><span class="pre">TransformHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><span class="pre">TransformHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.JumpHook" title="prompttrail.flow.hooks.core.JumpHook"><span class="pre">JumpHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.JumpHook" title="prompttrail.flow.hooks.core.JumpHook"><span class="pre">JumpHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#MessageTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.MessageTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.MetaTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">MetaTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_template_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><span class="pre">TransformHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.TransformHook" title="prompttrail.flow.hooks.core.TransformHook"><span class="pre">TransformHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.JumpHook" title="prompttrail.flow.hooks.core.JumpHook"><span class="pre">JumpHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.hooks.html#prompttrail.flow.hooks.core.JumpHook" title="prompttrail.flow.hooks.core.JumpHook"><span class="pre">JumpHook</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#MetaTemplate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.MetaTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.templates.core.MessageTemplate" title="prompttrail.flow.templates.core.MessageTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">MessageTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.MetaTemplate.list_child_templates">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_child_templates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#MetaTemplate.list_child_templates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.MetaTemplate.list_child_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.MetaTemplate.walk">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visited_templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#MetaTemplate.walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.MetaTemplate.walk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">Template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_template_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#Template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.Template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A template represents a template that (usually) create a message when rendered and include some logic to control flow.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template.get_logger">
+<span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#Template.get_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.Template.get_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template.list_child_templates">
+<span class="sig-name descname"><span class="pre">list_child_templates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#Template.list_child_templates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.Template.list_child_templates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template.next_template_default">
+<span class="sig-name descname"><span class="pre">next_template_default</span></span><a class="headerlink" href="#prompttrail.flow.templates.core.Template.next_template_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the default next template selected when no jump is specified. This is usually specified by MetaTemplate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#Template.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.Template.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.Template.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visited_templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#Template.walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.Template.walk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prompttrail.flow.templates.core.is_same_template">
+<span class="sig-prename descclassname"><span class="pre">prompttrail.flow.templates.core.</span></span><span class="sig-name descname"><span class="pre">is_same_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/templates/core.html#is_same_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.templates.core.is_same_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-prompttrail.flow.templates">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-prompttrail.flow.templates" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">prompttrail.flow.templates package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-prompttrail.flow.templates.core">prompttrail.flow.templates.core module</a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.IfTemplate"><code class="docutils literal notranslate"><span class="pre">IfTemplate</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.IfTemplate.list_child_templates"><code class="docutils literal notranslate"><span class="pre">IfTemplate.list_child_templates()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.IfTemplate.walk"><code class="docutils literal notranslate"><span class="pre">IfTemplate.walk()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LinearTemplate"><code class="docutils literal notranslate"><span class="pre">LinearTemplate</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LinearTemplate.list_child_templates"><code class="docutils literal notranslate"><span class="pre">LinearTemplate.list_child_templates()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LinearTemplate.walk"><code class="docutils literal notranslate"><span class="pre">LinearTemplate.walk()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LoopTemplate"><code class="docutils literal notranslate"><span class="pre">LoopTemplate</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LoopTemplate.list_child_templates"><code class="docutils literal notranslate"><span class="pre">LoopTemplate.list_child_templates()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.LoopTemplate.walk"><code class="docutils literal notranslate"><span class="pre">LoopTemplate.walk()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.MessageTemplate"><code class="docutils literal notranslate"><span class="pre">MessageTemplate</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate"><code class="docutils literal notranslate"><span class="pre">MetaTemplate</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate.list_child_templates"><code class="docutils literal notranslate"><span class="pre">MetaTemplate.list_child_templates()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.MetaTemplate.walk"><code class="docutils literal notranslate"><span class="pre">MetaTemplate.walk()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template"><code class="docutils literal notranslate"><span class="pre">Template</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template.get_logger"><code class="docutils literal notranslate"><span class="pre">Template.get_logger()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template.list_child_templates"><code class="docutils literal notranslate"><span class="pre">Template.list_child_templates()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template.next_template_default"><code class="docutils literal notranslate"><span class="pre">Template.next_template_default</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template.render"><code class="docutils literal notranslate"><span class="pre">Template.render()</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.Template.walk"><code class="docutils literal notranslate"><span class="pre">Template.walk()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.templates.core.is_same_template"><code class="docutils literal notranslate"><span class="pre">is_same_template()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prompttrail.flow.templates">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="prompttrail.flow.runner.html"
+                          title="previous chapter">prompttrail.flow.runner package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="prompttrail.providers.html"
+                          title="next chapter">prompttrail.providers namespace</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/prompttrail.flow.templates.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.providers.html" title="prompttrail.providers namespace"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.runner.html" title="prompttrail.flow.runner package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" >prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.templates package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

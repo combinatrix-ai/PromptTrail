@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>prompttrail.flow.runner package &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prompttrail.flow.templates package" href="prompttrail.flow.templates.html" />
+    <link rel="prev" title="prompttrail.flow.hooks package" href="prompttrail.flow.hooks.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.templates.html" title="prompttrail.flow.templates package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.hooks.html" title="prompttrail.flow.hooks package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" accesskey="U">prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.runner package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="prompttrail-flow-runner-package">
+<h1>prompttrail.flow.runner package<a class="headerlink" href="#prompttrail-flow-runner-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-prompttrail.flow.runner.core">
+<span id="prompttrail-flow-runner-core-module"></span><h2>prompttrail.flow.runner.core module<a class="headerlink" href="#module-prompttrail.flow.runner.core" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.runner.core.CommandLineRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.runner.core.</span></span><span class="sig-name descname"><span class="pre">CommandLineRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Model" title="prompttrail.core.Model"><span class="pre">Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.html#prompttrail.core.Parameters" title="prompttrail.core.Parameters"><span class="pre">Parameters</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">templates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="prompttrail.flow.templates.html#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/prompttrail/flow/runner/core.html#CommandLineRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.runner.core.CommandLineRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prompttrail.flow.runner.core.Runner" title="prompttrail.flow.runner.core.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prompttrail.flow.runner.core.CommandLineRunner.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.templates.html#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="prompttrail.flow.html#prompttrail.flow.core.FlowState" title="prompttrail.flow.core.FlowState"><span class="pre">FlowState</span></a></span></span><a class="reference internal" href="_modules/prompttrail/flow/runner/core.html#CommandLineRunner.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.runner.core.CommandLineRunner.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prompttrail.flow.runner.core.Runner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">prompttrail.flow.runner.core.</span></span><span class="sig-name descname"><span class="pre">Runner</span></span><a class="reference internal" href="_modules/prompttrail/flow/runner/core.html#Runner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.runner.core.Runner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prompttrail.flow.runner.core.get_id">
+<span class="sig-prename descclassname"><span class="pre">prompttrail.flow.runner.core.</span></span><span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_like</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="prompttrail.flow.templates.html#prompttrail.flow.templates.core.Template" title="prompttrail.flow.templates.core.Template"><span class="pre">Template</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/prompttrail/flow/runner/core.html#get_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#prompttrail.flow.runner.core.get_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-prompttrail.flow.runner">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-prompttrail.flow.runner" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">prompttrail.flow.runner package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-prompttrail.flow.runner.core">prompttrail.flow.runner.core module</a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.runner.core.CommandLineRunner"><code class="docutils literal notranslate"><span class="pre">CommandLineRunner</span></code></a><ul>
+<li><a class="reference internal" href="#prompttrail.flow.runner.core.CommandLineRunner.run"><code class="docutils literal notranslate"><span class="pre">CommandLineRunner.run()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompttrail.flow.runner.core.Runner"><code class="docutils literal notranslate"><span class="pre">Runner</span></code></a></li>
+<li><a class="reference internal" href="#prompttrail.flow.runner.core.get_id"><code class="docutils literal notranslate"><span class="pre">get_id()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prompttrail.flow.runner">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="prompttrail.flow.hooks.html"
+                          title="previous chapter">prompttrail.flow.hooks package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="prompttrail.flow.templates.html"
+                          title="next chapter">prompttrail.flow.templates package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/prompttrail.flow.runner.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.templates.html" title="prompttrail.flow.templates package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prompttrail.flow.hooks.html" title="prompttrail.flow.hooks package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="prompttrail.html" >prompttrail package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="prompttrail.flow.html" >prompttrail.flow package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.flow.runner package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>
