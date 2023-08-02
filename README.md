@@ -183,3 +183,13 @@ runner.run()
 - [ ] Offer repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
+
+## License
+
+- This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
+  - See [LICENSE](LICENSE) for more details.
+
+## Contributing
+
+- Contributions are welcome!
+- See [CONTRIBUTING](CONTRIBUTING.md) for more details.
