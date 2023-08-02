@@ -2,12 +2,12 @@ import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-logger = logging.getLogger(__name__)
-
 from prompttrail.flow.core import FlowState
 
 if TYPE_CHECKING:
     from prompttrail.flow.templates import TemplateId
+
+logger = logging.getLogger(__name__)
 
 
 class Hook(object):

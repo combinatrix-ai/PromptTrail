@@ -47,8 +47,6 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>  <span class="c1"># type: ignore</span>
 
-<span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
 <span class="kn">from</span> <span class="nn">prompttrail.core</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Configuration</span><span class="p">,</span>
     <span class="n">Message</span><span class="p">,</span>
@@ -58,6 +56,8 @@
     <span class="n">TextMessage</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">prompttrail.error</span> <span class="kn">import</span> <span class="n">ParameterValidationError</span><span class="p">,</span> <span class="n">ProviderResponseError</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="GoogleCloudConfiguration"><a class="viewcode-back" href="../../../prompttrail.providers.html#prompttrail.providers.google_cloud.GoogleCloudConfiguration">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudConfiguration</span><span class="p">(</span><span class="n">Configuration</span><span class="p">):</span>
@@ -108,7 +108,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s2">&quot;filters&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
                 <span class="k">raise</span> <span class="n">ProviderResponseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Blocked: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">filters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-            <span class="k">raise</span> <span class="n">ProviderResponseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No candidates returned.&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">raise</span> <span class="n">ProviderResponseError</span><span class="p">(</span><span class="s2">&quot;No candidates returned.&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="n">message</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># type: ignore #TODO: More robust error handling</span>
         <span class="k">return</span> <span class="n">TextMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">],</span> <span class="n">sender</span><span class="o">=</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">])</span>  <span class="c1"># type: ignore #TODO: More robust error handling</span>

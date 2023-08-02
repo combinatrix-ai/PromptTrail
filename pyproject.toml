@@ -26,10 +26,10 @@ dev-dependencies = [
     "autoflake>=2.2.0",
     "pyproject-autoflake>=1.0.2",
     "ipython>=8.14.0",
-    "faiss-cpu>=1.7.4",
     "jinja2>=3.1.2",
     "sphinx>=7.1.1",
     "pylint>=2.17.5",
+    "flake8>=6.1.0",
 ]
 
 [tool.rye.scripts]
@@ -37,8 +37,9 @@ format = { chain = ["format:black", "format:autoflake", "format:isort"] }
 "format:black" = "black src tests examples"
 "format:autoflake" = "pautoflake src tests examples"
 "format:isort" = "isort src tests"
-lint = { chain = ["lint:mypy"] }
+lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src"
+"lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src"
 test = "python -m unittest discover -s tests examples"
 doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:build", "doc:touch"] }
 "doc:clean_build" = "find docs -depth 1 ! -path docs/sphinx -exec rm  -rf {} +"

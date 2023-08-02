@@ -134,7 +134,7 @@
             <span class="k">if</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Jump is set to </span><span class="si">{</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">get_id</span><span class="p">(</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="p">)</span> <span class="o">==</span> <span class="n">END_TEMPLATE_ID</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Flow is finished.&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Flow is finished.&quot;</span><span class="p">)</span>
                     <span class="k">break</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="p">,</span> <span class="n">Template</span><span class="p">):</span>
                     <span class="n">next_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span><span class="n">flow_state</span><span class="o">.</span><span class="n">jump</span><span class="p">)</span>
@@ -153,7 +153,7 @@
                     <span class="k">if</span> <span class="n">next_template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">next_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_template</span><span class="p">(</span><span class="n">next_template</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">next_template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No jump is set. Flow is finished.&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No jump is set. Flow is finished.&quot;</span><span class="p">)</span>
                 <span class="k">break</span>
             <span class="k">if</span> <span class="n">last_template</span> <span class="o">==</span> <span class="n">next_template</span><span class="p">:</span>
                 <span class="n">same_template_count</span> <span class="o">+=</span> <span class="mi">1</span>

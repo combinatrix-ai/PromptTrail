@@ -96,7 +96,7 @@ class CommandLineRunner(Runner):
             if flow_state.jump is not None:
                 logger.info(msg=f"Jump is set to {flow_state.jump}.")
                 if get_id(flow_state.jump) == END_TEMPLATE_ID:
-                    logger.info(f"Flow is finished.")
+                    logger.info("Flow is finished.")
                     break
                 if not isinstance(flow_state.jump, Template):
                     next_template = self._search_template(flow_state.jump)
@@ -115,7 +115,7 @@ class CommandLineRunner(Runner):
                     if next_template is not None:
                         next_template = self._search_template(next_template)
             if next_template is None:
-                logger.info(f"No jump is set. Flow is finished.")
+                logger.info("No jump is set. Flow is finished.")
                 break
             if last_template == next_template:
                 same_template_count += 1

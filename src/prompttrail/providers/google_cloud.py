@@ -9,8 +9,6 @@ from google.generativeai.types.discuss_types import (  # type: ignore
 )
 from pydantic import BaseModel  # type: ignore
 
-logger = getLogger(__name__)
-
 from prompttrail.core import (
     Configuration,
     Message,
@@ -20,6 +18,8 @@ from prompttrail.core import (
     TextMessage,
 )
 from prompttrail.error import ParameterValidationError, ProviderResponseError
+
+logger = getLogger(__name__)
 
 
 class GoogleCloudConfiguration(Configuration):
@@ -70,7 +70,7 @@ class GoogleCloudChatModel(Model):
         if len(response.candidates) == 0:  # type: ignore
             if hasattr(response, "filters") and len(response.filters) > 0:  # type: ignore
                 raise ProviderResponseError(f"Blocked: {response.filters}", response=response)  # type: ignore
-            raise ProviderResponseError(f"No candidates returned.", response=response)  # type: ignore
+            raise ProviderResponseError("No candidates returned.", response=response)  # type: ignore
 
         message = response.candidates[0]  # type: ignore #TODO: More robust error handling
         return TextMessage(content=message["content"], sender=message["author"])  # type: ignore #TODO: More robust error handling
