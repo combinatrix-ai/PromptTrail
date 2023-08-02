@@ -2,10 +2,10 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional, Sequence
 
-from src.prompttrail.core import Model, Parameters
-from src.prompttrail.flow import FlowState, StatefulSession
-from src.prompttrail.flow.templates import Template, TemplateId, TemplateLike
-from src.prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
+from prompttrail.core import Model, Parameters
+from prompttrail.flow import FlowState, StatefulSession
+from prompttrail.flow.templates import Template, TemplateId, TemplateLike
+from prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 
 logger = logging.getLogger(__name__)
 

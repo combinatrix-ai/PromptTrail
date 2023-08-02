@@ -27,7 +27,7 @@ from src.prompttrail.flow.hooks import (
     BooleanHook,
     ExtractMarkdownCodeBlockHook,
 )
-from prompttrail.flow.runner.core import CommandLineRunner
+from prompttrail.flow.runner import CommandLineRunner
 
 logging.basicConfig(level=logging.DEBUG)
 

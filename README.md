@@ -71,7 +71,9 @@ If you want streaming output, you can use `send_async` method if the provider of
 
 If you want to mock LLM, you can use various mock models: 
 ```python
+> # Change model class to mock model class
 > model = OpenAIChatCompletionModelMock(configuration=config)
+> # and just call setup method to setup mock provider
 > model.setup(
 >     mock_provider=OneTurnConversationMockProvider(
 >         conversation_table={
@@ -85,7 +87,6 @@ If you want to mock LLM, you can use various mock models:
 >         Message(content="1+1", sender="user"),
 >     ]
 > )
-> # Mocking API provider and return message based on last message using the table
 > message = model.send(parameters=parameters, session=session)
 > print(message)
 

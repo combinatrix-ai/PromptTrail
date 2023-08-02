@@ -1,11 +1,11 @@
 import os
 
-from src.prompttrail.core import (
+from prompttrail.core import (
     Session,
     Message,
 )
 
-from src.prompttrail.providers.openai import (
+from prompttrail.providers.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

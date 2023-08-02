@@ -1,8 +1,8 @@
 import logging
 import re
 
-from src.prompttrail.flow.core import FlowState
-from src.prompttrail.util import hook_logger
+from prompttrail.flow.core import FlowState
+from prompttrail.util import hook_logger
 
 from .core import TransformHook
 

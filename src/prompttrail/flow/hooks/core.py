@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
-from src.prompttrail.flow.core import FlowState
+from prompttrail.flow.core import FlowState
 
 if TYPE_CHECKING:
-    from src.prompttrail.flow.templates import TemplateId
+    from prompttrail.flow.templates import TemplateId
 
 
 class Hook(object):

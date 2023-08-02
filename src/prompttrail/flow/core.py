@@ -2,13 +2,13 @@ import logging
 from pprint import pformat
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from src.prompttrail.core import Message, Model, Parameters, Session
+from prompttrail.core import Message, Model, Parameters, Session
 
 logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from src.prompttrail.flow.templates import TemplateLike
+    from prompttrail.flow.templates import TemplateLike
 
 
 class StatefulMessage(Message):

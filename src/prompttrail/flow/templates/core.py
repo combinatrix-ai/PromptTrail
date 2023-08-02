@@ -6,8 +6,8 @@ from uuid import uuid4
 
 import jinja2
 
-from src.prompttrail.flow import FlowState, StatefulMessage
-from src.prompttrail.flow.hooks import BooleanHook, IfJumpHook, JumpHook, TransformHook
+from prompttrail.flow import FlowState, StatefulMessage
+from prompttrail.flow.hooks import BooleanHook, IfJumpHook, JumpHook, TransformHook
 
 logger = logging.getLogger(__name__)
 

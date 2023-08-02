@@ -3,8 +3,8 @@ import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.prompttrail.flow.core import FlowState
-    from src.prompttrail.flow.hooks.core import Hook
+    from prompttrail.flow.core import FlowState
+    from prompttrail.flow.hooks.core import Hook
 
 MAX_TEMPLATE_LOOP = int(os.environ.get("MAX_TEMPLATE_LOOP", 10))
 END_TEMPLATE_ID = "END"
@@ -23,7 +23,7 @@ def hook_logger(
 ):
     if flow_state.current_template is not None:
         # To avoid circular import
-        from src.prompttrail.flow.templates import Template
+        from prompttrail.flow.templates import Template
 
         if isinstance(flow_state.current_template, Template):
             template_id = flow_state.current_template.template_id

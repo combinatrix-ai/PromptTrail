@@ -4,7 +4,7 @@ from typing import Any, Generator, List, Optional, Sequence, Tuple, TypeAlias
 
 from pydantic import BaseModel
 
-from src.prompttrail.util import logger_multiline
+from prompttrail.util import logger_multiline
 
 logger = logging.getLogger(__name__)
 

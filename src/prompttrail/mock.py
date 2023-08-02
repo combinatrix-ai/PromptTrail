@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 from pydantic import BaseModel
 
-from src.prompttrail.core import Message, Session, TextMessage
+from prompttrail.core import Message, Session, TextMessage
 
 
 class MockProvider(ABC):
