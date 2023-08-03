@@ -1,13 +1,13 @@
-prompttrail.flow.templates package
+prompttrail.agent.template package
 ==================================
 
 Submodules
 ----------
 
-prompttrail.flow.templates.core module
+prompttrail.agent.template.core module
 --------------------------------------
 
-.. automodule:: prompttrail.flow.templates.core
+.. automodule:: prompttrail.agent.template.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ prompttrail.flow.templates.core module
 Module contents
 ---------------
 
-.. automodule:: prompttrail.flow.templates
+.. automodule:: prompttrail.agent.template
    :members:
    :undoc-members:
    :show-inheritance:

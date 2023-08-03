@@ -5,7 +5,7 @@ from prompttrail.core import (
     Message,
 )
 
-from prompttrail.providers.openai import (
+from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

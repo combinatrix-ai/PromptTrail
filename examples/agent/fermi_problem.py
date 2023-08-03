@@ -7,19 +7,19 @@
 import logging
 import os
 
-from src.prompttrail.providers.openai import (
+from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
 
-from src.prompttrail.flow.templates import (
+from prompttrail.agent.template import (
     LinearTemplate,
     MessageTemplate,
     LoopTemplate,
     is_same_template,
 )
-from src.prompttrail.flow.hooks import (
+from prompttrail.agent.hook import (
     AskUserHook,
     GenerateChatHook,
     EvaluatePythonCodeHook,
@@ -27,7 +27,7 @@ from src.prompttrail.flow.hooks import (
     BooleanHook,
     ExtractMarkdownCodeBlockHook,
 )
-from prompttrail.flow.runner import CommandLineRunner
+from prompttrail.agent.runner import CommandLineRunner
 
 logging.basicConfig(level=logging.DEBUG)
 

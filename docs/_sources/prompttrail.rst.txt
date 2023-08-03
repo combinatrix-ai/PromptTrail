@@ -7,8 +7,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   prompttrail.flow
-   prompttrail.providers
+   prompttrail.agent
+   prompttrail.provider
 
 Submodules
 ----------

@@ -1,21 +1,21 @@
-prompttrail.flow.hooks package
+prompttrail.agent.hook package
 ==============================
 
 Submodules
 ----------
 
-prompttrail.flow.hooks.code module
+prompttrail.agent.hook.code module
 ----------------------------------
 
-.. automodule:: prompttrail.flow.hooks.code
+.. automodule:: prompttrail.agent.hook.code
    :members:
    :undoc-members:
    :show-inheritance:
 
-prompttrail.flow.hooks.core module
+prompttrail.agent.hook.core module
 ----------------------------------
 
-.. automodule:: prompttrail.flow.hooks.core
+.. automodule:: prompttrail.agent.hook.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ prompttrail.flow.hooks.core module
 Module contents
 ---------------
 
-.. automodule:: prompttrail.flow.hooks
+.. automodule:: prompttrail.agent.hook
    :members:
    :undoc-members:
    :show-inheritance:
