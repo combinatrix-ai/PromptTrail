@@ -1,11 +1,8 @@
-import os
-import sys
 import unittest
 
 from pydantic import ValidationError
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/")))
-from src.prompttrail.core import Configuration, Message, Model, TextMessage, TextSession
+from prompttrail.core import Configuration, Message, Model, TextMessage, TextSession
 
 
 class TestCore(unittest.TestCase):

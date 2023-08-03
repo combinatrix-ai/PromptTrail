@@ -6,8 +6,8 @@ from uuid import uuid4
 
 import jinja2
 
-from prompttrail.flow import FlowState, StatefulMessage
-from prompttrail.flow.hooks import BooleanHook, IfJumpHook, JumpHook, TransformHook
+from prompttrail.agent import FlowState, StatefulMessage
+from prompttrail.agent.hook import BooleanHook, IfJumpHook, JumpHook, TransformHook
 
 logger = logging.getLogger(__name__)
 
@@ -346,3 +346,64 @@ class LinearTemplate(MetaTemplate):
         yield self
         for template in self.templates:
             yield from template.walk(visited_templates)
+
+
+class GenerateTemplate(MessageTemplate):
+    def __init__(
+        self,
+        role: str,
+        template_id: Optional[TemplateId] = None,
+        next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
+    ):
+        self.template_id = (
+            template_id
+            if template_id is not None
+            else "Unnamed_MessageTemplate_" + str(uuid4())
+        )
+        self.next_template_default = next_template_default
+        self.role = role
+        self.before_transform = before_transform
+        self.after_transform = after_transform
+        self.before_control = before_control
+        self.after_control = after_control
+
+    def _render(self, flow_state: "FlowState") -> "FlowState":
+        # before_transform
+        for before_transform_hook in self.before_transform:
+            flow_state = before_transform_hook.hook(flow_state)
+        # before_jump
+        for before_jump_hook in self.before_control:
+            next_template_id = before_jump_hook.hook(flow_state)
+            if next_template_id is not None:
+                flow_state.jump = next_template_id
+                return flow_state
+        # render
+        if flow_state.model is None:
+            raise ValueError(
+                "Model must be given to use GenerateTemplate. Please set model to the runner."
+            )
+        if flow_state.parameters is None:
+            raise ValueError(
+                "Parameters must be given to use GenerateTemplate. Please set parameters to the runner."
+            )
+        rendered_content = flow_state.model.send(
+            flow_state.parameters, flow_state.session_history
+        )
+        message = StatefulMessage(
+            content=rendered_content, sender=self.role, template_id=self.template_id
+        )
+        flow_state.session_history.messages.append(message)
+        # after_transform
+        for after_transform_hook in self.after_transform:
+            flow_state = after_transform_hook.hook(flow_state)
+        # after_jump
+        for after_jump_hook in self.after_control:
+            next_template_id = after_jump_hook.hook(flow_state)
+            if next_template_id is not None:
+                flow_state.jump = next_template_id
+                return flow_state
+        return flow_state

@@ -4,6 +4,7 @@ from typing import Any, Generator, List, Optional, Sequence, Tuple, TypeAlias
 
 from pydantic import BaseModel
 
+from prompttrail.cache import CacheProvider
 from prompttrail.util import logger_multiline
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,9 @@ class Message(BaseModel):
     # We may soon get non-textual messages maybe, so we should prepare for that.
     content: Any
     sender: Optional[str] = None
+
+    def __hash__(self) -> int:
+        return hash((self.content, self.sender))
 
 
 class TextMessage(Message):
@@ -40,6 +44,9 @@ class Session(BaseModel):
     # Sequence is used to ensure that the session is covariant with the message type.
     messages: Sequence[Message] = []
 
+    def __hash__(self) -> int:
+        return hash(tuple(self.messages))
+
 
 class TextSession(Session):
     """A session that accepts only text messages."""
@@ -53,7 +60,11 @@ class Configuration(BaseModel):
     # Configuration is a set of data that is used to configure model.
     # The name is following the naming convention of openai.
     # Configuration does not have parameters that define the behavior of the model.
-    ...
+
+    cache_provider: Optional[CacheProvider] = None
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Parameters(BaseModel):
@@ -104,6 +115,11 @@ class Model(BaseModel):
 
     def send(self, parameters: Parameters, session: Session) -> Message:
         """send method defines the standard procedure to send a message to the model. You dont need to override this method usually."""
+        if self.configuration.cache_provider is not None:
+            message = self.configuration.cache_provider.search(parameters, session)
+            if message is not None:
+                return message
+
         parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
         logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)

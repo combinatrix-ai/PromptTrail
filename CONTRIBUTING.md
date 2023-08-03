@@ -54,3 +54,9 @@ Note: You can run all of these commands at once by `rye run all`.
 - The senteces above may seem a little bit scary, but in essence, we want you to declare that your contribution can be used freely in this project, so that other people can use it without worry.
 
 - Note: Elastic License 2.0 is not compatible with GPL, so we may not use GPL libraries in this project.
+
+## Coding Principles
+
+### Type Checking
+- We use pylance (strict) on vscode and mypy.
+  - We prefer repeating duplicated type checking code over using `Any` or # type: ignore.

@@ -2,10 +2,10 @@ import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from prompttrail.flow.core import FlowState
+from prompttrail.agent.core import FlowState
 
 if TYPE_CHECKING:
-    from prompttrail.flow.templates import TemplateId
+    from prompttrail.agent.template import TemplateId
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +91,14 @@ class GenerateChatHook(TransformHook):
         self.key = key
 
     def hook(self, flow_state: FlowState) -> FlowState:
+        if flow_state.parameters is None:
+            raise ValueError(
+                "Parameters must be given to use GenerateChatHook. Please set parameters to the runner."
+            )
+        if flow_state.model is None:
+            raise ValueError(
+                "Model must be given to use GenerateChatHook. Please set model to the runner."
+            )
         message = flow_state.model.send(
             flow_state.parameters, flow_state.session_history
         )

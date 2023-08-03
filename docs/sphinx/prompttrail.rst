@@ -13,6 +13,14 @@ Subpackages
 Submodules
 ----------
 
+prompttrail.cache module
+------------------------
+
+.. automodule:: prompttrail.cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 prompttrail.core module
 -----------------------
 

@@ -1,13 +1,11 @@
 import os
-import sys
 import unittest
 
 import openai
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/")))
-from src.prompttrail.core import Message, Session, TextMessage
-from src.prompttrail.error import ParameterValidationError
-from src.prompttrail.providers.openai import (
+from prompttrail.core import Message, Session, TextMessage
+from prompttrail.error import ParameterValidationError
+from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
@@ -16,7 +14,7 @@ from src.prompttrail.providers.openai import (
 
 class TestOpenAI(unittest.TestCase):
     def setUp(self):
-        self.api_key = os.environ.get("OPENAI_API_KEY", "")
+        self.api_key = os.environ["OPENAI_API_KEY"]
         self.organization_id = os.environ.get("OPENAI_ORGANIZATION_ID", None)
         self.use_model = "gpt-3.5-turbo"
         self.config = OpenAIModelConfiguration(

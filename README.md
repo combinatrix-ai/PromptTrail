@@ -236,6 +236,7 @@ runner.run()
 - [ ] Vector Search Integration
 - [ ] Better error messages that helps debugging
 - [ ] Provide a way to export / import sessions
+- [x] Caching of API call
 
 ### Big Features
 - [ ] toml input/output for templates

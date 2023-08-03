@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>prompttrail.agent.hook.core &#8212; promttrail  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.agent.hook.core</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for prompttrail.agent.hook.core</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">prompttrail.agent.core</span> <span class="kn">import</span> <span class="n">FlowState</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">prompttrail.agent.template</span> <span class="kn">import</span> <span class="n">TemplateId</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.Hook">[docs]</a><span class="k">class</span> <span class="nc">Hook</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Hook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.Hook.hook">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;hook method is not implemented&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TransformHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.TransformHook">[docs]</a><span class="k">class</span> <span class="nc">TransformHook</span><span class="p">(</span><span class="n">Hook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">FlowState</span><span class="p">],</span> <span class="n">FlowState</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+
+<div class="viewcode-block" id="TransformHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.TransformHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlowState</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BooleanHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.BooleanHook">[docs]</a><span class="k">class</span> <span class="nc">BooleanHook</span><span class="p">(</span><span class="n">Hook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">FlowState</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span>
+
+<div class="viewcode-block" id="BooleanHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.BooleanHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">flow_state</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JumpHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.JumpHook">[docs]</a><span class="k">class</span> <span class="nc">JumpHook</span><span class="p">(</span><span class="n">Hook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">FlowState</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateId&quot;</span><span class="p">]]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+
+<div class="viewcode-block" id="JumpHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.JumpHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateId&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;hook method is not implemented&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="IfJumpHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.IfJumpHook">[docs]</a><span class="k">class</span> <span class="nc">IfJumpHook</span><span class="p">(</span><span class="n">JumpHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">condition</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">FlowState</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
+        <span class="n">true_template</span><span class="p">:</span> <span class="s2">&quot;TemplateId&quot;</span><span class="p">,</span>
+        <span class="n">false_template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">true_template</span> <span class="o">=</span> <span class="n">true_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">false_template</span> <span class="o">=</span> <span class="n">false_template</span>
+
+<div class="viewcode-block" id="IfJumpHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.IfJumpHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateId&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">flow_state</span><span class="p">):</span>
+            <span class="n">flow_state</span><span class="o">.</span><span class="n">set_jump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">true_template</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_template</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">flow_state</span><span class="o">.</span><span class="n">set_jump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">false_template</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">false_template</span></div></div>
+
+
+<span class="c1"># TODO: Ask and Generate should be treated differently from other hooks</span>
+<div class="viewcode-block" id="AskUserHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.AskUserHook">[docs]</a><span class="k">class</span> <span class="nc">AskUserHook</span><span class="p">(</span><span class="n">TransformHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
+
+<div class="viewcode-block" id="AskUserHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.AskUserHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlowState</span><span class="p">:</span>
+        <span class="c1"># show user a prompt on console</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">raw</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span>
+        <span class="n">flow_state</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span>
+        <span class="k">return</span> <span class="n">flow_state</span></div></div>
+
+
+<div class="viewcode-block" id="GenerateChatHook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.GenerateChatHook">[docs]</a><span class="k">class</span> <span class="nc">GenerateChatHook</span><span class="p">(</span><span class="n">TransformHook</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+
+<div class="viewcode-block" id="GenerateChatHook.hook"><a class="viewcode-back" href="../../../../prompttrail.agent.hook.html#prompttrail.agent.hook.core.GenerateChatHook.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flow_state</span><span class="p">:</span> <span class="n">FlowState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlowState</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameters must be given to use GenerateChatHook. Please set parameters to the runner.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Model must be given to use GenerateChatHook. Please set model to the runner.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+            <span class="n">flow_state</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">flow_state</span><span class="o">.</span><span class="n">session_history</span>
+        <span class="p">)</span>
+        <span class="n">flow_state</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">content</span>
+        <span class="k">return</span> <span class="n">flow_state</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">promttrail  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">prompttrail.agent.hook.core</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023, combinatrix.ai.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1.
+    </div>
+  </body>
+</html>

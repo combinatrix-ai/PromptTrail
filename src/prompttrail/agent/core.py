@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from prompttrail.flow.templates import TemplateLike
+    from prompttrail.agent.template import TemplateLike
 
 
 class StatefulMessage(Message):
@@ -29,6 +29,10 @@ class StatefulMessage(Message):
             )
             + ",\n)"
         )
+
+    def __hash__(self) -> int:
+        # TODO: How to hash this?
+        return hash(str(self))
 
 
 class StatefulSession(Session):
@@ -51,8 +55,8 @@ class FlowState(object):
 
     def __init__(
         self,
-        model: Model,
-        parameters: Parameters,
+        model: Optional[Model] = None,
+        parameters: Optional[Parameters] = None,
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
         current_template: Optional["TemplateLike"] = None,

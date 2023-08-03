@@ -1,8 +1,15 @@
 import logging
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Literal, Optional, Sequence, Tuple
 
 import openai
 
+from prompttrail.agent.hook.core import JumpHook, TransformHook
+from prompttrail.agent.template.core import (
+    GenerateTemplate,
+    MessageTemplate,
+    TemplateId,
+    TemplateLike,
+)
 from prompttrail.core import (
     Configuration,
     Message,
@@ -27,7 +34,7 @@ class OpenAIModelConfiguration(Configuration):
 class OpenAIModelParameters(Parameters):
     model_name: str
     temperature: Optional[float] = 0
-    max_tokens: Optional[int] = 1000
+    max_tokens: int = 1024
 
     class Config:
         protected_namespaces = ()
@@ -36,15 +43,18 @@ class OpenAIModelParameters(Parameters):
 class OpenAIChatCompletionModel(Model):
     configuration: OpenAIModelConfiguration
 
-    def before_send(
-        self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
+    def _authenticate(self) -> None:
         openai.api_key = self.configuration.api_key  # type: ignore
         openai.organization = self.configuration.organization_id  # type: ignore
         if self.configuration.api_base is not None:
             openai.api_base = self.configuration.api_base  # type: ignore
         if self.configuration.api_version is not None:
             openai.api_version = self.configuration.api_version  # type: ignore
+
+    def before_send(
+        self, parameters: Parameters, session: Optional[Session], is_async: bool
+    ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
+        self._authenticate()
         return (None, None, None)
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
@@ -52,6 +62,7 @@ class OpenAIChatCompletionModel(Model):
             raise ParameterValidationError(
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
+        # TODO: Add retry logic for http error and max_tokens_exceeded
         response = openai.ChatCompletion.create(  # type: ignore
             model=parameters.model_name,
             temperature=parameters.temperature,
@@ -116,6 +127,7 @@ class OpenAIChatCompletionModel(Model):
         ]
 
     def list_models(self) -> List[str]:
+        self._authenticate()
         response = openai.Model.list()  # type: ignore
         return [model.id for model in response.data]  # type: ignore
 
@@ -130,3 +142,52 @@ class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
         return self.mock_provider.call(session)
+
+
+OpenAIrole = Literal["system", "assistant", "user"]
+
+
+class OpenAIMessageTemplate(MessageTemplate):
+    def __init__(
+        self,
+        content: str,
+        role: OpenAIrole,
+        template_id: Optional[TemplateId] = None,
+        next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
+    ):
+        super().__init__(
+            content=content,
+            template_id=template_id,
+            role=role,
+            next_template_default=next_template_default,
+            before_transform=before_transform,
+            after_transform=after_transform,
+            before_control=before_control,
+            after_control=after_control,
+        )
+
+
+class OpenAIGenerateTemplate(GenerateTemplate):
+    def __init__(
+        self,
+        role: OpenAIrole,
+        template_id: Optional[TemplateId] = None,
+        next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
+    ):
+        super().__init__(
+            template_id=template_id,
+            role=role,
+            next_template_default=next_template_default,
+            before_transform=before_transform,
+            after_transform=after_transform,
+            before_control=before_control,
+            after_control=after_control,
+        )

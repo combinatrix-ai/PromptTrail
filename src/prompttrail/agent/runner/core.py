@@ -2,9 +2,9 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional, Sequence
 
+from prompttrail.agent import FlowState, StatefulSession
+from prompttrail.agent.template import Template, TemplateId, TemplateLike
 from prompttrail.core import Model, Parameters
-from prompttrail.flow import FlowState, StatefulSession
-from prompttrail.flow.templates import Template, TemplateId, TemplateLike
 from prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,19 @@ class CommandLineRunner(Runner):
                 session_history=StatefulSession(),
                 jump=None,
             )
+        else:
+            if flow_state.model != self.model:
+                logger.log(
+                    logging.INFO,
+                    f"Given flow state has different model {flow_state.model} from the runner {self.model}. Overriding the flow state.",
+                )
+                flow_state.model = self.model
+            if flow_state.parameters != self.parameters:
+                logger.log(
+                    logging.INFO,
+                    f"Given flow state has different parameters {flow_state.parameters} from the runner {self.parameters}. Overriding the flow state.",
+                )
+                flow_state.parameters = self.parameters
         if start_template is not None:
             if isinstance(start_template, str):
                 start_template = self._search_template(start_template)
@@ -102,18 +115,19 @@ class CommandLineRunner(Runner):
                     next_template = self._search_template(flow_state.jump)
                 flow_state.jump = None
             else:
+                # TODO: Naming here is confusing. We should rename this.
                 if flow_state.current_template is not None:
-                    current_template = flow_state.current_template
-                    next_template_like = self._search_template(
-                        current_template
-                    ).next_template_default
-                    next_template = (
-                        self._search_template(next_template_like)
-                        if isinstance(next_template_like, TemplateId)
-                        else next_template
+                    current_template = self._search_template(
+                        template_like=flow_state.current_template
                     )
-                    if next_template is not None:
-                        next_template = self._search_template(next_template)
+                    next_template_like = current_template.next_template_default
+                    next_template_or_none: Template | None = (
+                        self._search_template(next_template_like)
+                        if next_template_like is not None
+                        else None
+                    )
+                    if next_template_or_none is not None:
+                        next_template = self._search_template(next_template_or_none)
             if next_template is None:
                 logger.info("No jump is set. Flow is finished.")
                 break

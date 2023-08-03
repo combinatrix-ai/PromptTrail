@@ -23,7 +23,7 @@ black==23.7.0
 cachetools==5.3.1
 certifi==2023.5.7
 charset-normalizer==3.2.0
-click==8.1.4
+click==8.1.6
 decorator==5.1.1
 dill==0.3.7
 docutils==0.20.1
@@ -71,6 +71,7 @@ pyflakes==3.1.0
 pygments==2.15.1
 pylint==2.17.5
 pyproject-autoflake==1.0.2
+regex==2023.6.3
 requests==2.31.0
 rsa==4.9
 six==1.16.0
@@ -83,10 +84,12 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 stack-data==0.6.2
+tiktoken==0.4.0
 toml==0.10.2
 tomlkit==0.12.1
 tqdm==4.65.0
 traitlets==5.9.0
+types-cachetools==5.3.0.6
 typing-extensions==4.7.1
 urllib3==2.0.3
 wcwidth==0.2.6

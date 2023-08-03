@@ -46,7 +46,7 @@
 
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">prompttrail.flow.templates</span> <span class="kn">import</span> <span class="n">TemplateLike</span>
+    <span class="kn">from</span> <span class="nn">prompttrail.agent.template</span> <span class="kn">import</span> <span class="n">TemplateLike</span>
 
 
 <div class="viewcode-block" id="StatefulMessage"><a class="viewcode-back" href="../../../prompttrail.agent.html#prompttrail.agent.core.StatefulMessage">[docs]</a><span class="k">class</span> <span class="nc">StatefulMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
@@ -66,7 +66,11 @@
                 <span class="p">}</span>
             <span class="p">)</span>
             <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">)&quot;</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># TODO: How to hash this?</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="StatefulSession"><a class="viewcode-back" href="../../../prompttrail.agent.html#prompttrail.agent.core.StatefulSession">[docs]</a><span class="k">class</span> <span class="nc">StatefulSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
@@ -89,8 +93,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
-        <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Parameters</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
         <span class="n">session_history</span><span class="p">:</span> <span class="n">StatefulSession</span> <span class="o">=</span> <span class="n">StatefulSession</span><span class="p">(),</span>
         <span class="n">current_template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TemplateLike&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
