@@ -3,16 +3,17 @@ import sys
 from typing import List, Optional
 
 import click
+
 from prompttrail.agent.core import FlowState
+from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate
+from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.template import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
-    OpenAIMessageTemplate as MessageTemplate,
-    OpenAIGenerateTemplate as GenerateTemplate,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
-from prompttrail.agent.runner import CommandLineRunner
 
 templates = LinearTemplate(
     templates=[
@@ -117,12 +118,10 @@ def main(
     )
     flow_state = runner.run(flow_state=initial_state)
     last_message = flow_state.get_last_message()
-    print(
-        last_message.content.content
-    )  # TODO: maybe bug? (last_message is not message?)
+    print(last_message.content)  # TODO: maybe bug? (last_message is not message?)
     if len(sys.argv) > 2:
         save_file_io = open(save_file, "w")
-        save_file_io.write(last_message.content.content)
+        save_file_io.write(last_message.content)
         save_file_io.close()
 
 
