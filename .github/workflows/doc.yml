@@ -7,6 +7,8 @@ jobs:
   doc:
     name: Build docs with Sphinx and force push to gh-pages branch
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       matrix:
         python-version: ["3.11"]
