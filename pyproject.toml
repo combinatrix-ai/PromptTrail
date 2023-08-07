@@ -48,12 +48,11 @@ lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src tests examples"
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src tests examples"
 test = "pytest --cov=src --cov-report=xml tests"
-doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:build", "doc:touch"] }
+doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:build"] }
 "doc:clean_build" = "find docs -depth 1 ! -path docs/sphinx -exec rm  -rf {} +"
 "doc:clean_autodoc" = "find docs/sphinx -name '*.rst' ! -name 'index.rst' -exec rm  -f {} +"
 "doc:apidoc" = "sphinx-apidoc --implicit-namespaces -F -o docs/sphinx src/prompttrail"
 "doc:build" = "sphinx-build -b html docs/sphinx docs/"
-"doc:touch" = "touch docs/.nojekyll"
 pyreverse = "pyreverse src.prompttrail -o png"
 
 [tool.hatch.metadata]
