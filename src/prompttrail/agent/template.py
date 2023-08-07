@@ -472,7 +472,7 @@ class UserInputTextTemplate(MessageTemplate):
 
         # TODO: user_interaction_provider can return non text for multimodal model
         rendered_content = flow_state.runner.user_interaction_provider.ask(
-            self.description, self.default
+            flow_state, self.description, self.default
         )
         message = StatefulTextMessage(
             # TODO: This should be a StatefulMessage
