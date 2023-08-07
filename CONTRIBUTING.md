@@ -31,7 +31,7 @@ Welcome to the PromptTrail project! We're so glad you're thinking about contribu
 - Please build documentation if you change the public interface. (sphinx)
   - `rye run doc`
 
-Note: You can run all of these commands at once by `rye run all`.
+Note: You can run all of these commands at once by `rye run all`. GitHub Actions will run these commands automatically in check mode when you make a PR. If any of these checks fail, please run these commands locally and fix the errors.
 
 ## License
 
