@@ -7,29 +7,23 @@
 import logging
 import os
 
+from prompttrail.agent.hook import (
+    AskUserHook,
+    BooleanHook,
+    EvaluatePythonCodeHook,
+    ExtractMarkdownCodeBlockHook,
+    GenerateChatHook,
+    IfJumpHook,
+)
+from prompttrail.agent.runner import CommandLineRunner
+from prompttrail.agent.template import LinearTemplate, LoopTemplate, MessageTemplate
+from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.template import UserInputTextTemplate, is_same_template
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
-
-from prompttrail.agent.template import (
-    LinearTemplate,
-    MessageTemplate,
-    LoopTemplate,
-    UserInputTextTemplate,
-    OpenAIGenerateTemplate as GenerateTemplate,
-    is_same_template,
-)
-from prompttrail.agent.hook import (
-    AskUserHook,
-    GenerateChatHook,
-    EvaluatePythonCodeHook,
-    IfJumpHook,
-    BooleanHook,
-    ExtractMarkdownCodeBlockHook,
-)
-from prompttrail.agent.runner import CommandLineRunner
 
 logging.basicConfig(level=logging.DEBUG)
 

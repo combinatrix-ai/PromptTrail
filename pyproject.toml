@@ -43,10 +43,10 @@ all = { chain = ["format", "lint", "test", "doc"] }
 format = { chain = ["format:black", "format:autoflake", "format:isort"] }
 "format:black" = "black src tests examples"
 "format:autoflake" = "pautoflake src tests examples"
-"format:isort" = "isort src tests"
+"format:isort" = "isort src tests examples"
 lint = { chain = ["lint:flake8", "lint:mypy"] }
-"lint:mypy" = "mypy src"
-"lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src"
+"lint:mypy" = "mypy src tests examples"
+"lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src tests examples"
 test = "pytest --cov=src --cov-report=xml tests"
 doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:build", "doc:touch"] }
 "doc:clean_build" = "find docs -depth 1 ! -path docs/sphinx -exec rm  -rf {} +"

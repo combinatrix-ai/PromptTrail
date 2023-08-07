@@ -37,7 +37,7 @@ class Runner(object):
         self.flow_state = flow_state
 
     @abstractmethod
-    def _run(
+    def run(
         self,
         start_template: Optional[TemplateLike] = None,
         flow_state: Optional[FlowState] = None,

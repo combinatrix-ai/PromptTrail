@@ -74,13 +74,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">templates</span> <span class="o">=</span> <span class="n">templates</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flow_state</span> <span class="o">=</span> <span class="n">flow_state</span>
 
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span>
+<div class="viewcode-block" id="Runner.run"><a class="viewcode-back" href="../../../prompttrail.agent.html#prompttrail.agent.runner.Runner.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">start_template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">flow_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FlowState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlowState</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;run method is not implemented&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;run method is not implemented&quot;</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="CommandLineRunner"><a class="viewcode-back" href="../../../prompttrail.agent.html#prompttrail.agent.runner.CommandLineRunner">[docs]</a><span class="k">class</span> <span class="nc">CommandLineRunner</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>

@@ -1,11 +1,7 @@
 import os
+
+from prompttrail.core import Message, Session
 from prompttrail.mock import OneTurnConversationMockProvider
-
-from prompttrail.core import (
-    Session,
-    Message,
-)
-
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,
