@@ -24,6 +24,9 @@ jobs:
           pip install -r requirements-dev.lock
       - name: Run Tests
         run: pytest --cov=src --cov-report=xml tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         env:
