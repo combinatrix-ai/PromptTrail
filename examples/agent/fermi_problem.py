@@ -6,28 +6,25 @@
 
 import logging
 import os
+import sys
 
 from prompttrail.agent.hook import (
-    AskUserHook,
     BooleanHook,
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
-    GenerateChatHook,
     IfJumpHook,
 )
-from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate, LoopTemplate, MessageTemplate
 from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
 from prompttrail.agent.template import UserInputTextTemplate, is_same_template
-from prompttrail.provider.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
+from prompttrail.agent.user_interaction import (
+    OneTurnConversationUserInteractionTextMockProvider,
 )
+from prompttrail.mock import OneTurnConversationMockProvider
 
 logging.basicConfig(level=logging.DEBUG)
 
-flow_template = LinearTemplate(
+agent_template = LinearTemplate(
     [
         MessageTemplate(
             # First, let's give an instruction to the API
@@ -56,8 +53,7 @@ Equation to be calculated:
 Calculation:
 ```python
 5300000 * 0.49 * 2.1
-```
-""",
+```""",
         ),
         LoopTemplate(
             [
@@ -113,20 +109,13 @@ Calculation:
                     # Let's ask user for question!
                     template_id="gather_feedback",
                     role="assistant",
-                    content="The answer is {{ answer }}. Satisfied?",
+                    content="The answer is {{ answer }} . Satisfied?",
                 ),
-                MessageTemplate(
+                UserInputTextTemplate(
                     # Here is where we ask user for their feedback
-                    # You can call AskUserHook in previous template, but we may want to keep the message separated for clarity
                     role="user",
-                    before_transform=[
-                        AskUserHook(
-                            key="feedback", description="Input:", default="Let's retry."
-                        )
-                    ],
-                    content="""
-                    {{ feedback }}
-                    """,
+                    description="Input:",
+                    default="Yes, I'm satisfied.",
                 ),
                 MessageTemplate(
                     # Based on the feedback, we can decide to retry or end the conversation
@@ -134,13 +123,13 @@ Calculation:
                     role="assistant",
                     content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
                 ),
-                check_end := MessageTemplate(
+                check_end := GenerateTemplate(
                     role="assistant",
                     # API will return END or RETRY (mostly!)
-                    # Then, we can decide to end the conversation or retry, see exit_condition below
-                    before_transform=[GenerateChatHook(key="generated_text")],
-                    content="{{ generated_text }}",
                 ),
+                # Then, we can decide to end the conversation or retry.
+                # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
+                # Check if the loop is finished, see exit_condition below.
             ],
             exit_condition=BooleanHook(
                 condition=lambda flow_state:
@@ -154,14 +143,73 @@ Calculation:
     ],
 )
 
-# This runner runs model in cli.
-# We will provide other runner, which will enable you to input/output via HTTP, etc...
-runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(api_key=os.environ["OPENAI_API_KEY"])
-    ),
-    parameters=OpenAIModelParameters(model_name="gpt-4"),
-    templates=[flow_template],
+# Then, let's run this agent!
+# You can run templates using runner.
+# This runner runs models in cli.
+from prompttrail.agent.runner import CommandLineRunner  # noqa: E402
+
+# Import some classes to interact with OpenAI API
+# You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
+from prompttrail.provider.openai import (  # noqa: E402
+    OpenAIChatCompletionModel,
+    OpenAIChatCompletionModelMock,
+    OpenAIModelConfiguration,
+    OpenAIModelParameters,
 )
 
-runner.run()
+# We will provide other runner, which will enable you to input/output via HTTP, etc... in the future.
+
+
+# It's a little bit off-topic, but we can run the agent in automatically for testing!
+# See the last part of this file for more details.
+if "CI" not in os.environ and "DEBUG" not in os.environ:
+    # For now, just run the agent with the runner like below!
+    runner = CommandLineRunner(
+        model=OpenAIChatCompletionModel(
+            configuration=OpenAIModelConfiguration(
+                api_key=os.environ.get("OPENAI_API_KEY", "")
+            )
+        ),
+        parameters=OpenAIModelParameters(model_name="gpt-4"),
+        templates=[agent_template],
+    )
+    conversation = runner.run()
+    # You can keep the conversation data for later use!
+    print(conversation)
+    sys.exit(0)
+
+# Here, we will run the agent in automatically for testing!
+# If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
+runner = CommandLineRunner(
+    # Use mock model in CI or DEBUG
+    model=OpenAIChatCompletionModelMock(
+        configuration=OpenAIModelConfiguration(
+            # Of course, same arguments as OpenAIChatCompletionModel can be used
+            api_key=os.environ.get("OPENAI_API_KEY", ""),
+        ),
+        # You can define the behaviour of the mock model using mock_provider
+        mock_provider=OneTurnConversationMockProvider(
+            conversation_table={
+                "How many cats in Japan?": """Thoughts: ...
+Calculation:
+```python
+5300000 * 0.49 * 2.1
+```
+""",
+                "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": "END",
+            },
+            sender="assistant",
+        ),
+    ),
+    user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
+        conversation_table={
+            # 5300000 * 0.49 * 2.1 = 5453700.0
+            agent_template.templates[0].content: "How many cats in Japan?",  # type: ignore
+            "The answer is 5453700.0 . Satisfied?": "OK",
+        }
+    ),
+    parameters=OpenAIModelParameters(model_name="gpt-4"),
+    templates=[agent_template],
+)
+conversation = runner.run()
+print(conversation)

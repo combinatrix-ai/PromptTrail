@@ -1,9 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
 from pydantic import BaseModel
 
 from prompttrail.core import Message, Session, TextMessage
+
+logger = logging.getLogger(__name__)
 
 
 class MockProvider(ABC):
@@ -36,9 +39,11 @@ class OneTurnConversationMockProvider(MockProvider):
         self.sender = sender
 
     def call(self, session: Session) -> Message:
-        if len(session.messages) == 0:
+        valid_messages = [x for x in session.messages if x.sender != "prompttrail"]
+        if len(valid_messages) == 0:
+            logger.warning("No message is passed to OneTurnConversationMockProvider.")
             return TextMessage(content="Hello", sender=self.sender)
-        last_message = session.messages[-1]
+        last_message = valid_messages[-1]
         if last_message.content in self.conversation_table:
             return TextMessage(
                 content=self.conversation_table[last_message.content],
