@@ -1,15 +1,8 @@
 import logging
-from typing import Dict, Generator, List, Literal, Optional, Sequence, Tuple
+from typing import Dict, Generator, List, Literal, Optional, Tuple
 
 import openai
 
-from prompttrail.agent.hook.core import JumpHook, TransformHook
-from prompttrail.agent.template.core import (
-    GenerateTemplate,
-    MessageTemplate,
-    TemplateId,
-    TemplateLike,
-)
 from prompttrail.core import (
     Configuration,
     Message,
@@ -93,7 +86,11 @@ class OpenAIChatCompletionModel(Model):
             yield TextMessage(content=all_text, sender=None)  # type: ignore
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if any([not isinstance(message.content, str) for message in session.messages]):
+        if len(session.messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
+            )
+        if any([not isinstance(message.content, str) for message in session.messages]):  # type: ignore
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
@@ -145,49 +142,3 @@ class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
 
 
 OpenAIrole = Literal["system", "assistant", "user"]
-
-
-class OpenAIMessageTemplate(MessageTemplate):
-    def __init__(
-        self,
-        content: str,
-        role: OpenAIrole,
-        template_id: Optional[TemplateId] = None,
-        next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
-    ):
-        super().__init__(
-            content=content,
-            template_id=template_id,
-            role=role,
-            next_template_default=next_template_default,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-
-
-class OpenAIGenerateTemplate(GenerateTemplate):
-    def __init__(
-        self,
-        role: OpenAIrole,
-        template_id: Optional[TemplateId] = None,
-        next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            role=role,
-            next_template_default=next_template_default,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )

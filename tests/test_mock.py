@@ -1,6 +1,6 @@
 import unittest
 
-from prompttrail.core import Session, TextMessage
+from prompttrail.core import TextMessage, TextSession
 from prompttrail.mock import OneTurnConversationMockProvider
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModelMock,
@@ -21,12 +21,14 @@ class TestOneTurnConversationMockProvider(unittest.TestCase):
         )
 
     def test_call_with_known_message(self):
-        session = Session(messages=[TextMessage(content="Hello", sender=self.sender)])
+        session = TextSession(
+            messages=[TextMessage(content="Hello", sender=self.sender)]
+        )
         response = self.mock_provider.call(session)
         self.assertEqual(response.content, "Hi")
 
     def test_call_with_unknown_message(self):
-        session = Session(
+        session = TextSession(
             messages=[TextMessage(content="Unknown message", sender=self.sender)]
         )
         with self.assertRaises(ValueError):
@@ -55,13 +57,15 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
         )
 
     def test_send_with_known_message(self):
-        session = Session(messages=[TextMessage(content="Hello", sender=self.sender)])
+        session = TextSession(
+            messages=[TextMessage(content="Hello", sender=self.sender)]
+        )
         response = self.model.send(parameters=self.parameters, session=session)
         self.assertEqual(response.content, "Hi")
         self.assertEqual(response.sender, self.sender)
 
     def test_send_with_unknown_message(self):
-        session = Session(
+        session = TextSession(
             messages=[TextMessage(content="Unknown message", sender=self.sender)]
         )
         with self.assertRaises(ValueError):

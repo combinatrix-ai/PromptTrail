@@ -37,17 +37,10 @@
             
   <h1>Source code for prompttrail.provider.openai</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">openai</span>
 
-<span class="kn">from</span> <span class="nn">prompttrail.agent.hook.core</span> <span class="kn">import</span> <span class="n">JumpHook</span><span class="p">,</span> <span class="n">TransformHook</span>
-<span class="kn">from</span> <span class="nn">prompttrail.agent.template.core</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">GenerateTemplate</span><span class="p">,</span>
-    <span class="n">MessageTemplate</span><span class="p">,</span>
-    <span class="n">TemplateId</span><span class="p">,</span>
-    <span class="n">TemplateLike</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">prompttrail.core</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Configuration</span><span class="p">,</span>
     <span class="n">Message</span><span class="p">,</span>
@@ -131,7 +124,11 @@
             <span class="k">yield</span> <span class="n">TextMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">all_text</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
 <div class="viewcode-block" id="OpenAIChatCompletionModel.validate_session"><a class="viewcode-back" href="../../../prompttrail.provider.html#prompttrail.provider.openai.OpenAIChatCompletionModel.validate_session">[docs]</a>    <span class="k">def</span> <span class="nf">validate_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">is_async</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: Session should be a Session object and have at least one message.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">messages</span><span class="p">]):</span>  <span class="c1"># type: ignore</span>
             <span class="k">raise</span> <span class="n">ParameterValidationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: All message in a session should be string.&quot;</span>
             <span class="p">)</span>
@@ -183,52 +180,6 @@
 
 
 <span class="n">OpenAIrole</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">]</span>
-
-
-<div class="viewcode-block" id="OpenAIMessageTemplate"><a class="viewcode-back" href="../../../prompttrail.provider.html#prompttrail.provider.openai.OpenAIMessageTemplate">[docs]</a><span class="k">class</span> <span class="nc">OpenAIMessageTemplate</span><span class="p">(</span><span class="n">MessageTemplate</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">role</span><span class="p">:</span> <span class="n">OpenAIrole</span><span class="p">,</span>
-        <span class="n">template_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">next_template_default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">before_transform</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TransformHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">after_transform</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TransformHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">before_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">after_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span>
-            <span class="n">template_id</span><span class="o">=</span><span class="n">template_id</span><span class="p">,</span>
-            <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
-            <span class="n">next_template_default</span><span class="o">=</span><span class="n">next_template_default</span><span class="p">,</span>
-            <span class="n">before_transform</span><span class="o">=</span><span class="n">before_transform</span><span class="p">,</span>
-            <span class="n">after_transform</span><span class="o">=</span><span class="n">after_transform</span><span class="p">,</span>
-            <span class="n">before_control</span><span class="o">=</span><span class="n">before_control</span><span class="p">,</span>
-            <span class="n">after_control</span><span class="o">=</span><span class="n">after_control</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="OpenAIGenerateTemplate"><a class="viewcode-back" href="../../../prompttrail.provider.html#prompttrail.provider.openai.OpenAIGenerateTemplate">[docs]</a><span class="k">class</span> <span class="nc">OpenAIGenerateTemplate</span><span class="p">(</span><span class="n">GenerateTemplate</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">role</span><span class="p">:</span> <span class="n">OpenAIrole</span><span class="p">,</span>
-        <span class="n">template_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateId</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">next_template_default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TemplateLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">before_transform</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TransformHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">after_transform</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TransformHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">before_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-        <span class="n">after_control</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JumpHook</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">template_id</span><span class="o">=</span><span class="n">template_id</span><span class="p">,</span>
-            <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">,</span>
-            <span class="n">next_template_default</span><span class="o">=</span><span class="n">next_template_default</span><span class="p">,</span>
-            <span class="n">before_transform</span><span class="o">=</span><span class="n">before_transform</span><span class="p">,</span>
-            <span class="n">after_transform</span><span class="o">=</span><span class="n">after_transform</span><span class="p">,</span>
-            <span class="n">before_control</span><span class="o">=</span><span class="n">before_control</span><span class="p">,</span>
-            <span class="n">after_control</span><span class="o">=</span><span class="n">after_control</span><span class="p">,</span>
-        <span class="p">)</span></div>
 </pre></div>
 
             <div class="clearer"></div>

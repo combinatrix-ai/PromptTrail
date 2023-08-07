@@ -24,6 +24,7 @@ cachetools==5.3.1
 certifi==2023.5.7
 charset-normalizer==3.2.0
 click==8.1.6
+coverage==7.2.7
 decorator==5.1.1
 dill==0.3.7
 docutils==0.20.1
@@ -39,6 +40,7 @@ grpcio==1.56.0
 grpcio-status==1.56.0
 idna==3.4
 imagesize==1.4.1
+iniconfig==2.0.0
 ipython==8.14.0
 isort==5.12.0
 jedi==0.18.2
@@ -57,6 +59,7 @@ pathspec==0.11.1
 pexpect==4.8.0
 pickleshare==0.7.5
 platformdirs==3.8.1
+pluggy==1.2.0
 prompt-toolkit==3.0.39
 proto-plus==1.22.3
 protobuf==4.23.4
@@ -71,6 +74,8 @@ pyflakes==3.1.0
 pygments==2.15.1
 pylint==2.17.5
 pyproject-autoflake==1.0.2
+pytest==7.4.0
+pytest-cov==4.1.0
 regex==2023.6.3
 requests==2.31.0
 rsa==4.9

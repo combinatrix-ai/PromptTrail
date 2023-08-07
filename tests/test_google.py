@@ -3,26 +3,26 @@ import unittest
 
 from prompttrail.core import TextMessage, TextSession
 from prompttrail.error import ParameterValidationError
-from prompttrail.provider.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
+from prompttrail.provider.google_cloud import (
+    GoogleCloudChatModel,
+    GoogleCloudChatParameters,
+    GoogleCloudConfiguration,
 )
 
 
-# TODO: Add error handling test
-class TestOpenAI(unittest.TestCase):
+class TestGoogleCloud(unittest.TestCase):
     def setUp(self):
-        self.api_key = os.environ["OPENAI_API_KEY"]
-        self.organization_id = os.environ.get("OPENAI_ORGANIZATION_ID", None)
-        self.use_model = "gpt-3.5-turbo"
-        self.config = OpenAIModelConfiguration(
-            api_key=self.api_key, organization_id=self.organization_id
+        self.api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
+        self.configuration = GoogleCloudConfiguration(
+            api_key=self.api_key,
         )
-        self.parameters = OpenAIModelParameters(
-            model_name=self.use_model, max_tokens=100, temperature=0
+        self.use_model = "models/chat-bison-001"
+        self.parameters = GoogleCloudChatParameters(
+            model_name=self.use_model,
+            max_output_tokens=100,
+            temperature=0,
         )
-        self.model = OpenAIChatCompletionModel(configuration=self.config)
+        self.model = GoogleCloudChatModel(configuration=self.configuration)
 
     def test_model_list(self):
         model_list = self.model.list_models()
@@ -56,14 +56,9 @@ class TestOpenAI(unittest.TestCase):
 
         # malformed session
         with self.assertRaises(ParameterValidationError):
-            self.model.send(
+            response = self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="", sender="User")]),
-            )
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(
-                self.parameters,
-                TextSession(messages=[TextMessage(content="Hello", sender="User")]),
+                TextSession(messages=[TextMessage(content="", sender="user")]),
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
@@ -72,6 +67,12 @@ class TestOpenAI(unittest.TestCase):
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, TextSession(messages=[]))
+
+        # On Google Cloud, sender can be anything
+        response = self.model.send(
+            self.parameters,
+            TextSession(messages=[TextMessage(content="Hello", sender="")]),
+        )
 
 
 if __name__ == "__main__":

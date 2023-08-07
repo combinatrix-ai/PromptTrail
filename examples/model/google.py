@@ -11,7 +11,7 @@ from prompttrail.provider.google_cloud import (
     GoogleCloudChatParameters,
 )
 
-api_key = os.environ.get("GOOGLE_API_KEY", "")
+api_key = os.environ.get("GOOGLE_CLOUD_API_KEY", "")
 
 session = Session(
     messages=[

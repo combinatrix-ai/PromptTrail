@@ -33,9 +33,13 @@ dev-dependencies = [
     "sphinx>=7.1.1",
     "pylint>=2.17.5",
     "flake8>=6.1.0",
+    "coverage>=7.2.7",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
 ]
 
 [tool.rye.scripts]
+all = { chain = ["format", "lint", "test", "doc"] }
 format = { chain = ["format:black", "format:autoflake", "format:isort"] }
 "format:black" = "black src tests examples"
 "format:autoflake" = "pautoflake src tests examples"
@@ -43,15 +47,14 @@ format = { chain = ["format:black", "format:autoflake", "format:isort"] }
 lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src"
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src"
-test = "python -m unittest discover -s tests"
+test = "pytest --cov=src --cov-report=xml tests"
 doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:build", "doc:touch"] }
 "doc:clean_build" = "find docs -depth 1 ! -path docs/sphinx -exec rm  -rf {} +"
 "doc:clean_autodoc" = "find docs/sphinx -name '*.rst' ! -name 'index.rst' -exec rm  -f {} +"
 "doc:apidoc" = "sphinx-apidoc --implicit-namespaces -F -o docs/sphinx src/prompttrail"
 "doc:build" = "sphinx-build -b html docs/sphinx docs/"
 "doc:touch" = "touch docs/.nojekyll"
-"pyreverse" = "pyreverse src.prompttrail -o png"
-"all" = { chain = ["format",  "lint", "test", "doc"] }
+pyreverse = "pyreverse src.prompttrail -o png"
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -2,8 +2,13 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional, Sequence
 
-from prompttrail.agent import FlowState, StatefulSession
+from prompttrail.agent import FlowState
+from prompttrail.agent.core import StatefulTextSession
 from prompttrail.agent.template import Template, TemplateId, TemplateLike
+from prompttrail.agent.user_interaction import (
+    UserInteractionProvider,
+    UserInteractionTextCLIProvider,
+)
 from prompttrail.core import Model, Parameters
 from prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 
@@ -17,6 +22,20 @@ def get_id(template_like: TemplateLike) -> TemplateId:
 
 
 class Runner(object):
+    def __init__(
+        self,
+        model: Model,
+        parameters: Parameters,
+        templates: Sequence["Template"],
+        user_interaction_provider: Optional[UserInteractionProvider] = None,
+        flow_state: Optional[FlowState] = None,
+    ):
+        self.model = model
+        self.parameters = parameters
+        self.user_interaction_provider = user_interaction_provider
+        self.templates = templates
+        self.flow_state = flow_state
+
     @abstractmethod
     def _run(
         self,
@@ -32,11 +51,15 @@ class CommandLineRunner(Runner):
         model: Model,
         parameters: Parameters,
         templates: Sequence["Template"],
+        user_interaction_provider: Optional[UserInteractionProvider] = None,
         flow_state: Optional[FlowState] = None,
     ):
-        # In future it must handle models, manage task runner, and control simultaneous flow. So template itself cannot be sufficient.
         self.model = model
         self.parameters = parameters
+        if user_interaction_provider is None:
+            self.user_interaction_provider = UserInteractionTextCLIProvider()
+        else:
+            self.user_interaction_provider = user_interaction_provider
         self.templates = templates
         self.flow_state = flow_state
         self.template_dict: Dict[TemplateId, Template] = {}
@@ -56,10 +79,12 @@ class CommandLineRunner(Runner):
     ) -> FlowState:
         if flow_state is None:
             flow_state = FlowState(
+                runner=self,
                 model=self.model,
                 parameters=self.parameters,
                 data={},
-                session_history=StatefulSession(),
+                session_history=StatefulTextSession(),
+                # TODO: This should be StatefulSession
                 jump=None,
             )
         else:
@@ -75,6 +100,12 @@ class CommandLineRunner(Runner):
                     f"Given flow state has different parameters {flow_state.parameters} from the runner {self.parameters}. Overriding the flow state.",
                 )
                 flow_state.parameters = self.parameters
+            if flow_state.runner is None or flow_state.runner != self:
+                logger.log(
+                    logging.INFO,
+                    f"Given flow state has different runner {flow_state.runner} from the runner {self}. Overriding the flow state.",
+                )
+                flow_state.runner = self
         if start_template is not None:
             if isinstance(start_template, str):
                 start_template = self._search_template(start_template)

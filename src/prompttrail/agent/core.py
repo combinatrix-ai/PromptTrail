@@ -1,13 +1,14 @@
 import logging
 from pprint import pformat
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 
-from prompttrail.core import Message, Model, Parameters, Session
+from prompttrail.core import Message, Model, Parameters, Session, TextMessage
 
 logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
+    from prompttrail.agent.runner import Runner
     from prompttrail.agent.template import TemplateLike
 
 
@@ -35,12 +36,33 @@ class StatefulMessage(Message):
         return hash(str(self))
 
 
+class StatefulTextMessage(StatefulMessage, TextMessage):
+    def __str__(self) -> str:
+        # construct json
+        return (
+            "StatefulTextMessage(\n"
+            + pformat(
+                {
+                    "content": self.content,
+                    "data": self.data,
+                    "template_id": self.template_id,
+                    "sender": self.sender,
+                }
+            )
+            + ",\n)"
+        )
+
+
 class StatefulSession(Session):
     data: Dict[str, Any] = {}
-    messages: List[StatefulMessage] = []
+    messages: Sequence[StatefulMessage] = []
 
 
-class ControlMessage(StatefulMessage):
+class StatefulTextSession(StatefulSession):
+    messages: Sequence[StatefulTextMessage] = []
+
+
+class ControlMessage(StatefulTextMessage):
     content: Any = None
 
     # ControlMessage is not expected to edit by human, so kill the edit method.
@@ -55,21 +77,25 @@ class FlowState(object):
 
     def __init__(
         self,
+        runner: Optional["Runner"] = None,
         model: Optional[Model] = None,
         parameters: Optional[Parameters] = None,
         data: Dict[str, Any] = {},
-        session_history: StatefulSession = StatefulSession(),
+        session_history: StatefulTextSession = StatefulTextSession(),
+        # TODO: This should be StatefulSession
         current_template: Optional["TemplateLike"] = None,
         jump: Optional["TemplateLike"] = None,
     ):
-        self.data = data
+        self.runner = runner
         self.model = model
         self.parameters = parameters
+        self.data = data
         self.session_history = session_history
         self.current_template = current_template
         self.jump = jump
 
-    def get_last_message(self) -> StatefulMessage:
+    def get_last_message(self) -> StatefulTextMessage:
+        # TODO: This should be StatefulMessage
         if len(self.session_history.messages) == 0:
             raise IndexError("Session has no message.")
         return self.session_history.messages[-1]

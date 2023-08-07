@@ -17,6 +17,8 @@ from prompttrail.agent.template import (
     LinearTemplate,
     MessageTemplate,
     LoopTemplate,
+    UserInputTextTemplate,
+    OpenAIGenerateTemplate as GenerateTemplate,
     is_same_template,
 )
 from prompttrail.agent.hook import (
@@ -67,33 +69,23 @@ Calculation:
             [
                 # Then, we can start the conversation with user
                 # First, we ask user for their question
-                first := MessageTemplate(
+                # UserInputTextTemplate is a template that ask user for their input.
+                # As we see later, we use CLIRunner to run this model in CLI, so the input is given via console.
+                first := UserInputTextTemplate(
                     # Note: we can name the template using walrus operator (though not recommended), this is used later.
                     role="user",
-                    before_transform=[
-                        # You can modify the content of the message using TransformHook
-                        # In this case, this hook ask user to input new question
-                        # This input is passed to key: "prompt", which can be accessed in the template using {{ prompt }}
-                        # Also, you can access "prompt" in Hook using flow_state.data["prompt"]
-                        # TODO: Of course, you dont have to use hook in future, we will provide AskUserTemplate to do this
-                        AskUserHook(
-                            key="prompt",
-                            description="Input:",
-                            default="How many elephants in Japan?",
-                        )
-                    ],
-                    content="{{ prompt }}",
+                    description="Input:",
+                    default="How many elephants in Japan?",
                 ),
-                MessageTemplate(
+                GenerateTemplate(
                     role="assistant",
                     # Now we have the user's question, we can ask the API to generate the answer
-                    # GenerateChatHook is a hook that generate text using model, with passing the previous messages to the model
-                    # TODO: We will provide TextGenerationTemplate to do this in the future
-                    before_transform=[GenerateChatHook(key="generated_text")],
-                    content="{{ generated_text }}",
+                    # Let's use GenerateTemplate to do this
+                    # GenerateTemplate make the content of the message using the model.
+                    # Previous message is used as context, so the model can generate the answer based on the question.
                     after_transform=[
                         # This is where things get interesting!
-                        # You can extract code block from markdown using ExtractMarkdownCodeBlockHook
+                        # You can extract code block from markdown using ExtractMarkdownCodeBlockHook from generated content
                         # As we give an example, the API may include something like this in their response, which is stored in this message
                         #  ```python
                         #     5300000 * 0.49 * 2.1

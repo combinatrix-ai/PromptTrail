@@ -102,7 +102,7 @@ If you want to mock LLM, you can use various mock models:
 > message = model.send(parameters=parameters, session=session)
 > print(message)
 
-> TextMessage(content="1215973652716", sender="assistant")
+TextMessage(content="1215973652716", sender="assistant")
 ```
 ## Agent
 

@@ -45,7 +45,13 @@ class GoogleCloudChatParameters(Parameters):
 class GoogleCloudChatModel(Model):
     configuration: GoogleCloudConfiguration
 
+    def _authenticate(self) -> None:
+        palm.configure(  # type: ignore
+            api_key=self.configuration.api_key,
+        )
+
     def _send(self, parameters: Parameters, session: Session) -> Message:
+        self._authenticate()
         if not isinstance(parameters, GoogleCloudChatParameters):
             raise ParameterValidationError(
                 f"{GoogleCloudChatParameters.__name__} is expected, but {type(parameters).__name__} is given."
@@ -76,24 +82,25 @@ class GoogleCloudChatModel(Model):
         return TextMessage(content=message["content"], sender=message["author"])  # type: ignore #TODO: More robust error handling
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if any([not isinstance(message.content, str) for message in session.messages]):
+        if len(session.messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
+            )
+        if any([not isinstance(message.content, str) for message in session.messages]):  # type: ignore
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
+            )
+        # TODO: OpenAI allow empty string, but Google Cloud does not. In principle, we should not allow empty string. Should we impose this restriction on OpenAI as well?
+        if any([message.content == "" for message in session.messages]):  # type: ignore
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: All message in a session should not be empty string."
             )
         if any([message.sender is None for message in session.messages]):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should have sender."
             )
-        if any(
-            [
-                message.sender not in ["system", "assistant", "user"]
-                for message in session.messages
-            ]
-        ):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Sender should be one of 'system', 'assistant', 'user' for all message in a session."
-            )
 
     def list_models(self) -> List[str]:
+        self._authenticate()
         response: List[palm.Model] = palm.list_models()  # type: ignore
         return [model.name for model in response]  # type: ignore
