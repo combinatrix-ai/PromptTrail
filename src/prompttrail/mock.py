@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from prompttrail.core import Message, Session, TextMessage
 
@@ -20,8 +20,8 @@ class MockProvider(ABC):
 class MockModel(ABC, BaseModel):
     mock_provider: Optional[MockProvider] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    # pydantic
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     """ A mock model is an abstract classs that should be inherited by any mock model to ensure implementation of `setup` method, which is used to inject the mock provider. """
 
