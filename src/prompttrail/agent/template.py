@@ -1,3 +1,4 @@
+import json
 import logging
 from abc import abstractmethod
 from pprint import pformat
@@ -9,7 +10,9 @@ import jinja2
 from prompttrail.agent import FlowState
 from prompttrail.agent.core import StatefulTextMessage
 from prompttrail.agent.hook import BooleanHook, IfJumpHook, JumpHook, TransformHook
-from prompttrail.provider.openai import OpenAIrole
+from prompttrail.agent.tool import Tool, check_arguments
+from prompttrail.core import TextMessage
+from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
 
 logger = logging.getLogger(__name__)
 
@@ -538,3 +541,109 @@ class OpenAIGenerateTemplate(GenerateTemplate):
             before_control=before_control,
             after_control=after_control,
         )
+
+
+class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
+    def __init__(
+        self,
+        role: OpenAIrole,
+        functions: Sequence[Tool],
+        template_id: Optional[TemplateId] = None,
+        next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence["TransformHook"] = [],
+        after_transform: Sequence["TransformHook"] = [],
+        before_control: Sequence["JumpHook"] = [],
+        after_control: Sequence["JumpHook"] = [],
+    ):
+        super().__init__(
+            template_id=template_id,
+            role=role,
+            next_template_default=next_template_default,
+            before_transform=before_transform,
+            after_transform=after_transform,
+            before_control=before_control,
+            after_control=after_control,
+        )
+        self.functions = {func.name: func for func in functions}
+
+    def _render(self, flow_state: "FlowState") -> "FlowState":
+        # before_transform
+        for before_transform_hook in self.before_transform:
+            flow_state = before_transform_hook.hook(flow_state)
+        # before_jump
+        for before_jump_hook in self.before_control:
+            next_template_id = before_jump_hook.hook(flow_state)
+            if next_template_id is not None:
+                flow_state.jump = next_template_id
+                return flow_state
+        # render
+        if flow_state.model is None:
+            raise ValueError(
+                "Model must be given to use GenerateTemplate. Please set model to the runner."
+            )
+        if flow_state.parameters is None:
+            raise ValueError(
+                "Parameters must be given to use GenerateTemplate. Please set parameters to the runner."
+            )
+        if not isinstance(flow_state.model, OpenAIChatCompletionModel):
+            raise ValueError(
+                "Function calling can only be used with OpenAIChatCompletionModel."
+            )
+        # TODO: Temporaly rewrite parameters for function calling. Is this good?
+        old_state_parameters = flow_state.parameters.model_copy()
+        flow_state.parameters.functions = self.functions
+
+        # 1st message
+        rendered_message = flow_state.model.send(
+            flow_state.parameters, flow_state.session_history
+        )
+        flow_state.parameters = old_state_parameters
+        message = StatefulTextMessage(
+            # TODO: This should be a StatefulMessage
+            content=rendered_message.content,
+            sender=self.role,
+            template_id=self.template_id,
+            data=rendered_message.data,
+        )
+        flow_state.session_history.messages.append(message)  # type: ignore
+
+        # 2nd message
+        if rendered_message.data.get("function_call"):
+            if rendered_message.data["function_call"]["name"] not in self.functions:
+                raise ValueError(
+                    f"Function {rendered_message.data['function_call']['name']} is not defined in the template."
+                )
+            function = self.functions[rendered_message.data["function_call"]["name"]]
+            arguments = check_arguments(
+                rendered_message.data["function_call"]["arguments"],
+                function.argument_types,
+            )
+            result = function.call(arguments, flow_state)  # type: ignore
+            # Send result
+            function_message = TextMessage(
+                sender="function",
+                data={"function_call": {"name": function.name}},
+                content=json.dumps(result.show()),
+            )
+            flow_state.session_history.messages.append(function_message)  # type: ignore
+            second_response = flow_state.model.send(
+                flow_state.parameters, flow_state.session_history
+            )
+            message = StatefulTextMessage(
+                # TODO: This should be a StatefulMessage
+                content=second_response.content,
+                sender=second_response.sender,
+                template_id=self.template_id,
+            )
+            flow_state.session_history.messages.append(message)  # type: ignore
+
+        # after_transform
+        for after_transform_hook in self.after_transform:
+            flow_state = after_transform_hook.hook(flow_state=flow_state)
+        # after_jump
+        for after_jump_hook in self.after_control:
+            next_template_id = after_jump_hook.hook(flow_state)
+            if next_template_id is not None:
+                flow_state.jump = next_template_id
+                return flow_state
+        return flow_state

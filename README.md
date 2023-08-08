@@ -4,7 +4,7 @@ PromptTrail is a lightweight library to interact with LLM.
 
 - [Documentation (WIP)](https://combinatrix-ai.github.io/PromptTrail/)
 
-# Installation
+## Installation
 
 ```bash
 git clone https://github.com/combinatrix-ai/PromptTrail.git
@@ -27,7 +27,7 @@ When we release the first version, we will publish this package to PyPI.
     - Message
     - Session
     - Model
-  - Unified interface to various LLMs)
+  - Unified interface to various LLMs
     - OpenAI
     - Google Cloud
     - [TODO] Local LLMs
@@ -72,16 +72,16 @@ When we release the first version, we will publish this package to PyPI.
 TextMessage(content="Hello! How can I assist you today?", sender="assistant")
 ```
 
-
-
 If you want streaming output, you can use `send_async` method if the provider offers the feature.
- ```python
+
+```python
 > message_genrator = model.send_async(parameters=parameters, session=session)
 > for message in message_genrator:
 >     print(message.content)
 ```
 
-If you want to mock LLM, you can use various mock models: 
+If you want to mock LLM, you can use various mock models:
+
 ```python
 > # Change model class to mock model class
 > model = OpenAIChatCompletionModelMock(configuration=config)
@@ -104,6 +104,7 @@ If you want to mock LLM, you can use various mock models:
 
 TextMessage(content="1215973652716", sender="assistant")
 ```
+
 ## Agent
 
 You can write a simple agent like this:
@@ -203,7 +204,6 @@ runner = FlowRunner(
 runner.run()
 ```
 
-
 ## Design Principles
 
 - If you know what is LLM, you must be able to use PromptTrail.
@@ -224,10 +224,10 @@ runner.run()
     - Hook-based agent definition
     - More default values
 
-
 ## Next
 
 ### Before the first release
+
 - [ ] Examples
 - [ ] Documentation
 - [ ] Runner
@@ -235,16 +235,19 @@ runner.run()
   - [ ] Turn-based execution that can be used by other libraries
 - [ ] Vector Search Integration
 - [ ] Better error messages that helps debugging
-- [ ] Provide a way to export / import sessions
 - [x] Caching of API call
+- [x] Function Calling
 
 ### Big Features
+
+- [ ] Provide a way to export / import sessions
 - [ ] toml input/output for templates
 - [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
 - [ ] Tooling
 - [ ] Local LLMs
+
 ## License
 
 - This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
@@ -254,3 +257,8 @@ runner.run()
 
 - Contributions are welcome!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
+
+## Environment Variables
+
+- `OPENAI_API_KEY`: API key for OpenAI API
+- `GOOGLE_CLOUD_API_KEY`: API key for Google Cloud API
