@@ -119,16 +119,7 @@ class CommandLineRunner(Runner):
         next_message_index_to_show = 0
         next_template = None
         while 1:
-            # logger_multiline(
-            #     logger, f"Current template: {template.template_id}", logging.DEBUG
-            # )
-            # logger_multiline(
-            #     logger, f"flow state (before rendering):\n{flow_state}", logging.DEBUG
-            # )
             flow_state = template.render(flow_state)
-            # logger_multiline(
-            #     logger, f"flow state (after rendering):\n{flow_state}", logging.DEBUG
-            # )
             new_messages = flow_state.session_history.messages[
                 next_message_index_to_show:
             ]
@@ -169,6 +160,7 @@ class CommandLineRunner(Runner):
                         f"Same template is rendered consecutively more than {MAX_TEMPLATE_LOOP} times. This may be caused by infinite loop?"
                     )
             template = next_template
+            next_template = None
         return flow_state
 
     def _search_template(self, template_like: TemplateLike) -> "Template":
