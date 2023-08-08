@@ -18,12 +18,12 @@ When we release the first version, we will publish this package to PyPI.
 
 - PromptTrail is designed to be lightweight and easy to use.
 - Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
-- PromptTrail aims to provide simple interface for LLMs, and let developers to implement their own features.
+- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
 
 ## What PromptTrail can do?
 
-- PromptTrail offers below features:
-  - Thin layer of abstraction for LLMs you can intuitively understand
+- PromptTrail offers the following features:
+  - Thin layer of abstraction for LLMs that you can intuitively understand
     - Message
     - Session
     - Model
@@ -72,11 +72,11 @@ When we release the first version, we will publish this package to PyPI.
 TextMessage(content="Hello! How can I assist you today?", sender="assistant")
 ```
 
-If you want streaming output, you can use `send_async` method if the provider offers the feature.
+If you want streaming output, you can use the `send_async` method if the provider offers the feature.
 
 ```python
-> message_genrator = model.send_async(parameters=parameters, session=session)
-> for message in message_genrator:
+> message_generator = model.send_async(parameters=parameters, session=session)
+> for message in message_generator:
 >     print(message.content)
 ```
 
@@ -85,7 +85,7 @@ If you want to mock LLM, you can use various mock models:
 ```python
 > # Change model class to mock model class
 > model = OpenAIChatCompletionModelMock(configuration=config)
-> # and just call setup method to setup mock provider
+> # and just call the setup method to set up the mock provider
 > model.setup(
 >     mock_provider=OneTurnConversationMockProvider(
 >         conversation_table={
@@ -139,7 +139,7 @@ flow_template = LinearTemplate(
                         AskUserHook(
                             key="prompt",
                             description="Input:",
-                            default="Why you can't divide a number by zero?",
+                            default="Why can't you divide a number by zero?",
                         )
                     ],
                     content="""
@@ -169,7 +169,7 @@ flow_template = LinearTemplate(
                 MessageTemplate(
                     role="assistant",
                     content="""
-                    The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.
+                    The user has stated their feedback. If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
                     """,
                 ),
                 check_end := MessageTemplate(
@@ -206,20 +206,20 @@ runner.run()
 
 ## Design Principles
 
-- If you know what is LLM, you must be able to use PromptTrail.
+- If you know what an LLM is, you must be able to use PromptTrail.
 - Agent (Flow) as Code
   - Agent that can be written in one place by code
     - Hook-based agent definition like PyTorch Lightning
 - Provide an easy way to debug prompt program
   - Turn-based execution
   - Record everything for later inspection
-  - Easy to read error messages with template id, hook name etc... is included
+  - Easy to read error messages with template id, hook name, etc... is included
 - Intuitive and explicit (but sometimes convention)
   - Everything evolves fast here. You can't be sure what is right now. So explicit is better than implicit. Code is better than document.
     - No hidden templates and configurations
-    - Every parameter should be passed explicitly and be able to understood by types
+    - Every parameter should be passed explicitly and be able to be understood by types
       - Easy to work with on VSCode and JetBrains IDEs
-  - Everything must be clear by class inhetitance and types. I don't want to read docs.
+  - Everything must be clear by class inheritance and types. I don't want to read docs.
     - Unified access to templates, parameters of agents
     - Hook-based agent definition
     - More default values
@@ -234,7 +234,7 @@ runner.run()
   - [ ] Sophisticated CLI experience for intuitive demo
   - [ ] Turn-based execution that can be used by other libraries
 - [ ] Vector Search Integration
-- [ ] Better error messages that helps debugging
+- [ ] Better error messages that help debugging
 - [x] Caching of API call
 - [x] Function Calling
 
