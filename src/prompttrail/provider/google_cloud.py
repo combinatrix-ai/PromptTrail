@@ -7,7 +7,7 @@ from google.generativeai.types.discuss_types import (  # type: ignore
     ChatResponse,
     MessageDict,
 )
-from pydantic import BaseModel  # type: ignore
+from pydantic import BaseModel, ConfigDict  # type: ignore
 
 from prompttrail.core import (
     Configuration,
@@ -40,6 +40,8 @@ class GoogleCloudChatParameters(Parameters):
     candidate_count: Optional[int] = None
     context: Optional[str] = None
     examples: Optional[List[GoogleCloudChatExample]] = None
+
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class GoogleCloudChatModel(Model):

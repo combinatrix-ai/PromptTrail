@@ -58,5 +58,6 @@ Note: You can run all of these commands at once by `rye run all`. GitHub Actions
 ## Coding Principles
 
 ### Type Checking
+
 - We use pylance (strict) on vscode and mypy.
   - We prefer repeating duplicated type checking code over using `Any` or # type: ignore.

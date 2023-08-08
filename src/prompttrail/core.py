@@ -1,8 +1,8 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Generator, List, Optional, Sequence, Tuple, TypeAlias
+from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, TypeAlias
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from prompttrail.cache import CacheProvider
 from prompttrail.util import logger_multiline
@@ -16,6 +16,10 @@ class Message(BaseModel):
     # We may soon get non-textual messages maybe, so we should prepare for that.
     content: Any
     sender: Optional[str] = None
+
+    # Store extra information in dict
+    # TODO: Update __str__ to include this
+    data: Dict[str, Any] = {}
 
     def __hash__(self) -> int:
         return hash((self.content, self.sender))
@@ -63,8 +67,8 @@ class Configuration(BaseModel):
 
     cache_provider: Optional[CacheProvider] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    # pydantic
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class Parameters(BaseModel):
