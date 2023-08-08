@@ -3,9 +3,6 @@
 
 import os
 import sys
-from typing import List, Optional
-
-import click
 
 from prompttrail.agent.core import FlowState
 from prompttrail.agent.runner import CommandLineRunner
@@ -46,8 +43,6 @@ model = OpenAIChatCompletionModel(configuration=configuration)
 runner = CommandLineRunner(model=model, parameters=parameter, templates=[templates])
 
 
-# @click.command()
-# @click.option("--load_file", type=click.Path(exists=True))
 def main(
     load_file: str,
 ):
@@ -76,9 +71,5 @@ def main(
 
 
 if __name__ == "__main__":
-    main(
-        load_file="README.md"
-    )
-    main(
-        load_file="CONTRIBUTING.md"
-    )
+    main(load_file="README.md")
+    main(load_file="CONTRIBUTING.md")
