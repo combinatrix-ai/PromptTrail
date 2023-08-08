@@ -1,10 +1,17 @@
-import unittest
 import logging
-from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional
+import unittest
+from typing import TYPE_CHECKING
 
 from prompttrail.agent.core import FlowState
-from prompttrail.agent.hook.core import AskUserHook, BooleanHook, GenerateChatHook, Hook, IfJumpHook, JumpHook, TransformHook
+from prompttrail.agent.hook.core import (
+    AskUserHook,
+    BooleanHook,
+    GenerateChatHook,
+    Hook,
+    IfJumpHook,
+    JumpHook,
+    TransformHook,
+)
 from prompttrail.agent.template import TemplateId
 
 if TYPE_CHECKING:
