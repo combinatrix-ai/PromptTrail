@@ -1,3 +1,6 @@
+# This script is actually used to create some unit tests for this repository.
+# See https://github.com/combinatrix-ai/PromptTrail/pull/4 for what it does.
+
 import os
 import sys
 from typing import List, Optional
