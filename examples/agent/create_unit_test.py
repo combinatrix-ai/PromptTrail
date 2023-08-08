@@ -118,7 +118,7 @@ def main(
     )
     flow_state = runner.run(flow_state=initial_state)
     last_message = flow_state.get_last_message()
-    print(last_message.content)  # TODO: maybe bug? (last_message is not message?)
+    print(last_message.content)
     if len(sys.argv) > 2:
         save_file_io = open(save_file, "w")
         save_file_io.write(last_message.content)
