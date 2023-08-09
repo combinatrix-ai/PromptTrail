@@ -1,10 +1,8 @@
 import logging
 import unittest
-from typing import TYPE_CHECKING
 
 from prompttrail.agent.core import FlowState
 from prompttrail.agent.hook.core import (
-    AskUserHook,
     BooleanHook,
     GenerateChatHook,
     Hook,
@@ -13,9 +11,6 @@ from prompttrail.agent.hook.core import (
     TransformHook,
 )
 from prompttrail.agent.template import TemplateId
-
-if TYPE_CHECKING:
-    from prompttrail.agent.template import TemplateId
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +55,7 @@ class TestIfJumpHook(unittest.TestCase):
         if_jump_hook = IfJumpHook(lambda x: True, true_template, false_template)
         result = if_jump_hook.hook(flow_state)
         self.assertEqual(result, true_template)
+
 
 # AskUserHook uses input() which is not testable for now!
 # class TestAskUserHook(unittest.TestCase):

@@ -1,0 +1,33 @@
+.gitignore
+
+# You can customize this file to suit your needs
+
+# Python
+
+.venv/
+.python-version
+*.pyc
+dist
+
+# Coverage
+
+.coverage
+coverage.xml
+
+# Sphinx
+
+docs/*/*
+!docs/sphinx/*
+docs/*.html
+docs/*.js
+docs/*.inv
+docs/.buildinfo
+docs/sphinx/prompttrail*.rst
+
+# Others
+
+*.old
+*.log
+.envrc
+.vscode
+tmp
