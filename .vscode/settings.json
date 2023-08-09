@@ -1,9 +1,0 @@
-{
-    // エディタ上のカバレッジ表示設定
-    // ガター(ブレークポイント等が表示される場所)でのカバレッジ表示有無(default: true)
-    "coverage-gutters.showGutterCoverage": true,
-    // エディタ行でのカバレッジ表示有無(default: false)
-    "coverage-gutters.showLineCoverage": true,
-    // ルーラーでのカバレッジ表示有無(default: false)
-    "coverage-gutters.showRulerCoverage": true
-  }

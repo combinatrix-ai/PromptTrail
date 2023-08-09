@@ -41,17 +41,19 @@ When we release the first version, we will publish this package to PyPI.
     - Agent
     - Hooks
       - PytorchLightning-like hook-based agent definition is supported
-    - [TODO] Calling other APIs other than LLMs (Tooling)
+    - Unified interface to build/parse LLM input/output and agent for function calling.
+    - Calling other APIs other than LLMs (Tooling)
       - [TODO] Vector Search
     - [TODO] Multiple Conversation Flow
       - [TODO] Concurrent Execution
-    - [TODO] Unified interface to build/parse LLM input/output and agent for function calling.
-      - [TODO] QueryBuilder
-      - [TODO] OutputParser
 
 ## Example
 
+You can find more examples in [examples](examples) directory.
+
 ## LLM API Call
+
+This is the simplest example of how to use PromptTrail as a thin wrapper around LLMs.
 
 ```python
 > import os
