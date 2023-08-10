@@ -2,18 +2,18 @@
 
 In this directory, we collect examples of `prompttrail`.
 
-## `model`
+## `provider`
 
 In this directory, we give examples of how to use `prompttrail` as a thin wrapper around LLMs.
 If you want just to use LLMs, see these examples.
 
-- [`model/openai.py`](model/openai.py)
+- [`provider/openai.py`](provider/openai.py)
   - This shows how to use `prompttrail` to generate prompts for OpenAI's GPT-3.5 / 4.
-- [`model/stream.py`](model/stream.py)
+- [`provider/stream.py`](provider/stream.py)
   - If you want to use OpenAI's streaming feature, see this example.
-- [`model/google.py`](model/google.py)
+- [`provider/google.py`](provider/google.py)
   - This shows how to use `prompttrail` to generate prompts for Google's PaLM.
-- [`model/mock.py`](model/mock.py)
+- [`provider/mock.py`](provider/mock.py)
   - This shows how you can mock APIs for testing.
 
 ## `agent`
