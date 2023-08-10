@@ -1,6 +1,16 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, TypeAlias
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeAlias,
+)
 
 from pydantic import BaseModel, ConfigDict
 
@@ -133,17 +143,23 @@ class Model(BaseModel):
         return message
 
     def _send_async(
-        self, parameters: Parameters, session: Session
+        self,
+        parameters: Parameters,
+        session: Session,
+        yiled_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
         """A model should implement _send_async method to receive response asynchronously. You must implement this method to create a new model if you need async feature."""
         raise NotImplementedError("Async method is not implemented for this model.")
 
     def send_async(
-        self, parameters: Parameters, session: Optional[Session] = None
+        self,
+        parameters: Parameters,
+        session: Session,
+        yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
         """send_async method defines the standard procedure to send a message to the model asynchronously. You dont need to override this method usually."""
         parameters, session = self.prepare(parameters, session, True)
-        messages = self._send_async(parameters, session)
+        messages = self._send_async(parameters, session, yield_type)
         for message in messages:
             message_ = self.after_send(parameters, session, message, True)
             if message_ is not None:
