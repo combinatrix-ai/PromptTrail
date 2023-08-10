@@ -1,6 +1,6 @@
 import os
 
-from prompttrail.core import Message, Session
+from prompttrail.core import Message, Session, TextMessage
 from prompttrail.mock import OneTurnConversationMockProvider
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModelMock,
@@ -20,7 +20,7 @@ model = OpenAIChatCompletionModelMock(configuration=config)
 model.setup(
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={
-            "1+1": "1215973652716",
+            "1+1": TextMessage(content="1215973652716", sender="assistant"),
         },
         sender="assistant",
     )

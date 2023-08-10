@@ -34,21 +34,18 @@ class MockModel(ABC, BaseModel):
 class OneTurnConversationMockProvider(MockProvider):
     """A mock provider that returns a predefined response based on the last message."""
 
-    def __init__(self, conversation_table: Dict[str, str], sender: str):
+    def __init__(self, conversation_table: Dict[str, TextMessage], sender: str):
         self.conversation_table = conversation_table
         self.sender = sender
 
-    def call(self, session: Session) -> Message:
+    def call(self, session: Session) -> TextMessage:
         valid_messages = [x for x in session.messages if x.sender != "prompttrail"]
         if len(valid_messages) == 0:
             logger.warning("No message is passed to OneTurnConversationMockProvider.")
             return TextMessage(content="Hello", sender=self.sender)
         last_message = valid_messages[-1]
         if last_message.content in self.conversation_table:
-            return TextMessage(
-                content=self.conversation_table[last_message.content],
-                sender=self.sender,
-            )
+            return self.conversation_table[last_message.content]
         else:
             raise ValueError(
                 "Unexpected message is passed to mock provider: " + last_message.content

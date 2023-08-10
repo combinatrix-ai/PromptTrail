@@ -20,6 +20,7 @@ from prompttrail.agent.template import UserInputTextTemplate, is_same_template
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
 )
+from prompttrail.core import TextMessage
 from prompttrail.mock import OneTurnConversationMockProvider
 
 logging.basicConfig(level=logging.DEBUG)
@@ -190,13 +191,18 @@ runner = CommandLineRunner(
         # You can define the behaviour of the mock model using mock_provider
         mock_provider=OneTurnConversationMockProvider(
             conversation_table={
-                "How many cats in Japan?": """Thoughts: ...
+                "How many cats in Japan?": TextMessage(
+                    content="""Thoughts: ...
 Calculation:
 ```python
 5300000 * 0.49 * 2.1
 ```
 """,
-                "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": "END",
+                    sender="assistant",
+                ),
+                "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": TextMessage(
+                    content="END", sender="assistant"
+                ),
             },
             sender="assistant",
         ),
