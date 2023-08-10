@@ -71,6 +71,45 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.model.send(parameters=self.parameters, session=session)
 
+    def test_send_async_with_known_message_yield_all(self):
+        session = TextSession(
+            messages=[TextMessage(content="Hello", sender=self.sender)]
+        )
+        message_generator = self.model.send_async(
+            parameters=self.parameters, session=session, yield_type="all"
+        )
+        messages = list(message_generator)
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0].content, "H")
+        self.assertEqual(messages[0].sender, self.sender)
+        self.assertEqual(messages[1].content, "Hi")
+        self.assertEqual(messages[1].sender, self.sender)
+
+    def test_send_async_with_known_message_yield_new(self):
+        session = TextSession(
+            messages=[TextMessage(content="Hello", sender=self.sender)]
+        )
+        message_generator = self.model.send_async(
+            parameters=self.parameters, session=session, yield_type="new"
+        )
+        messages = list(message_generator)
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0].content, "H")
+        self.assertEqual(messages[0].sender, self.sender)
+        self.assertEqual(messages[1].content, "i")
+        self.assertEqual(messages[1].sender, self.sender)
+
+    def test_send_async_with_unknown_message(self):
+        session = TextSession(
+            messages=[TextMessage(content="Unknown message", sender=self.sender)]
+        )
+        with self.assertRaises(ValueError):
+            message_generator = self.model.send_async(
+                parameters=self.parameters, session=session, yield_type="all"
+            )
+            # We need to call the generator to raise the error.
+            list(message_generator)
+
 
 if __name__ == "__main__":
     unittest.main()
