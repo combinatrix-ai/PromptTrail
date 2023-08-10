@@ -79,7 +79,9 @@ If you want streaming output, you can use the `send_async` method if the provide
 ```python
 > message_generator = model.send_async(parameters=parameters, session=session)
 > for message in message_generator:
->     print(message.content)
+>     print(message.content, sep="", flush=True)
+
+Hello! How can # text is incrementally typed
 ```
 
 If you want to mock LLM, you can use various mock models:

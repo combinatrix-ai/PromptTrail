@@ -94,7 +94,10 @@ class OpenAIChatCompletionModel(Model):
         return result
 
     def _send_async(
-        self, parameters: Parameters, session: Session
+        self,
+        parameters: Parameters,
+        session: Session,
+        yiled_type: Literal["all", "new"] = "new",
     ) -> Generator[TextMessage, None, None]:
         if not isinstance(parameters, OpenAIModelParameters):
             raise ParameterValidationError(
@@ -110,8 +113,16 @@ class OpenAIChatCompletionModel(Model):
         # response is a generator, and we want response[i]['choices'][0]['delta'].get('content', '')
         all_text: str = ""
         for message in response:
-            all_text: str = all_text + message.choices[0]["delta"].get("content", "")  # type: ignore #TODO: More robust error handling
-            yield TextMessage(content=all_text, sender=None)  # type: ignore
+            new_text: str = message.choices[0]["delta"].get("content", "")  # type: ignore #TODO: More robust error handling
+            if yiled_type == "new":
+                yield TextMessage(content=new_text, sender=None)  # type: ignore
+            elif yiled_type == "all":
+                all_text: str = all_text + new_text  # type: ignore
+                yield TextMessage(content=all_text, sender=None)  # type: ignore
+            else:
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: yiled_type should be 'all' or 'new'."
+                )
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         if len(session.messages) == 0:
@@ -166,6 +177,7 @@ class OpenAIChatCompletionModel(Model):
 
 
 class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
+    # TODO: This should be integrated to OpenAIChatCompletionModel itself?
     def setup(self, mock_provider: MockProvider) -> None:
         self.mock_provider: MockProvider = mock_provider
 
@@ -175,6 +187,26 @@ class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
         return self.mock_provider.call(session)
+
+    def _send_async(
+        self,
+        parameters: Parameters,
+        session: Session,
+        yiled_type: Literal["all", "new"] = "new",
+    ) -> Generator[TextMessage, None, None]:
+        if not isinstance(parameters, OpenAIModelParameters):
+            raise ParameterValidationError(
+                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+            )
+        message = self.mock_provider.call(session)
+        if yiled_type == "new":
+            for ch in message.content:
+                yield TextMessage(content=ch, sender=message.sender)
+        elif yiled_type == "all":
+            for idx in range(len(message.content)):
+                yield TextMessage(
+                    content=message.content[: (idx + 1)], sender=message.sender
+                )
 
 
 OpenAIrole = Literal["system", "assistant", "user", "function"]
