@@ -7,6 +7,7 @@ import openai
 from pydantic import ConfigDict
 
 from prompttrail.agent.tool import Tool
+from prompttrail.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.error import ParameterValidationError
 from prompttrail.mock import MockModel, MockProvider
@@ -130,7 +131,7 @@ class OpenAIChatCompletionModel(Model):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should have sender."
             )
-        allowed_senders = list(typing.get_args(OpenAIrole)) + ["prompttrail"]
+        allowed_senders = list(typing.get_args(OpenAIrole)) + [CONTROL_TEMPLATE_ROLE]
         if any(
             [
                 message.sender not in allowed_senders
@@ -146,7 +147,9 @@ class OpenAIChatCompletionModel(Model):
     def _session_to_openai_messages(session: Session) -> List[Dict[str, str]]:
         # TODO: decide what to do with MetaTemplate (role=prompttrail)
         messages = [
-            message for message in session.messages if message.sender != "prompttrail"
+            message
+            for message in session.messages
+            if message.sender != CONTROL_TEMPLATE_ROLE
         ]
         return [
             {

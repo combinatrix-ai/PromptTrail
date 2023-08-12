@@ -4,6 +4,7 @@ from typing import Callable, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict
 
+from prompttrail.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core import Message, Session
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,9 @@ class OneTurnConversationMockProvider(MockProvider):
         self.sender = sender
 
     def call(self, session: Session) -> Message:
-        valid_messages = [x for x in session.messages if x.sender != "prompttrail"]
+        valid_messages = [
+            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
+        ]
         if len(valid_messages) == 0:
             logger.warning("No message is passed to OneTurnConversationMockProvider.")
             return Message(content="Hello", sender=self.sender)

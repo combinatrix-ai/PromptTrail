@@ -4,14 +4,9 @@ from typing import Dict, Optional, Sequence
 
 from prompttrail.agent import FlowState
 from prompttrail.agent.core import StatefulSession
-from prompttrail.agent.template import (
-    END_TEMPLATE_ID,
-    MAX_TEMPLATE_LOOP,
-    EndTemplate,
-    Template,
-    TemplateId,
-)
+from prompttrail.agent.template import EndTemplate, Template, TemplateId
 from prompttrail.agent.user_interaction import UserInteractionProvider
+from prompttrail.const import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 from prompttrail.core import Model, Parameters
 
 logger = logging.getLogger(__name__)

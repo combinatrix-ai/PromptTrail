@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from abc import abstractmethod
 from pprint import pformat
 from typing import Generator, List, Optional, Sequence, TypeAlias
@@ -12,17 +11,17 @@ from prompttrail.agent import FlowState
 from prompttrail.agent.core import StatefulMessage
 from prompttrail.agent.hook import BooleanHook, IfJumpHook, JumpHook, TransformHook
 from prompttrail.agent.tool import Tool, check_arguments
+from prompttrail.const import (
+    CONTROL_TEMPLATE_ROLE,
+    END_TEMPLATE_ID,
+    RESERVED_TEMPLATE_IDS,
+)
 from prompttrail.core import Message
 from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
 
 logger = logging.getLogger(__name__)
 
 TemplateId: TypeAlias = str
-
-
-END_TEMPLATE_ID = "END"
-RESERVED_TEMPLATE_IDS = [END_TEMPLATE_ID]
-MAX_TEMPLATE_LOOP = int(os.environ.get("MAX_TEMPLATE_LOOP", 10))
 
 
 # TODO: How can I force the user to use check_template_id?
@@ -179,8 +178,8 @@ class MessageTemplate(Template):
         return f"MessageTemplate(id={self.template_id}, {content_part}{before_transform_part}{after_transform_part}{before_jump_part}{after_jump_part})"
 
 
-class MetaTemplate(MessageTemplate):
-    # MetaTemplate must handle its child templates.
+class ControlTemplate(MessageTemplate):
+    # ControlTemplate must handle its child templates.
 
     @abstractmethod
     def __init__(
@@ -195,7 +194,7 @@ class MetaTemplate(MessageTemplate):
         self.template_id = (
             template_id
             if template_id is not None
-            else "Unnamed_MetaTemplate_" + str(uuid4())
+            else "Unnamed_ControlTemplate_" + str(uuid4())
         )
         check_template_id(self.template_id)
         self.next_template_default = next_template_default
@@ -203,7 +202,7 @@ class MetaTemplate(MessageTemplate):
         self.after_transform = after_transform
         self.before_jump = before_control
         self.after_jump = after_control
-        self.role = "prompttrail"
+        self.role = CONTROL_TEMPLATE_ROLE
 
     @abstractmethod
     def list_child_templates(self) -> List[Template]:
@@ -216,7 +215,7 @@ class MetaTemplate(MessageTemplate):
         raise NotImplementedError("walk method is not implemented")
 
 
-class LoopTemplate(MetaTemplate):
+class LoopTemplate(ControlTemplate):
     def __init__(
         self,
         templates: Sequence[Template],
@@ -240,7 +239,7 @@ class LoopTemplate(MetaTemplate):
         self.exit_loop_count = exit_loop_count
         # Of course, LoopTemplate use self.templates[0] as next template
         self.next_template_default = templates[0].template_id
-        self.role = "prompttrail"
+        self.role = CONTROL_TEMPLATE_ROLE
         self.before_transform = before_transform
         self.before_control = before_control
         self.after_transform = after_transform
@@ -283,7 +282,7 @@ class LoopTemplate(MetaTemplate):
             yield from template.walk(visited_templates)
 
 
-class IfTemplate(MetaTemplate):
+class IfTemplate(ControlTemplate):
     def __init__(
         self,
         true_template: Template,
@@ -305,7 +304,7 @@ class IfTemplate(MetaTemplate):
         self.false_template = false_template
         self.condition = condition
         self.next_template_default = None
-        self.role = "prompttrail"
+        self.role = CONTROL_TEMPLATE_ROLE
         self.before_transform = before_transform
         self.before_control = before_control
         self.after_transform = after_transform
@@ -338,7 +337,7 @@ class IfTemplate(MetaTemplate):
         yield from self.false_template.walk(visited_templates)
 
 
-class LinearTemplate(MetaTemplate):
+class LinearTemplate(ControlTemplate):
     def __init__(
         self,
         templates: Sequence[Template],
@@ -364,7 +363,7 @@ class LinearTemplate(MetaTemplate):
         # set last next_template
         if next_template_default is not None:
             self.templates[-1].next_template_default = next_template_default
-        self.role = "prompttrail"
+        self.role = CONTROL_TEMPLATE_ROLE
 
         self.before_transform = before_transform
         self.before_control = before_control

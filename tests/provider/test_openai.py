@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 
+from prompttrail.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core import Message, Session
 from prompttrail.error import ParameterValidationError
 from prompttrail.provider.openai import (
@@ -84,7 +85,7 @@ class TestOpenAI(unittest.TestCase):
 
         flow_state = weather_forecast.runner.run(max_messages=10)
         messages = flow_state.session_history.messages
-        messages = [m for m in messages if m.sender != "prompttrail"]
+        messages = [m for m in messages if m.sender != CONTROL_TEMPLATE_ROLE]
         senders = [m.sender for m in messages]
         # system, user, function call by assistant, function result by function, assistant
         self.assertEqual(

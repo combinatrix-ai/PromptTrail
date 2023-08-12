@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Dict, Optional
 
 from prompttrail.agent.core import FlowState
+from prompttrail.const import CONTROL_TEMPLATE_ROLE
 
 
 class UserInteractionProvider(object):
@@ -43,7 +44,9 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
         default: Optional[str] = None,
     ) -> str:
         valid_messages = [
-            x for x in flow_state.session_history.messages if x.sender != "prompttrail"
+            x
+            for x in flow_state.session_history.messages
+            if x.sender != CONTROL_TEMPLATE_ROLE
         ]
         last_message = valid_messages[-1].content
         if last_message not in self.conversation_table:
