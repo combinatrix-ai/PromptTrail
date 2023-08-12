@@ -24,7 +24,7 @@ class Message(BaseModel):
     """A message represents a single message from a user, model, or API etc..."""
 
     # We may soon get non-textual messages maybe, so we should prepare for that.
-    content: Any
+    content: str
     sender: Optional[str] = None
 
     # Store extra information in dict
@@ -34,21 +34,14 @@ class Message(BaseModel):
     def __hash__(self) -> int:
         return hash((self.content, self.sender))
 
-
-class TextMessage(Message):
-    """A message that accepts only text."""
-
-    # However, text is the most common message type, so we should have a shortcut for it.
-    content: str
-
     def __str__(self) -> str:
         if "\n" in self.content:
             content_part = 'content="""\n' + self.content + '\n"""'
         else:
             content_part = 'content="' + self.content + '"'
         if self.sender is None:
-            return "TextMessage(" + content_part + '")'
-        return "TextMessage(" + content_part + ', sender="' + self.sender + '")'
+            return "Message(" + content_part + '")'
+        return "Message(" + content_part + ', sender="' + self.sender + '")'
 
 
 class Session(BaseModel):
@@ -60,12 +53,6 @@ class Session(BaseModel):
 
     def __hash__(self) -> int:
         return hash(tuple(self.messages))
-
-
-class TextSession(Session):
-    """A session that accepts only text messages."""
-
-    messages: Sequence[TextMessage] = []
 
 
 class Configuration(BaseModel):

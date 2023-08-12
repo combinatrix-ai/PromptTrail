@@ -7,14 +7,7 @@ import openai
 from pydantic import ConfigDict
 
 from prompttrail.agent.tool import Tool
-from prompttrail.core import (
-    Configuration,
-    Message,
-    Model,
-    Parameters,
-    Session,
-    TextMessage,
-)
+from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.error import ParameterValidationError
 from prompttrail.mock import MockModel, MockProvider
 
@@ -82,7 +75,7 @@ class OpenAIChatCompletionModel(Model):
         if content is None:
             # This implies that the model responded with function calling
             content = ""  # TODO: Should allow null message? (It may be more clear that non textual response is returned)
-        result = TextMessage(content=content, sender=message["role"])  # type: ignore #TODO: More robust error handling
+        result = Message(content=content, sender=message["role"])  # type: ignore #TODO: More robust error handling
         # TODO: handle for _send_async
         if message.get("function_call"):  # type: ignore
             function_name = message["function_call"]["name"]  # type: ignore
@@ -98,7 +91,7 @@ class OpenAIChatCompletionModel(Model):
         parameters: Parameters,
         session: Session,
         yiled_type: Literal["all", "new"] = "new",
-    ) -> Generator[TextMessage, None, None]:
+    ) -> Generator[Message, None, None]:
         if not isinstance(parameters, OpenAIModelParameters):
             raise ParameterValidationError(
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
@@ -115,10 +108,10 @@ class OpenAIChatCompletionModel(Model):
         for message in response:
             new_text: str = message.choices[0]["delta"].get("content", "")  # type: ignore #TODO: More robust error handling
             if yiled_type == "new":
-                yield TextMessage(content=new_text, sender=None)  # type: ignore
+                yield Message(content=new_text, sender=None)  # type: ignore
             elif yiled_type == "all":
                 all_text: str = all_text + new_text  # type: ignore
-                yield TextMessage(content=all_text, sender=None)  # type: ignore
+                yield Message(content=all_text, sender=None)  # type: ignore
             else:
                 raise ParameterValidationError(
                     f"{self.__class__.__name__}: yiled_type should be 'all' or 'new'."
@@ -193,7 +186,7 @@ class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
         parameters: Parameters,
         session: Session,
         yiled_type: Literal["all", "new"] = "new",
-    ) -> Generator[TextMessage, None, None]:
+    ) -> Generator[Message, None, None]:
         if not isinstance(parameters, OpenAIModelParameters):
             raise ParameterValidationError(
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
@@ -201,10 +194,10 @@ class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
         message = self.mock_provider.call(session)
         if yiled_type == "new":
             for ch in message.content:
-                yield TextMessage(content=ch, sender=message.sender)
+                yield Message(content=ch, sender=message.sender)
         elif yiled_type == "all":
             for idx in range(len(message.content)):
-                yield TextMessage(
+                yield Message(
                     content=message.content[: (idx + 1)], sender=message.sender
                 )
 

@@ -2,7 +2,7 @@ import logging
 from pprint import pformat
 from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 
-from prompttrail.core import Message, Model, Parameters, Session, TextMessage
+from prompttrail.core import Message, Model, Parameters, Session
 
 logger = logging.getLogger(__name__)
 
@@ -36,40 +36,20 @@ class StatefulMessage(Message):
         return hash(str(self))
 
 
-class StatefulTextMessage(StatefulMessage, TextMessage):
-    def __str__(self) -> str:
-        # construct json
-        return (
-            "StatefulTextMessage(\n"
-            + pformat(
-                {
-                    "content": self.content,
-                    "data": self.data,
-                    "template_id": self.template_id,
-                    "sender": self.sender,
-                }
-            )
-            + ",\n)"
-        )
-
-
 class StatefulSession(Session):
     data: Dict[str, Any] = {}
     messages: Sequence[StatefulMessage] = []
 
 
-class StatefulTextSession(StatefulSession):
-    messages: Sequence[StatefulTextMessage] = []
+# TODO: Use control message below to make control flow more explicit.
+# class ControlMessage(StatefulMessage):
+#     content: Any = None
 
-
-class ControlMessage(StatefulTextMessage):
-    content: Any = None
-
-    # ControlMessage is not expected to edit by human, so kill the edit method.
-    def __init__(self, sender: str, template_id: str, data: Dict[str, Any]):
-        self.template_id = template_id
-        self.data = data
-        self.sender = sender
+#     # ControlMessage is not expected to edit by human, so kill the edit method.
+#     def __init__(self, sender: str, template_id: str, data: Dict[str, Any]):
+#         self.template_id = template_id
+#         self.data = data
+#         self.sender = sender
 
 
 class FlowState(object):
@@ -81,8 +61,7 @@ class FlowState(object):
         model: Optional[Model] = None,
         parameters: Optional[Parameters] = None,
         data: Dict[str, Any] = {},
-        session_history: StatefulTextSession = StatefulTextSession(),
-        # TODO: This should be StatefulSession
+        session_history: StatefulSession = StatefulSession(),
         current_template: Optional["TemplateLike"] = None,
         jump: Optional["TemplateLike"] = None,
     ):
@@ -94,8 +73,7 @@ class FlowState(object):
         self.current_template = current_template
         self.jump = jump
 
-    def get_last_message(self) -> StatefulTextMessage:
-        # TODO: This should be StatefulMessage
+    def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
             raise IndexError("Session has no message.")
         return self.session_history.messages[-1]

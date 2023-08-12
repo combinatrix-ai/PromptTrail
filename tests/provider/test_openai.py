@@ -1,13 +1,18 @@
 import os
+import sys
 import unittest
 
-from prompttrail.core import TextMessage, TextSession
+from prompttrail.core import Message, Session
 from prompttrail.error import ParameterValidationError
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
+
+path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(path)
+from examples.agent import weather_forecast  # type: ignore # noqa: E402
 
 
 # TODO: Add error handling test
@@ -32,25 +37,25 @@ class TestOpenAI(unittest.TestCase):
 
     def test_model_send(self):
         # One message
-        message = TextMessage(
+        message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
             sender="user",
         )
-        session = TextSession(messages=[message])
+        session = Session(messages=[message])
         response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, TextMessage)
+        self.assertIsInstance(response, Message)
         self.assertIsInstance(response.content, str)
         self.assertIn("527", response.content)
 
         # All message types
         messages = [
-            TextMessage(content="You're a helpful assistant.", sender="system"),
-            TextMessage(content="Calculate 129183712*1271606", sender="user"),
-            TextMessage(content="bc: The answer is 12696595579352", sender="system"),
+            Message(content="You're a helpful assistant.", sender="system"),
+            Message(content="Calculate 129183712*1271606", sender="user"),
+            Message(content="bc: The answer is 12696595579352", sender="system"),
         ]
-        session = TextSession(messages=messages)
+        session = Session(messages=messages)
         response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, TextMessage)
+        self.assertIsInstance(response, Message)
         self.assertIsInstance(response.content, str)
         self.assertIn("12696595579352", response.content)
 
@@ -58,20 +63,34 @@ class TestOpenAI(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="", sender="User")]),
+                Session(messages=[Message(content="", sender="User")]),
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="Hello", sender="User")]),
+                Session(messages=[Message(content="Hello", sender="User")]),
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="Hello", sender=None)]),
+                Session(messages=[Message(content="Hello", sender=None)]),
             )
         with self.assertRaises(ParameterValidationError):
-            self.model.send(self.parameters, TextSession(messages=[]))
+            self.model.send(self.parameters, Session(messages=[]))
+
+    def test_function_calling(self):
+        # Tools are already tested in test_tool.py
+        # Here, we use the example from examples/agent/weather_forecast.py
+
+        flow_state = weather_forecast.runner.run(max_messages=10)
+        messages = flow_state.session_history.messages
+        messages = [m for m in messages if m.sender != "prompttrail"]
+        senders = [m.sender for m in messages]
+        # system, user, function call by assistant, function result by function, assistant
+        self.assertEqual(
+            senders, ["system", "user", "assistant", "function", "assistant"]
+        )
+        self.assertIn("Tokyo", messages[-1].content)
 
 
 if __name__ == "__main__":

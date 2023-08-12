@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -34,3 +35,15 @@ def hook_logger(
     else:
         logger = logging.getLogger(hook.__class__.__name__)
     logger_multiline(logger, message, level)
+
+
+def is_in_test_env() -> bool:
+    # We use pytest as the test runner.
+    # https://stackoverflow.com/questions/25188119/test-if-code-is-executed-from-within-a-py-test-session
+    if "pytest" in sys.modules:
+        return True
+    if os.environ.get("CI"):
+        return True
+    if os.environ.get("DEBUG"):
+        return True
+    return False

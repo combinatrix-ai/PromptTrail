@@ -104,3 +104,21 @@ class GenerateChatHook(TransformHook):
         )
         flow_state.data[self.key] = message.content
         return flow_state
+
+
+class CountUpHook(TransformHook):
+    def __init__(self):
+        pass
+
+    def hook(self, flow_state: FlowState) -> FlowState:
+        template_like = flow_state.get_current_template()
+        if flow_state.runner is None:
+            raise ValueError("No runner is set.")
+        template = flow_state.runner._search_template(  # pylint: disable=protected-access # type: ignore
+            template_like
+        )
+        if template.template_id not in flow_state.data:
+            flow_state.data[template.template_id] = 0
+        else:
+            flow_state.data[template.template_id] += 1
+        return flow_state

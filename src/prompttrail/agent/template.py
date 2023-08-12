@@ -8,10 +8,10 @@ from uuid import uuid4
 import jinja2
 
 from prompttrail.agent import FlowState
-from prompttrail.agent.core import StatefulTextMessage
+from prompttrail.agent.core import StatefulMessage
 from prompttrail.agent.hook import BooleanHook, IfJumpHook, JumpHook, TransformHook
 from prompttrail.agent.tool import Tool, check_arguments
-from prompttrail.core import TextMessage
+from prompttrail.core import Message
 from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
 
 logger = logging.getLogger(__name__)
@@ -33,13 +33,17 @@ def is_same_template(template1: TemplateLike, template2: TemplateLike) -> bool:
 
 
 class Template(object):
-    """A template represents a template that (usually) create a message when rendered and include some logic to control flow."""
+    """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow."""
 
     @abstractmethod
     def __init__(
         self,
         template_id: Optional[None] = None,
         next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
     ):
         self.template_id: str = (
             template_id
@@ -48,14 +52,17 @@ class Template(object):
         )
         self.next_template_default = next_template_default
         """ This is the default next template selected when no jump is specified. This is usually specified by MetaTemplate. """
+        self.before_transform = before_transform
+        self.after_transform = after_transform
+        self.before_control = before_control
+        self.after_control = after_control
 
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
 
     def render(self, flow_state: "FlowState") -> "FlowState":
-        flow_state.current_template = (
-            self  # TODO: This should be stack maybe? We can fofce push/pop
-        )
+        flow_state.current_template = self  # TODO: This should be stack maybe? We can force push/pop? => Maybe not because in this impl. we don't render recursively.
+        # TODO: This check may be redundant?
         jump: str | Template | None = flow_state.get_jump()
         if jump is not None:
             jump_template_id = jump.template_id if isinstance(jump, Template) else jump
@@ -124,7 +131,7 @@ class MessageTemplate(Template):
                 return flow_state
         # render
         rendered_content = self.jinja_template.render(**flow_state.data)
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             content=rendered_content, sender=self.role, template_id=self.template_id
         )
         flow_state.session_history.messages.append(message)  # type: ignore
@@ -211,11 +218,10 @@ class LoopTemplate(MetaTemplate):
         jump_to: Optional[TemplateId] = None,
         template_id: Optional[TemplateId] = None,
         exit_loop_count: Optional[int] = None,
-        # TODO: Should MetaTemplate have these hooks?
-        # before_transform: Sequence[TransformHook] = [],
-        # after_transform: Sequence[TransformHook] = [],
-        # before_control: Sequence[JumpHook] = [],
-        # after_control: Sequence[JumpHook] = [],
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -225,14 +231,19 @@ class LoopTemplate(MetaTemplate):
         self.templates = templates
         self.exit_condition = exit_condition
         self.exit_loop_count = exit_loop_count
-        # Of course, looptemplate use self.templates[0]
+        # Of course, LoopTemplate use self.templates[0] as next template
         self.next_template_default = templates[0]
         self.role = "prompttrail"
+        self.before_transform = before_transform
+        self.before_control = before_control
+        self.after_transform = after_transform
+        self.after_control = after_control
 
         # set loop link
         for template, next_template in zip(self.templates, self.templates[1:]):
             template.next_template_default = next_template
         self.templates[-1].next_template_default = self.templates[0]
+
         # set jump link
         # TODO: Should END be a special template?
         hook = IfJumpHook(
@@ -244,7 +255,7 @@ class LoopTemplate(MetaTemplate):
 
     def _render(self, flow_state: FlowState) -> FlowState:
         # render
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
@@ -274,6 +285,10 @@ class IfTemplate(MetaTemplate):
         false_template: Template,
         condition: BooleanHook,
         template_id: Optional[TemplateId] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -285,9 +300,13 @@ class IfTemplate(MetaTemplate):
         self.condition = condition
         self.next_template_default = None
         self.role = "prompttrail"
+        self.before_transform = before_transform
+        self.before_control = before_control
+        self.after_transform = after_transform
+        self.after_control = after_control
 
     def _render(self, flow_state: FlowState) -> FlowState:
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
@@ -320,6 +339,10 @@ class LinearTemplate(MetaTemplate):
         templates: Sequence[Template],
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
+        before_transform: Sequence[TransformHook] = [],
+        after_transform: Sequence[TransformHook] = [],
+        before_control: Sequence[JumpHook] = [],
+        after_control: Sequence[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -337,9 +360,14 @@ class LinearTemplate(MetaTemplate):
             self.templates[-1].next_template_default = next_template_default
         self.role = "prompttrail"
 
+        self.before_transform = before_transform
+        self.before_control = before_control
+        self.after_transform = after_transform
+        self.after_control = after_control
+
     def _render(self, flow_state: FlowState) -> FlowState:
         # render
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
@@ -407,7 +435,7 @@ class GenerateTemplate(MessageTemplate):
         rendered_content = flow_state.model.send(
             flow_state.parameters, flow_state.session_history
         ).content
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content=rendered_content,
             sender=self.role,
@@ -468,16 +496,12 @@ class UserInputTextTemplate(MessageTemplate):
             raise ValueError(
                 "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via FlowState."
             )
-        if flow_state.runner.user_interaction_provider is None:
-            raise ValueError(
-                "UserInteractionProvider must be given to use UserInputTextTemplate. Please set user_interaction_provider to the runner."
-            )
 
         # TODO: user_interaction_provider can return non text for multimodal model
         rendered_content = flow_state.runner.user_interaction_provider.ask(
             flow_state, self.description, self.default
         )
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content=rendered_content,
             sender=self.role,
@@ -598,7 +622,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             flow_state.parameters, flow_state.session_history
         )
         flow_state.parameters = old_state_parameters
-        message = StatefulTextMessage(
+        message = StatefulMessage(
             # TODO: This should be a StatefulMessage
             content=rendered_message.content,
             sender=self.role,
@@ -620,7 +644,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             )
             result = function.call(arguments, flow_state)  # type: ignore
             # Send result
-            function_message = TextMessage(
+            function_message = Message(
                 sender="function",
                 data={"function_call": {"name": function.name}},
                 content=json.dumps(result.show()),
@@ -629,7 +653,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             second_response = flow_state.model.send(
                 flow_state.parameters, flow_state.session_history
             )
-            message = StatefulTextMessage(
+            message = StatefulMessage(
                 # TODO: This should be a StatefulMessage
                 content=second_response.content,
                 sender=second_response.sender,

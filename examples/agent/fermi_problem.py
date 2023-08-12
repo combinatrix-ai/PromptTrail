@@ -6,7 +6,6 @@
 
 import logging
 import os
-import sys
 
 from prompttrail.agent.hook import (
     BooleanHook,
@@ -19,9 +18,11 @@ from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplat
 from prompttrail.agent.template import UserInputTextTemplate, is_same_template
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
+    UserInteractionTextCLIProvider,
 )
-from prompttrail.core import TextMessage
+from prompttrail.core import Message
 from prompttrail.mock import OneTurnConversationMockProvider
+from prompttrail.util import is_in_test_env
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -160,62 +161,66 @@ from prompttrail.provider.openai import (  # noqa: E402
 
 # We will provide other runner, which will enable you to input/output via HTTP, etc... in the future.
 
-
-# It's a little bit off-topic, but we can run the agent in automatically for testing!
+# It's a little bit off-topic, but we can mock the API to respond in automatically for testing!
+# Actually, we're using this example script in the test! (See tests/provider/test_openai.py)
 # See the last part of this file for more details.
-if "CI" not in os.environ and "DEBUG" not in os.environ:
-    # For now, just run the agent with the runner like below!
+
+if not is_in_test_env():
+    # First, let's see how the agent works in CLI (without mocking)!
+    # Just set up the runner and run it!
     runner = CommandLineRunner(
         model=OpenAIChatCompletionModel(
             configuration=OpenAIModelConfiguration(
                 api_key=os.environ.get("OPENAI_API_KEY", "")
             )
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4"),
+        parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
+        templates=[agent_template],
+        user_interaction_provider=UserInteractionTextCLIProvider(),
+    )
+    if __name__ == "__main__":
+        conversation = runner.run()
+        # You can keep the conversation data for later use!
+        print(conversation)
+else:
+    # Here, we will run the agent in automatically for testing!
+    # If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
+    runner = CommandLineRunner(
+        # Use mock model in CI or DEBUG
+        model=OpenAIChatCompletionModelMock(
+            configuration=OpenAIModelConfiguration(
+                # Of course, same arguments as OpenAIChatCompletionModel can be used
+                api_key=os.environ.get("OPENAI_API_KEY", ""),
+            ),
+            # You can define the behaviour of the mock model using mock_provider
+            mock_provider=OneTurnConversationMockProvider(
+                conversation_table={
+                    "How many cats in Japan?": Message(
+                        content="""Thoughts: ...
+    Calculation:
+    ```python
+    5300000 * 0.49 * 2.1
+    ```
+    """,
+                        sender="assistant",
+                    ),
+                    "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
+                        content="END", sender="assistant"
+                    ),
+                },
+                sender="assistant",
+            ),
+        ),
+        user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
+            conversation_table={
+                # 5300000 * 0.49 * 2.1 = 5453700.0
+                agent_template.templates[0].content: "How many cats in Japan?",  # type: ignore
+                "The answer is 5453700.0 . Satisfied?": "OK",
+            }
+        ),
+        parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
         templates=[agent_template],
     )
-    conversation = runner.run()
-    # You can keep the conversation data for later use!
-    print(conversation)
-    sys.exit(0)
-
-# Here, we will run the agent in automatically for testing!
-# If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
-runner = CommandLineRunner(
-    # Use mock model in CI or DEBUG
-    model=OpenAIChatCompletionModelMock(
-        configuration=OpenAIModelConfiguration(
-            # Of course, same arguments as OpenAIChatCompletionModel can be used
-            api_key=os.environ.get("OPENAI_API_KEY", ""),
-        ),
-        # You can define the behaviour of the mock model using mock_provider
-        mock_provider=OneTurnConversationMockProvider(
-            conversation_table={
-                "How many cats in Japan?": TextMessage(
-                    content="""Thoughts: ...
-Calculation:
-```python
-5300000 * 0.49 * 2.1
-```
-""",
-                    sender="assistant",
-                ),
-                "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": TextMessage(
-                    content="END", sender="assistant"
-                ),
-            },
-            sender="assistant",
-        ),
-    ),
-    user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
-        conversation_table={
-            # 5300000 * 0.49 * 2.1 = 5453700.0
-            agent_template.templates[0].content: "How many cats in Japan?",  # type: ignore
-            "The answer is 5453700.0 . Satisfied?": "OK",
-        }
-    ),
-    parameters=OpenAIModelParameters(model_name="gpt-4"),
-    templates=[agent_template],
-)
-conversation = runner.run()
-print(conversation)
+    if __name__ == "__main__":
+        conversation = runner.run()
+        print(conversation)

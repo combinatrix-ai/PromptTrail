@@ -1,25 +1,19 @@
 import unittest
 
-from pydantic import ValidationError
-
-from prompttrail.core import Configuration, Message, Model, TextMessage, TextSession
+from prompttrail.core import Configuration, Message, Model, Session
 
 
 class TestCore(unittest.TestCase):
     def test_text_message_creation(self):
-        message = TextMessage(content="Hello", sender="User")
+        message = Message(content="Hello", sender="User")
         self.assertEqual(message.content, "Hello")
         self.assertEqual(message.sender, "User")
 
     def test_text_session_creation(self):
-        message1 = TextMessage(content="Hello", sender="User")
-        message2 = TextMessage(content="Hi", sender="Bot")
-        session = TextSession(messages=[message1, message2])
+        message1 = Message(content="Hello", sender="User")
+        message2 = Message(content="Hi", sender="Bot")
+        session = Session(messages=[message1, message2])
         self.assertEqual(len(session.messages), 2)
-
-        with self.assertRaises(ValidationError):
-            message3 = Message(content="Bye", sender="User")
-            session = TextSession(messages=[message1, message2, message3])  # type: ignore
 
     def test_model_implementation(self):
         with self.assertRaises(TypeError):
