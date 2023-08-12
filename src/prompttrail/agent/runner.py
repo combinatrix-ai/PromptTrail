@@ -101,8 +101,6 @@ class CommandLineRunner(Runner):
         if start_template is not None:
             if isinstance(start_template, str):
                 start_template = self._search_template(start_template)
-            elif not isinstance(start_template, Template):  # type: ignore
-                raise TypeError("start_template must be Template or TemplateId.")
 
         # main loop
         template = start_template if start_template is not None else self.templates[0]

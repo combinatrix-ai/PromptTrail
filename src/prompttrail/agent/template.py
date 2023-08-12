@@ -40,10 +40,10 @@ class Template(object):
         self,
         template_id: Optional[None] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id: str = (
             template_id
@@ -100,10 +100,10 @@ class MessageTemplate(Template):
         role: str,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -182,10 +182,10 @@ class MetaTemplate(MessageTemplate):
         self,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -218,10 +218,10 @@ class LoopTemplate(MetaTemplate):
         jump_to: Optional[TemplateId] = None,
         template_id: Optional[TemplateId] = None,
         exit_loop_count: Optional[int] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -251,7 +251,7 @@ class LoopTemplate(MetaTemplate):
             true_template=jump_to if jump_to is not None else "END",
         )
         for template in self.templates:
-            template.after_control.append(hook)  # type: ignore
+            template.after_control.append(hook)
 
     def _render(self, flow_state: FlowState) -> FlowState:
         # render
@@ -285,10 +285,10 @@ class IfTemplate(MetaTemplate):
         false_template: Template,
         condition: BooleanHook,
         template_id: Optional[TemplateId] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -339,10 +339,10 @@ class LinearTemplate(MetaTemplate):
         templates: Sequence[Template],
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -396,10 +396,10 @@ class GenerateTemplate(MessageTemplate):
         role: str,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -462,10 +462,10 @@ class UserInputTextTemplate(MessageTemplate):
         default: Optional[str] = None,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence[TransformHook] = [],
-        after_transform: Sequence[TransformHook] = [],
-        before_control: Sequence[JumpHook] = [],
-        after_control: Sequence[JumpHook] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         self.template_id = (
             template_id
@@ -528,10 +528,10 @@ class OpenAIMessageTemplate(MessageTemplate):
         role: OpenAIrole,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence["TransformHook"] = [],
-        after_transform: Sequence["TransformHook"] = [],
-        before_control: Sequence["JumpHook"] = [],
-        after_control: Sequence["JumpHook"] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             content=content,
@@ -551,10 +551,10 @@ class OpenAIGenerateTemplate(GenerateTemplate):
         role: OpenAIrole,
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence["TransformHook"] = [],
-        after_transform: Sequence["TransformHook"] = [],
-        before_control: Sequence["JumpHook"] = [],
-        after_control: Sequence["JumpHook"] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             template_id=template_id,
@@ -574,10 +574,10 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         functions: Sequence[Tool],
         template_id: Optional[TemplateId] = None,
         next_template_default: Optional[TemplateLike] = None,
-        before_transform: Sequence["TransformHook"] = [],
-        after_transform: Sequence["TransformHook"] = [],
-        before_control: Sequence["JumpHook"] = [],
-        after_control: Sequence["JumpHook"] = [],
+        before_transform: List[TransformHook] = [],
+        after_transform: List[TransformHook] = [],
+        before_control: List[JumpHook] = [],
+        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             template_id=template_id,
