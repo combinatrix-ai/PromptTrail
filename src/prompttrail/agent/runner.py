@@ -4,18 +4,17 @@ from typing import Dict, Optional, Sequence
 
 from prompttrail.agent import FlowState
 from prompttrail.agent.core import StatefulSession
-from prompttrail.agent.template import Template, TemplateId, TemplateLike
+from prompttrail.agent.template import (
+    END_TEMPLATE_ID,
+    MAX_TEMPLATE_LOOP,
+    EndTemplate,
+    Template,
+    TemplateId,
+)
 from prompttrail.agent.user_interaction import UserInteractionProvider
 from prompttrail.core import Model, Parameters
-from prompttrail.util import END_TEMPLATE_ID, MAX_TEMPLATE_LOOP
 
 logger = logging.getLogger(__name__)
-
-
-def get_id(template_like: TemplateLike) -> TemplateId:
-    if isinstance(template_like, Template):
-        return template_like.template_id
-    return template_like
 
 
 class Runner(object):
@@ -45,15 +44,15 @@ class Runner(object):
     @abstractmethod
     def run(
         self,
-        start_template: Optional[TemplateLike] = None,
+        start_template_id: Optional[TemplateId] = None,
         flow_state: Optional[FlowState] = None,
         max_messages: Optional[int] = None,
     ) -> FlowState:
         raise NotImplementedError("run method is not implemented")
 
-    def _search_template(self, template_like: TemplateLike) -> "Template":
-        if isinstance(template_like, Template):
-            return template_like
+    def search_template(self, template_like: TemplateId) -> "Template":
+        if template_like == EndTemplate.template_id:
+            return EndTemplate()
         if template_like not in self.template_dict:
             raise ValueError(f"Template id {template_like} is not found.")
         return self.template_dict[template_like]
@@ -62,7 +61,7 @@ class Runner(object):
 class CommandLineRunner(Runner):
     def run(
         self,
-        start_template: Optional[TemplateLike] = None,
+        start_template_id: Optional[TemplateId] = None,
         flow_state: Optional[FlowState] = None,
         max_messages: Optional[int] = 100,
     ) -> FlowState:
@@ -74,7 +73,7 @@ class CommandLineRunner(Runner):
                 parameters=self.parameters,
                 data={},
                 session_history=StatefulSession(),
-                jump=None,
+                jump_to_id=None,
             )
         else:
             if flow_state.model != self.model:
@@ -97,18 +96,21 @@ class CommandLineRunner(Runner):
                 flow_state.runner = self
 
         # decide where to start running
-        if start_template is not None:
-            if isinstance(start_template, str):
-                start_template = self._search_template(start_template)
+        if start_template_id is not None:
+            start_template_id = self.search_template(start_template_id).template_id
 
         # main loop
-        template = start_template if start_template is not None else self.templates[0]
-        last_template = template
+        current_template_id = (
+            start_template_id
+            if start_template_id is not None
+            else self.templates[0].template_id
+        )
+        last_template_id = None
         same_template_count = 0
         next_message_index_to_show = 0
         next_template = None
         while 1:
-            flow_state = template.render(flow_state)
+            flow_state = self.search_template(current_template_id).render(flow_state)
             logger.error(flow_state)
 
             # show newly added messages
@@ -129,30 +131,28 @@ class CommandLineRunner(Runner):
             # MetaTemplate handle the default next template for each child template.
 
             # Step 1: handle jump
-            if flow_state.jump is not None:
-                logger.info(msg=f"Jump is set to {flow_state.jump}.")
-                if get_id(flow_state.jump) == END_TEMPLATE_ID:
-                    logger.info("Flow is finished.")
-                    break
-                if not isinstance(flow_state.jump, Template):
-                    next_template = self._search_template(flow_state.jump)
-                flow_state.jump = None
+            if flow_state.jump_to_id is not None:
+                logger.info(msg=f"Jump is set to {flow_state.jump_to_id}.")
+                next_template = self.search_template(flow_state.jump_to_id)
+                flow_state.jump_to_id = None
             else:
                 # TODO: Naming here is confusing. We should rename this.
                 # Step 2: handle default next template
-                if flow_state.current_template is None:
+                if flow_state.current_template_id is None:
                     raise ValueError("current_template is not set.")
-                current_template = self._search_template(
-                    template_like=flow_state.current_template
+                current_template = self.search_template(
+                    template_like=flow_state.current_template_id
                 )
-                next_template_like = current_template.next_template_default
-                next_template_or_none: Template | None = (
-                    self._search_template(next_template_like)
-                    if next_template_like is not None
+                next_template_id = current_template.next_template_default
+                next_template = (
+                    self.search_template(next_template_id)
+                    if next_template_id is not None
                     else None
                 )
-                if next_template_or_none is not None:
-                    next_template = self._search_template(next_template_or_none)
+            if next_template and next_template.template_id == END_TEMPLATE_ID:
+                logger.info("Next template is END. Flow is finished.")
+                break
+
             # Step 3: no jump and no next template
             if next_template is None:
                 logger.info("No jump is set. Flow is finished.")
@@ -160,13 +160,14 @@ class CommandLineRunner(Runner):
 
             # check if the same template is rendered consecutively
             # TODO: Check more general loop
-            if last_template == next_template:
+            if last_template_id == next_template.template_id:
                 same_template_count += 1
                 if same_template_count > MAX_TEMPLATE_LOOP:
                     raise RuntimeError(
                         f"Same template is rendered consecutively more than {MAX_TEMPLATE_LOOP} times. This may be caused by infinite loop?"
                     )
-            template = next_template
+            last_template_id = current_template_id
+            current_template_id = next_template.template_id
             next_template = None
             if (
                 max_messages

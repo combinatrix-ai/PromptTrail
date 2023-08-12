@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from prompttrail.agent.runner import Runner
-    from prompttrail.agent.template import TemplateLike
+    from prompttrail.agent.template import Template, TemplateId
 
 
 class StatefulMessage(Message):
@@ -62,16 +62,16 @@ class FlowState(object):
         parameters: Optional[Parameters] = None,
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
-        current_template: Optional["TemplateLike"] = None,
-        jump: Optional["TemplateLike"] = None,
+        current_template_id: Optional["TemplateId"] = None,
+        jump_to_id: Optional["TemplateId"] = None,
     ):
         self.runner = runner
         self.model = model
         self.parameters = parameters
         self.data = data
         self.session_history = session_history
-        self.current_template = current_template
-        self.jump = jump
+        self.current_template_id = current_template_id
+        self.jump_to_id = jump_to_id
 
     def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
@@ -81,16 +81,18 @@ class FlowState(object):
     def get_current_data(self) -> Dict[str, Any]:
         return self.data
 
-    def get_jump(self) -> Optional["TemplateLike"]:
-        return self.jump
+    def get_jump(self) -> Optional["TemplateId"]:
+        return self.jump_to_id
 
-    def set_jump(self, jump: Optional["TemplateLike"]) -> None:
-        self.jump = jump
+    def set_jump(self, jump_to_id: Optional["TemplateId"]) -> None:
+        self.jump_to_id = jump_to_id
 
-    def get_current_template(self) -> "TemplateLike":
-        if self.current_template is None:
-            raise Exception("Current template is not set.")
-        return self.current_template
+    def get_current_template(self) -> "Template":
+        if self.current_template_id is None:
+            raise ValueError("Current template is not set.")
+        if self.runner is None:
+            raise ValueError("Runner is not set.")
+        return self.runner.search_template(self.current_template_id)
 
     def __str__(self):
         # Create PrettyPrinted string
@@ -108,13 +110,16 @@ class FlowState(object):
                 ).splitlines()
             ]
         )
-        current_template_json = pformat(
-            self.current_template.template_id
-            if self.current_template is not None
-            and not isinstance(self.current_template, str)
-            else self.current_template
-        )
-        jump_json = pformat(self.jump)
+        # If runner is set, template can be searched.
+        if self.runner is not None:
+            current_template_json = pformat(
+                self.runner.search_template(self.current_template_id)
+                if self.current_template_id is not None
+                else self.current_template_id
+            )
+        else:
+            current_template_json = self.current_template_id
+        jump_json = pformat(self.jump_to_id)
 
         return f"""FlowState(
     data=

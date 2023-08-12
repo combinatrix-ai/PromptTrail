@@ -15,7 +15,7 @@ from prompttrail.agent.hook import (
 )
 from prompttrail.agent.template import LinearTemplate, LoopTemplate, MessageTemplate
 from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template import UserInputTextTemplate, is_same_template
+from prompttrail.agent.template import UserInputTextTemplate
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
     UserInteractionTextCLIProvider,
@@ -136,9 +136,7 @@ Calculation:
             exit_condition=BooleanHook(
                 condition=lambda flow_state:
                 # Exit condition: if the last message given by API is END, then exit, else continue (in this case, go to top of loop)
-                is_same_template(
-                    flow_state.get_current_template(), check_end.template_id
-                )
+                flow_state.get_current_template().template_id == check_end.template_id
                 and "END" in flow_state.get_last_message().content
             ),
         ),
