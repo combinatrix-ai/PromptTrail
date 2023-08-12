@@ -62,7 +62,6 @@ class IfJumpHook(JumpHook):
             return self.false_template
 
 
-# TODO: Ask and Generate should be treated differently from other hooks
 class AskUserHook(TransformHook):
     def __init__(
         self,

@@ -256,7 +256,6 @@ class LoopTemplate(MetaTemplate):
     def _render(self, flow_state: FlowState) -> FlowState:
         # render
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
             template_id=self.template_id,
@@ -307,7 +306,6 @@ class IfTemplate(MetaTemplate):
 
     def _render(self, flow_state: FlowState) -> FlowState:
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
             template_id=self.template_id,
@@ -368,7 +366,6 @@ class LinearTemplate(MetaTemplate):
     def _render(self, flow_state: FlowState) -> FlowState:
         # render
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content="",
             sender=self.role,
             template_id=self.template_id,
@@ -436,7 +433,6 @@ class GenerateTemplate(MessageTemplate):
             flow_state.parameters, flow_state.session_history
         ).content
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content=rendered_content,
             sender=self.role,
             template_id=self.template_id,
@@ -497,12 +493,10 @@ class UserInputTextTemplate(MessageTemplate):
                 "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via FlowState."
             )
 
-        # TODO: user_interaction_provider can return non text for multimodal model
         rendered_content = flow_state.runner.user_interaction_provider.ask(
             flow_state, self.description, self.default
         )
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content=rendered_content,
             sender=self.role,
             template_id=self.template_id,
@@ -623,7 +617,6 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         )
         flow_state.parameters = old_state_parameters
         message = StatefulMessage(
-            # TODO: This should be a StatefulMessage
             content=rendered_message.content,
             sender=self.role,
             template_id=self.template_id,
@@ -654,7 +647,6 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 flow_state.parameters, flow_state.session_history
             )
             message = StatefulMessage(
-                # TODO: This should be a StatefulMessage
                 content=second_response.content,
                 sender=second_response.sender,
                 template_id=self.template_id,

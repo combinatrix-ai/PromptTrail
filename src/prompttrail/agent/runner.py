@@ -74,7 +74,6 @@ class CommandLineRunner(Runner):
                 parameters=self.parameters,
                 data={},
                 session_history=StatefulSession(),
-                # TODO: This should be StatefulSession
                 jump=None,
             )
         else:
