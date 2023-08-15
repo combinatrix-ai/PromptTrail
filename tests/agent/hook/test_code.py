@@ -5,20 +5,20 @@ from prompttrail.agent.hook.code import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
 )
-from prompttrail.core import TextMessage
+from prompttrail.core import Message
 
 
 class TestExtractMarkdownCodeBlockHook(unittest.TestCase):
     def test_hook(self):
         flow_state = FlowState()
-        flow_state.session_history.messages.append(TextMessage(content="```python\nprint('Hello, World!')```", sender="assistant"))  # type: ignore
+        flow_state.session_history.messages.append(Message(content="```python\nprint('Hello, World!')```", sender="assistant"))  # type: ignore
         hook = ExtractMarkdownCodeBlockHook("code", "python")
         flow_state = hook.hook(flow_state)
         self.assertEqual(flow_state.data["code"], "print('Hello, World!')")
 
     def test_hook_no_code_block(self):
         flow_state = FlowState()
-        flow_state.session_history.messages.append(TextMessage(content="This  is a regular message", sender="assistant"))  # type: ignore
+        flow_state.session_history.messages.append(Message(content="This  is a regular message", sender="assistant"))  # type: ignore
         hook = ExtractMarkdownCodeBlockHook("code", "python")
         flow_state = hook.hook(flow_state)
         self.assertIsNone(flow_state.data["code"])

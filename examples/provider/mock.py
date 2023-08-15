@@ -20,7 +20,7 @@ model = OpenAIChatCompletionModelMock(configuration=config)
 model.setup(
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={
-            "1+1": "1215973652716",
+            "1+1": Message(content="1215973652716", sender="assistant"),
         },
         sender="assistant",
     )

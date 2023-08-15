@@ -11,6 +11,7 @@ from prompttrail.agent.template import (
     OpenAIGenerateWithFunctionCallingTemplate,
 )
 from prompttrail.agent.tool import Tool, ToolArgument, ToolResult
+from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -107,11 +108,13 @@ runner = CommandLineRunner(
         )
     ),
     parameters=OpenAIModelParameters(
-        model_name="gpt-4",
+        model_name="gpt-3.5-turbo",
         max_tokens=1000,
         temperature=0,
     ),
     templates=[template],
+    user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-runner.run()
+if __name__ == "__main__":
+    runner.run()
