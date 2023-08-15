@@ -266,3 +266,34 @@ runner.run()
 
 - `OPENAI_API_KEY`: API key for OpenAI API
 - `GOOGLE_CLOUD_API_KEY`: API key for Google Cloud API
+
+## Module Architecture
+
+- core: Base classes such as message, session etc...
+- provider: Unified interface to various LLMs
+  - openai: OpenAI API
+  - stream: OpenAI API with streaming output
+  - google: Google Cloud API
+  - mock:   Mock of API for testing
+- agent
+  - runner:   Runner execute agent in various media (CLI, API, etc...) based on Templates with Hooks
+  - template: Template for agents, let you write complex agent in a simple way
+  - hook:     Pytorch Lightning style hook for agents, allowing you to customize agents based on your needs
+    - core:   Basic hooks
+    - code:   Hooks for code related tasks
+  - tool:     Tooling for agents incl. function calling
+  - user_interaction: Unified interface to user interaction
+    - console: Console-based user interaction
+    - mock:    Mock of user interaction for testing
+
+Your typical workflow is as follows:
+- Create a template using control flow templates (Looptemplate, Iftemplate etc..) and message templates
+- Run them in your CLI with CLIRunner and test it.
+- If you want to use it in your application, use APIRunner!
+  - See the examples for server side usage.
+- Mock your agent with MockProvider and MockUserInteraction let them automatically test on your CI.
+
+## Real World Examples
+
+- I have created some services with PromptTrail!
+- Please let me know via issue if you have created one! I'll add it here.
