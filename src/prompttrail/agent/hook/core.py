@@ -62,7 +62,6 @@ class IfJumpHook(JumpHook):
             return self.false_template
 
 
-# TODO: Ask and Generate should be treated differently from other hooks
 class AskUserHook(TransformHook):
     def __init__(
         self,
@@ -103,4 +102,17 @@ class GenerateChatHook(TransformHook):
             flow_state.parameters, flow_state.session_history
         )
         flow_state.data[self.key] = message.content
+        return flow_state
+
+
+class CountUpHook(TransformHook):
+    def __init__(self):
+        pass
+
+    def hook(self, flow_state: FlowState) -> FlowState:
+        template = flow_state.get_current_template()
+        if template.template_id not in flow_state.data:
+            flow_state.data[template.template_id] = 0
+        else:
+            flow_state.data[template.template_id] += 1
         return flow_state

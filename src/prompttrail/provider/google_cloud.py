@@ -9,14 +9,7 @@ from google.generativeai.types.discuss_types import (  # type: ignore
 )
 from pydantic import BaseModel, ConfigDict  # type: ignore
 
-from prompttrail.core import (
-    Configuration,
-    Message,
-    Model,
-    Parameters,
-    Session,
-    TextMessage,
-)
+from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.error import ParameterValidationError, ProviderResponseError
 
 logger = getLogger(__name__)
@@ -81,7 +74,7 @@ class GoogleCloudChatModel(Model):
             raise ProviderResponseError("No candidates returned.", response=response)  # type: ignore
 
         message = response.candidates[0]  # type: ignore #TODO: More robust error handling
-        return TextMessage(content=message["content"], sender=message["author"])  # type: ignore #TODO: More robust error handling
+        return Message(content=message["content"], sender=message["author"])  # type: ignore #TODO: More robust error handling
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         if len(session.messages) == 0:

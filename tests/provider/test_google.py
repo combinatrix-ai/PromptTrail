@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from prompttrail.core import TextMessage, TextSession
+from prompttrail.core import Message, Session
 from prompttrail.error import ParameterValidationError
 from prompttrail.provider.google_cloud import (
     GoogleCloudChatModel,
@@ -32,25 +32,25 @@ class TestGoogleCloud(unittest.TestCase):
 
     def test_model_send(self):
         # One message
-        message = TextMessage(
+        message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
             sender="user",
         )
-        session = TextSession(messages=[message])
+        session = Session(messages=[message])
         response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, TextMessage)
+        self.assertIsInstance(response, Message)
         self.assertIsInstance(response.content, str)
         self.assertIn("527", response.content)
 
         # All message types
         messages = [
-            TextMessage(content="You're a helpful assistant.", sender="system"),
-            TextMessage(content="Calculate 129183712*1271606", sender="user"),
-            TextMessage(content="bc: The answer is 12696595579352", sender="system"),
+            Message(content="You're a helpful assistant.", sender="system"),
+            Message(content="Calculate 129183712*1271606", sender="user"),
+            Message(content="bc: The answer is 12696595579352", sender="system"),
         ]
-        session = TextSession(messages=messages)
+        session = Session(messages=messages)
         response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, TextMessage)
+        self.assertIsInstance(response, Message)
         self.assertIsInstance(response.content, str)
         self.assertIn("12696595579352", response.content)
 
@@ -58,20 +58,20 @@ class TestGoogleCloud(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             response = self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="", sender="user")]),
+                Session(messages=[Message(content="", sender="user")]),
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                TextSession(messages=[TextMessage(content="Hello", sender=None)]),
+                Session(messages=[Message(content="Hello", sender=None)]),
             )
         with self.assertRaises(ParameterValidationError):
-            self.model.send(self.parameters, TextSession(messages=[]))
+            self.model.send(self.parameters, Session(messages=[]))
 
         # On Google Cloud, sender can be anything
         response = self.model.send(
             self.parameters,
-            TextSession(messages=[TextMessage(content="Hello", sender="")]),
+            Session(messages=[Message(content="Hello", sender="")]),
         )
 
 

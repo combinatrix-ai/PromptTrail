@@ -26,7 +26,7 @@ jobs:
         run: mypy src examples tests
       - name: Run flake8
         # Note that ignore must be sometimes synchronized with pyproject.toml
-        run: flake8 --ignore=E121,E123,E126,E226,E24,E704,W503,W504,E501,F401,F403 src examples tests
+        run: flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples
       - name: Run black
         run: black --check src examples tests
       - name: Run pytest

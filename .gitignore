@@ -31,3 +31,4 @@ docs/sphinx/prompttrail*.rst
 .envrc
 .vscode
 tmp
+lib

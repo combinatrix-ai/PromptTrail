@@ -53,7 +53,7 @@ You can find more examples in [examples](examples) directory.
 
 ## LLM API Call
 
-This is the simplest example of how to use PromptTrail as a thin wrapper around LLMs.
+This is the simplest example of how to use PromptTrail as a thin wrapper around LLMs of various providers.
 
 ```python
 > import os

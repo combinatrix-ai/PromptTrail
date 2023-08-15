@@ -39,6 +39,24 @@ class EvaluatePythonCodeHook(TransformHook):
                 level=logging.WARNING,
             )
             return flow_state
-        answer = eval(python_segment)  # TODO: security check
+        # rewrite python segment
+        # remove leading spaces if all lines have the same number of leading spaces
+        lines = python_segment.splitlines()
+        if len(lines) > 0:
+            leading_spaces = [len(line) - len(line.lstrip()) for line in lines]
+            if len(set(leading_spaces)) == 1:
+                python_segment = "\n".join(
+                    [line[leading_spaces[0] :] for line in lines]
+                )
+        try:
+            answer = eval(python_segment)  # TODO: security check
+        except Exception as e:
+            hook_logger(
+                self,
+                flow_state,
+                f"Failed to evaluate python code: {python_segment}",
+                level=logging.WARNING,
+            )
+            raise e
         flow_state.data[self.key] = answer
         return flow_state
