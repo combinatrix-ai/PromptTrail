@@ -98,9 +98,7 @@ class GenerateChatHook(TransformHook):
             raise ValueError(
                 "Model must be given to use GenerateChatHook. Please set model to the runner."
             )
-        message = state.model.send(
-            state.parameters, state.session_history
-        )
+        message = state.model.send(state.parameters, state.session_history)
         state.data[self.key] = message.content
         return state
 

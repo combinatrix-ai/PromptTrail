@@ -2,7 +2,6 @@
 # See https://github.com/combinatrix-ai/PromptTrail/pull/3 for what it does.
 
 import os
-import sys
 
 from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
@@ -61,7 +60,7 @@ def main(
     logging.basicConfig(level=logging.DEBUG)
 
     load_file_content = open(load_file, "r")
-    splits:list[list[str]] = []
+    splits: list[list[str]] = []
     # try splitting by ##
 
     chunk: list[str] = []
@@ -72,15 +71,11 @@ def main(
         chunk.append(line)
     if len(chunk) > 0:
         splits.append(chunk)
-    
-    corrected_splits:list[str] = []
+
+    corrected_splits: list[str] = []
     for split in splits:
         content = "\n".join(split)
-        initial_state = State(
-            data={
-                "content": content
-            }
-        )
+        initial_state = State(data={"content": content})
         state = runner.run(state=initial_state)
         last_message = state.get_last_message()
         content = last_message.content

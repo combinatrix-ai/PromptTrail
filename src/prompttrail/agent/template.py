@@ -621,9 +621,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         state.parameters.functions = self.functions
 
         # 1st message
-        rendered_message = state.model.send(
-            state.parameters, state.session_history
-        )
+        rendered_message = state.model.send(state.parameters, state.session_history)
         state.parameters = old_state_parameters
         message = StatefulMessage(
             content=rendered_message.content,
@@ -652,9 +650,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 content=json.dumps(result.show()),
             )
             state.session_history.messages.append(function_message)  # type: ignore
-            second_response = state.model.send(
-                state.parameters, state.session_history
-            )
+            second_response = state.model.send(state.parameters, state.session_history)
             message = StatefulMessage(
                 content=second_response.content,
                 sender=second_response.sender,

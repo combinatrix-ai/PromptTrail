@@ -107,9 +107,7 @@ class CommandLineRunner(Runner):
             logger.error(state)
 
             # show newly added messages
-            new_messages = state.session_history.messages[
-                next_message_index_to_show:
-            ]
+            new_messages = state.session_history.messages[next_message_index_to_show:]
             for message in new_messages:
                 if message.sender == CONTROL_TEMPLATE_ROLE:
                     continue
@@ -164,10 +162,7 @@ class CommandLineRunner(Runner):
             last_template_id = current_template_id
             current_template_id = next_template.template_id
             next_template = None
-            if (
-                max_messages
-                and len(state.session_history.messages) >= max_messages
-            ):
+            if max_messages and len(state.session_history.messages) >= max_messages:
                 logger.warning(
                     f"Max messages {max_messages} is reached. Flow is forced to stop."
                 )
