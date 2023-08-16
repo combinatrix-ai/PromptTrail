@@ -185,9 +185,9 @@ flow_template = LinearTemplate(
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda flow_state: (
-                    flow_state.get_current_template().id == check_end.id
-                    and "END" in flow_state.get_last_message().content
+                condition=lambda state: (
+                    state.get_current_template().id == check_end.id
+                    and "END" in state.get_last_message().content
                 )
             ),
         ),

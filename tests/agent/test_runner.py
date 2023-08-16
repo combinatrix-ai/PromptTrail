@@ -29,13 +29,13 @@ template = LinearTemplate(
                         ),
                     ],
                     exit_condition=BooleanHook(
-                        lambda flow_state: len(flow_state.session_history.messages) > 10
+                        lambda state: len(state.session_history.messages) > 10
                     ),
                 ),
             ],
             exit_condition=BooleanHook(
-                lambda flow_state: flow_state.data[assistant_reply.template_id] >= 2
-                if assistant_reply.template_id in flow_state.data
+                lambda state: state.data[assistant_reply.template_id] >= 2
+                if assistant_reply.template_id in state.data
                 else False
             ),
         )
@@ -57,5 +57,5 @@ def test_runner():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         templates=[template],
     )
-    flow_state = runner.run(max_messages=100)
-    print(flow_state)
+    state = runner.run(max_messages=100)
+    print(state)

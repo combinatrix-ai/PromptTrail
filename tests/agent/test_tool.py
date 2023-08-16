@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Sequence
 
 import pytest
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 from prompttrail.agent.tool import (
     FunctionCallingPartialProperty,
     FunctionCallingProperty,
@@ -150,7 +150,7 @@ def test_tool_argument_instance():
 def test_tool():
     tool = MyTool()
     args = [ToolArgument1(value=5)]
-    result = tool.call(args=args, flow_state=FlowState())
+    result = tool.call(args=args, state=State())
     assert isinstance(result, ToolResult1)
     assert tool.show() == {
         "name": "mytool",

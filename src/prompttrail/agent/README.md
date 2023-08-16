@@ -67,7 +67,7 @@ Let's run the agent above on CLI. Use OpenAI's GPT-3.5-turbo with 16k context. U
 
 ```python
 import os
-from prompttrail.agent import FlowState
+from prompttrail.agent import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.provider.openai import (
@@ -106,15 +106,15 @@ PrompTrail is library to build text generation agent with LLMs.
 ```
 
 Then, we need to pass the markdown to the agent.
-The point here is `flow_state`. `flow_state` is a state that is passed to the templates. In this example, we pass the markdown to the template.
-`flow_state.data` is passed to jinja2 processor and impute the template.
+The point here is `state`. `state` is a state that is passed to the templates. In this example, we pass the markdown to the template.
+`state.data` is passed to jinja2 processor and impute the template.
 You can also update the data itself with LLM outputs, function results etc. See [examples/agent/fermi_problem.py] for example.
 
 Finally, run the agent!
 
 ```python
 result = runner.run(
-    flow_state=FlowState(
+    state=State(
         data = {"content": markdown},
     ),
 )
@@ -150,7 +150,7 @@ StatefulMessage(
 
 Pretty simple, right?
 What we want is the last message, which is the corrected markdown.
-Now we saved the output of runner in `result`, which is the final `flow_state`.
+Now we saved the output of runner in `result`, which is the final `state`.
 We can extract conversation as follows:
 
 ```python
@@ -244,7 +244,7 @@ GenerateTemplate(
     ],
     after_control=[
         IfJumpHook(
-            condition=lambda flow_state: "answer" in flow_state.data,
+            condition=lambda state: "answer" in state.data,
             true_template="gather_feedback",
             false_template=first.template_id,
         )
@@ -255,11 +255,11 @@ GenerateTemplate(
 This template order LLM to generate text, extract python code block from the generated text, and evaluate the code.
 `after_transform` is called after LLM generates text. We passed `ExtractMarkdownCodeBlockHook` and `EvaluatePythonCodeHook`.
 Let's see what they do.
-`ExtractMarkdownCodeBlockHook` extracts code block of the language specified by `lang` from the generated text and store it to `flow_state.data["python_segment"]`.
-`EvaluatePythonCodeHook` evaluates the code stored in `flow_state.data["python_segment"]` and store the result to `flow_state.data["answer"]`.
-As convention, `key` is used to represent the key of `flow_state.data` to store the result of hook.
+`ExtractMarkdownCodeBlockHook` extracts code block of the language specified by `lang` from the generated text and store it to `state.data["python_segment"]`.
+`EvaluatePythonCodeHook` evaluates the code stored in `state.data["python_segment"]` and store the result to `state.data["answer"]`.
+As convention, `key` is used to represent the key of `state.data` to store the result of hook.
 
-After that, `after_control` is called. `IfJumpHook` jumps to `gather_feedback` template if `answer` is in `flow_state.data` or `first.template_id` otherwise. We will explain FlowState later. Now you should remember that hook is dealing with FlowState.
+After that, `after_control` is called. `IfJumpHook` jumps to `gather_feedback` template if `answer` is in `state.data` or `first.template_id` otherwise. We will explain State later. Now you should remember that hook is dealing with State.
 `gather_feedback` and `first.template_id` are template ids, the unique identifier of the template passed to the runner. `template_id` can be set at instantiation like:
 
 ```python
@@ -286,28 +286,28 @@ The order of hooks are:
 
 `rendering` is a process to create a message from a template.
 Every template has a `render` method.
-For `MessageTemplate`, it is just rendering the template with `flow_state.data` via jinja2 and return the result as a message.
+For `MessageTemplate`, it is just rendering the template with `state.data` via jinja2 and return the result as a message.
 For `GenerateTemplate`, it is calling LLM and return the result as a message.
 For `InputTemplate`, it is asking user input using user_interaction_provider and return the result as a message.
 
 You can of course add your own template. See [template.py] for more details.
 
-### `FlowState`
+### `State`
 
-`FlowState` is a state that is passed to the templates and holds the state of the conversation.
+`State` is a state that is passed to the templates and holds the state of the conversation.
 If you're going to build application with `prompttrail.agent`, you just need to the following:
 
-- `FlowState.data`
+- `State.data`
   - This is a python dictionary you can use to pass data to the templates.
   - Handling `data` is the responsibility of the temlates (and hooks, which we will see later).
   - If specified key is not found in `data`, error will be raised unless you specify `default` in the template or hooks.
-- `FlowState.current_template_id`
+- `State.current_template_id`
   - You can know which template is currently running by accessing this.
   - ex. This is used by `IfJumpHook` to jump to another template.
 
 ```python
-class FlowState(object):
-    """FlowState hold the all state of the conversation."""
+class State(object):
+    """State hold the all state of the conversation."""
 
     def __init__(
         self,
@@ -329,7 +329,7 @@ class FlowState(object):
 ```
 
 - Other attributes can be also accessed:
-  - `runner`: You can access the runner itself. If you want to search templates passed to runner, you can use `FlowState.runner.search_template`.
+  - `runner`: You can access the runner itself. If you want to search templates passed to runner, you can use `State.runner.search_template`.
   - `model` and `parameter`: You can access the model itself. You can make your own call to the model if you want.
   - `session_history`: You can access the session history. You can review the history of the conversation.
   - `jump_to_id`: This is where you order the runner to jump to another template. Usually, this is manipulated via hooks.

@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional, Sequence
 
-from prompttrail.agent import FlowState
+from prompttrail.agent import State
 from prompttrail.agent.core import StatefulSession
 from prompttrail.agent.template import EndTemplate, Template, TemplateId
 from prompttrail.agent.user_interaction import UserInteractionProvider
@@ -38,9 +38,9 @@ class Runner(object):
     def run(
         self,
         start_template_id: Optional[TemplateId] = None,
-        flow_state: Optional[FlowState] = None,
+        state: Optional[State] = None,
         max_messages: Optional[int] = None,
-    ) -> FlowState:
+    ) -> State:
         raise NotImplementedError("run method is not implemented")
 
     def search_template(self, template_like: TemplateId) -> "Template":
@@ -55,12 +55,12 @@ class CommandLineRunner(Runner):
     def run(
         self,
         start_template_id: Optional[TemplateId] = None,
-        flow_state: Optional[FlowState] = None,
+        state: Optional[State] = None,
         max_messages: Optional[int] = 100,
-    ) -> FlowState:
-        # set / update flow_state
-        if flow_state is None:
-            flow_state = FlowState(
+    ) -> State:
+        # set / update state
+        if state is None:
+            state = State(
                 runner=self,
                 model=self.model,
                 parameters=self.parameters,
@@ -69,24 +69,24 @@ class CommandLineRunner(Runner):
                 jump_to_id=None,
             )
         else:
-            if flow_state.model != self.model:
+            if state.model != self.model:
                 logger.log(
                     logging.INFO,
-                    f"Given flow state has different model {flow_state.model} from the runner {self.model}. Overriding the flow state.",
+                    f"Given flow state has different model {state.model} from the runner {self.model}. Overriding the flow state.",
                 )
-                flow_state.model = self.model
-            if flow_state.parameters != self.parameters:
+                state.model = self.model
+            if state.parameters != self.parameters:
                 logger.log(
                     logging.INFO,
-                    f"Given flow state has different parameters {flow_state.parameters} from the runner {self.parameters}. Overriding the flow state.",
+                    f"Given flow state has different parameters {state.parameters} from the runner {self.parameters}. Overriding the flow state.",
                 )
-                flow_state.parameters = self.parameters
-            if flow_state.runner is None or flow_state.runner != self:
+                state.parameters = self.parameters
+            if state.runner is None or state.runner != self:
                 logger.log(
                     logging.INFO,
-                    f"Given flow state has different runner {flow_state.runner} from the runner {self}. Overriding the flow state.",
+                    f"Given flow state has different runner {state.runner} from the runner {self}. Overriding the flow state.",
                 )
-                flow_state.runner = self
+                state.runner = self
 
         # decide where to start running
         if start_template_id is not None:
@@ -103,18 +103,18 @@ class CommandLineRunner(Runner):
         next_message_index_to_show = 0
         next_template = None
         while 1:
-            flow_state = self.search_template(current_template_id).render(flow_state)
-            logger.error(flow_state)
+            state = self.search_template(current_template_id).render(state)
+            logger.error(state)
 
             # show newly added messages
-            new_messages = flow_state.session_history.messages[
+            new_messages = state.session_history.messages[
                 next_message_index_to_show:
             ]
             for message in new_messages:
                 if message.sender == CONTROL_TEMPLATE_ROLE:
                     continue
                 print(message)
-            next_message_index_to_show = len(flow_state.session_history.messages)
+            next_message_index_to_show = len(state.session_history.messages)
 
             # calculate next template
 
@@ -126,17 +126,17 @@ class CommandLineRunner(Runner):
             # MetaTemplate handle the default next template for each child template.
 
             # Step 1: handle jump
-            if flow_state.jump_to_id is not None:
-                logger.info(msg=f"Jump is set to {flow_state.jump_to_id}.")
-                next_template = self.search_template(flow_state.jump_to_id)
-                flow_state.jump_to_id = None
+            if state.jump_to_id is not None:
+                logger.info(msg=f"Jump is set to {state.jump_to_id}.")
+                next_template = self.search_template(state.jump_to_id)
+                state.jump_to_id = None
             else:
                 # TODO: Naming here is confusing. We should rename this.
                 # Step 2: handle default next template
-                if flow_state.current_template_id is None:
+                if state.current_template_id is None:
                     raise ValueError("current_template is not set.")
                 current_template = self.search_template(
-                    template_like=flow_state.current_template_id
+                    template_like=state.current_template_id
                 )
                 next_template_id = current_template.next_template_default
                 next_template = (
@@ -166,10 +166,10 @@ class CommandLineRunner(Runner):
             next_template = None
             if (
                 max_messages
-                and len(flow_state.session_history.messages) >= max_messages
+                and len(state.session_history.messages) >= max_messages
             ):
                 logger.warning(
                     f"Max messages {max_messages} is reached. Flow is forced to stop."
                 )
                 break
-        return flow_state
+        return state

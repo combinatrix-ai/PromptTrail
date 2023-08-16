@@ -4,7 +4,7 @@ import os
 
 import click
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate
 from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
@@ -60,13 +60,13 @@ def main(
     logging.basicConfig(level=logging.DEBUG)
 
     load_file_content = open(load_file, "r")
-    initial_state = FlowState(
+    initial_state = State(
         data={
             "content": load_file_content.read(),
         }
     )
-    flow_state = runner.run(flow_state=initial_state)
-    last_message = flow_state.get_last_message()
+    state = runner.run(state=initial_state)
+    last_message = state.get_last_message()
     message = last_message.content
     print(message)
     # add EOF if not exists
