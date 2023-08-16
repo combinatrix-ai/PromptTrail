@@ -79,3 +79,4 @@ def main(
 if __name__ == "__main__":
     main(load_file="README.md")
     main(load_file="CONTRIBUTING.md")
+    main(load_file="src/prompttrail/agent/README.md")

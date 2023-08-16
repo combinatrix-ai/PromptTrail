@@ -2,6 +2,10 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
+## Qucikstart
+
+- If you want to just use unified interface to various LLMs, see [exapmles/provider/](examples/provider/).
+- If you want to build complex LLM applications, see [src/prompttrail/agents](src/prompttrail/agents/).
 - [Documentation (WIP)](https://combinatrix-ai.github.io/PromptTrail/)
 
 ## Installation
@@ -287,6 +291,7 @@ runner.run()
     - mock:    Mock of user interaction for testing
 
 Your typical workflow is as follows:
+
 - Create a template using control flow templates (Looptemplate, Iftemplate etc..) and message templates
 - Run them in your CLI with CLIRunner and test it.
 - If you want to use it in your application, use APIRunner!

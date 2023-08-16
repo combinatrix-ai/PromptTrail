@@ -292,7 +292,7 @@ For `InputTemplate`, it is asking user input using user_interaction_provider and
 
 You can of course add your own template. See [template.py] for more details.
 
-### `State`
+## `State`
 
 `State` is a state that is passed to the templates and holds the state of the conversation.
 If you're going to build application with `prompttrail.agent`, you just need to the following:
