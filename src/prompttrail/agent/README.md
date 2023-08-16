@@ -14,7 +14,7 @@ You can write how you would like to interact with user, LLM, and functions in it
 Example: A simple proofreading agent
 
 This is actually used in this repository to housekeep README.md etc.
-See [examples/dogfooding/fix_markdown.py].
+See [examples/dogfooding/fix_markdown.py](../../examples/dogfooding/fix_markdown.py).
 
 ```python
 from prompttrail.agent.template import LinearTemplate
@@ -26,9 +26,9 @@ templates = LinearTemplate(
         MessageTemplate(
             content="""
 You're an AI proofreader that help user to fix markdown.
-You're given python script content by the user.
-You must fix the missspellings in the comments.
-You only emit the corrected python script. No explanation is needed.
+You're given markdown content by the user.
+You only emit the corrected markdown. No explanation, comments, or anything else is needed.
+Do not remove > in the code section, which represents the prompt.
 """,
             role="system",
         ),
@@ -44,7 +44,7 @@ You only emit the corrected python script. No explanation is needed.
 The template above is an example of a very simple agent.
 `LinearTemplate` is a template that runs templates in order. So, let's see child templates.
 First `MessageTemplate` is a static template to tell LLM what who they are, as you see `role` is set to `system` following OpenAI's convention.
-In this agent, Python script is passed to LLM and LLM returns the corrected Python script.
+In this agent, markdown is passed to LLM and LLM returns the cirrected markdown.
 Second `MessageTemplate` is a template that takes user's input. `{{content}}` is a placeholder that will be replaced by `runner`.
 This is where actual markdown is passed. As some of you may have noticed, this is `Jinja2` template syntax. We use Jinja to dynamically generate templates.
 Finally, `GenerateTemplate` is a template that runs LLM actually. So, the result is what we are looking for.
@@ -61,25 +61,13 @@ Then, we need to define how the conversation actually carried out. You need to p
 - How the agent interact with LLM?: Model & Parameter
 - How the agent interact with the user?: UserInteractionProvider
 
-In this example, we don't have any user interaction. If you want to see more about user interaction, see [examples/agent/fermi_problem.py].
+In this example, we don't have any user interaction. If you want to see more about user interaction, see [examples/agent/fermi_problem.py](examples/agent/fermi_problem.py).
 
 Let's run the agent above on CLI. Use OpenAI's GPT-3.5-turbo with 16k context. User is interacted with CLI.
 
-Oh before running the agent, we need to prepare the markdown file to be proofreaded.
-
 ```python
-markdown = """
-# PromptTrail
-
-PrompTrail is library to build text generation agent with LLMs.
-"""
-```
-
-Of course, we need to pass the content to `runner`, let's see how to do it.
-
-
-```python
-
+import os
+from prompttrail.agent import FlowState
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.provider.openai import (
@@ -89,6 +77,7 @@ from prompttrail.provider.openai import (
 )
 
 # Setup LLM model
+# Don't forget to set OPENAI_API_KEY environment variable
 configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIModelParameters(
     model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=8000
@@ -101,12 +90,22 @@ runner = CommandLineRunner(
     parameters=parameter,
     templates=[templates],
     user_interaction_provider=UserInteractionTextCLIProvider(),
-    flow_state=FlowState(
-        data = {"content": markdown},
-    ),
 )
 ```
 
+OK, we are ready to run the agent. Let's run it!
+
+We need to prepare the markdown file to be proofreaded.
+
+```python
+markdown = """
+# PromptTrail
+
+PrompTrail is library to build text generation agent with LLMs.
+"""
+```
+
+Then, we need to pass the markdown to the agent.
 The point here is `flow_state`. `flow_state` is a state that is passed to the templates. In this example, we pass the markdown to the template.
 `flow_state.data` is passed to jinja2 processor and impute the template.
 You can also update the data itself with LLM outputs, function results etc. See [examples/agent/fermi_problem.py] for example.
@@ -114,41 +113,67 @@ You can also update the data itself with LLM outputs, function results etc. See 
 Finally, run the agent!
 
 ```python
-result = runner.run()
+result = runner.run(
+    flow_state=FlowState(
+        data = {"content": markdown},
+    ),
+)
 ```
 
-You will see the output like this:
+You will see the following output on your terminal.
 
 ```
-(TBU)
+StatefulMessage(
+{'content': '\n'
+            "You're an AI proofreader that help user to fix markdown.\n"
+            "You're given markdown content by the user.\n"
+            'You only emit the corrected markdown. No explanation, comments, '
+            'or anything else is needed.\n'
+            'Do not remove > in the code section, which represents the prompt.',
+ 'sender': 'system',
+)
+StatefulMessage(
+{'content': '\n'
+            '# PromptTrail\n'
+            '\n'
+            'PrompTrail is library to build text generation agent with LLMs.\n',
+ 'sender': 'user',
+)
+StatefulMessage(
+{'content': '# PromptTrail\n'
+            '\n'
+            'PromptTrail is a library to build a text generation agent with '
+            'LLMs.',
+ 'sender': 'assistant',
+)
 ```
 
-`result` is final `flow_state`.
+Pretty simple, right?
+What we want is the last message, which is the corrected markdown.
+Now we saved the output of runner in `result`, which is the final `flow_state`.
 We can extract conversation as follows:
 
 ```python
-result.session_history
-```
-
-You get `Session` instace wcich contains `Message` instances:
-
-```
-(TBU)
+result.session_history.messages
 ```
 
 We just need last message:
 
 ```python
-corrected_markdown = result.session_history[-1].content
+corrected_markdown = result.session_history.messages[-1].content
 print(corrected_markdown)
 ```
 
 The result is (may vary depending on the LLM):
 
 ```
-(TBU)
+# PromptTrail
+
+PromptTrail is a library to build a text generation agent with LLMs.
+
 ```
 
+Great! We have built our first agent!
 Here we have reviewed the core concepts of `prompttrail.agent`.
 You may start using `prompttrail.agent` to build your own agent now!
 
@@ -234,8 +259,8 @@ Let's see what they do.
 `EvaluatePythonCodeHook` evaluates the code stored in `flow_state.data["python_segment"]` and store the result to `flow_state.data["answer"]`.
 As convention, `key` is used to represent the key of `flow_state.data` to store the result of hook.
 
-After that, `after_control` is called. `IfJumpHook` jumps to `gather_feedback` template if `answer` is in `flow_state.data` or `first.template_id` otherwise.
-`gather_feedback` and `first.template_id` are template ids. `template_id` can be set at instantiation like:
+After that, `after_control` is called. `IfJumpHook` jumps to `gather_feedback` template if `answer` is in `flow_state.data` or `first.template_id` otherwise. We will explain FlowState later. Now you should remember that hook is dealing with FlowState.
+`gather_feedback` and `first.template_id` are template ids, the unique identifier of the template passed to the runner. `template_id` can be set at instantiation like:
 
 ```python
 GenerateTemplate(
@@ -246,7 +271,7 @@ GenerateTemplate(
 ```
 
 However, you can omit it. In that case, `template_id` is automatically generated based. You can get it by `template.template_id`.
-Anyway, we omitted these templates in this example, so we will not explain it here. See [examples/agent/fermi_problem.py] for more details.
+Anyway, we omitted the templates in this example, so we will not explain it here. See [examples/agent/fermi_problem.py] for more details.
 
 As there are `after_transform` and `after_control`, there are `before_transform` and `before_control`. They are called before the `rendering` of the template.
 
@@ -266,6 +291,49 @@ For `GenerateTemplate`, it is calling LLM and return the result as a message.
 For `InputTemplate`, it is asking user input using user_interaction_provider and return the result as a message.
 
 You can of course add your own template. See [template.py] for more details.
+
+### `FlowState`
+
+`FlowState` is a state that is passed to the templates and holds the state of the conversation.
+If you're going to build application with `prompttrail.agent`, you just need to the following:
+
+- `FlowState.data`
+  - This is a python dictionary you can use to pass data to the templates.
+  - Handling `data` is the responsibility of the temlates (and hooks, which we will see later).
+  - If specified key is not found in `data`, error will be raised unless you specify `default` in the template or hooks.
+- `FlowState.current_template_id`
+  - You can know which template is currently running by accessing this.
+  - ex. This is used by `IfJumpHook` to jump to another template.
+
+```python
+class FlowState(object):
+    """FlowState hold the all state of the conversation."""
+
+    def __init__(
+        self,
+        runner: Optional["Runner"] = None,
+        model: Optional[Model] = None,
+        parameters: Optional[Parameters] = None,
+        data: Dict[str, Any] = {},
+        session_history: StatefulSession = StatefulSession(),
+        current_template_id: Optional["TemplateId"] = None,
+        jump_to_id: Optional["TemplateId"] = None,
+    ):
+        self.runner = runner
+        self.model = model
+        self.parameters = parameters
+        self.data = data
+        self.session_history = session_history
+        self.current_template_id = current_template_id
+        self.jump_to_id = jump_to_id
+```
+
+- Other attributes can be also accessed:
+  - `runner`: You can access the runner itself. If you want to search templates passed to runner, you can use `FlowState.runner.search_template`.
+  - `model` and `parameter`: You can access the model itself. You can make your own call to the model if you want.
+  - `session_history`: You can access the session history. You can review the history of the conversation.
+  - `jump_to_id`: This is where you order the runner to jump to another template. Usually, this is manipulated via hooks.
+
 
 ## `agent.tool` (Function Calling)
 
