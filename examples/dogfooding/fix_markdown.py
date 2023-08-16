@@ -35,9 +35,12 @@ Do not remove > in the code section, which represents the prompt.
     ],
 )
 
+MAX_TOKENS = 8000
+MODEL_NAME = "gpt-3.5-turbo-16k"
+
 configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=8000
+    model_name=MODEL_NAME, temperature=0.0, max_tokens=MAX_TOKENS
 )
 model = OpenAIChatCompletionModel(configuration=configuration)
 
@@ -58,25 +61,40 @@ def main(
     logging.basicConfig(level=logging.DEBUG)
 
     load_file_content = open(load_file, "r")
-    initial_state = State(
-        data={
-            "content": load_file_content.read(),
-        }
-    )
-    state = runner.run(state=initial_state)
-    last_message = state.get_last_message()
-    message = last_message.content
-    print(message)
-    if len(sys.argv) > 2:
-        # add EOF if not exists
-        if message[-1] != "\n":
-            message += "\n"
-        save_file_io = open(load_file, "w")
-        save_file_io.write(last_message.content)
-        save_file_io.close()
+    splits:list[list[str]] = []
+    # try splitting by ##
+
+    chunk: list[str] = []
+    for line in load_file_content.readlines():
+        if line.startswith("## "):
+            splits.append(chunk)
+            chunk = []
+        chunk.append(line)
+    if len(chunk) > 0:
+        splits.append(chunk)
+    
+    corrected_splits:list[str] = []
+    for split in splits:
+        content = "\n".join(split)
+        initial_state = State(
+            data={
+                "content": content
+            }
+        )
+        state = runner.run(state=initial_state)
+        last_message = state.get_last_message()
+        content = last_message.content
+        print(content)
+        corrected_splits.append(content)
+    corrected_all = "\n".join(corrected_splits)
+    if corrected_all[-1] != "\n":
+        corrected_all += "\n"
+    save_file_io = open(load_file, "w")
+    save_file_io.write(corrected_all)
+    save_file_io.close()
 
 
 if __name__ == "__main__":
-    main(load_file="README.md")
-    main(load_file="CONTRIBUTING.md")
+    # main(load_file="README.md")
+    # main(load_file="CONTRIBUTING.md")
     main(load_file="src/prompttrail/agent/README.md")
