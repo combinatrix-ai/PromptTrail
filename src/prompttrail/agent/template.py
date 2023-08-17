@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import jinja2
 
-from prompttrail.agent import FlowState
+from prompttrail.agent import State
 from prompttrail.agent.core import StatefulMessage
 from prompttrail.agent.hook import BooleanHook, IfJumpHook, JumpHook, TransformHook
 from prompttrail.agent.tool import Tool, check_arguments
@@ -61,24 +61,24 @@ class Template(object):
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
 
-    def render(self, flow_state: "FlowState") -> "FlowState":
-        flow_state.current_template_id = (
+    def render(self, state: "State") -> "State":
+        state.current_template_id = (
             self.template_id
         )  # TODO: This should be stack maybe? We can force push/pop? => Maybe not because in this impl. we don't render recursively.
         # TODO: This check may be redundant?
-        jump: str | Template | None = flow_state.get_jump()
+        jump: str | Template | None = state.get_jump()
         if jump is not None:
             jump_template_id = jump.template_id if isinstance(jump, Template) else jump
             if jump_template_id != self.template_id:
                 logger = self.get_logger()
                 logger.warning(
-                    f"FlowState is set to jump to {jump_template_id} which is not the current template. Something is wrong."
+                    f"State is set to jump to {jump_template_id} which is not the current template. Something is wrong."
                 )
-            flow_state.jump_to_id = None
-        return self._render(flow_state)
+            state.jump_to_id = None
+        return self._render(state)
 
     @abstractmethod
-    def _render(self, flow_state: "FlowState") -> "FlowState":
+    def _render(self, state: "State") -> "State":
         raise NotImplementedError("render method is not implemented")
 
     def list_child_templates(self) -> List["Template"]:
@@ -123,32 +123,32 @@ class MessageTemplate(Template):
         self.before_control = before_control
         self.after_control = after_control
 
-    def _render(self, flow_state: "FlowState") -> "FlowState":
+    def _render(self, state: "State") -> "State":
         # before_transform
         for before_transform_hook in self.before_transform:
-            flow_state = before_transform_hook.hook(flow_state)
+            state = before_transform_hook.hook(state)
         # before_jump
         for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(flow_state)
+            next_template_id = before_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
+                state.jump_to_id = next_template_id
+                return state
         # render
-        rendered_content = self.jinja_template.render(**flow_state.data)
+        rendered_content = self.jinja_template.render(**state.data)
         message = StatefulMessage(
             content=rendered_content, sender=self.role, template_id=self.template_id
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
+        state.session_history.messages.append(message)  # type: ignore
         # after_transform
         for after_transform_hook in self.after_transform:
-            flow_state = after_transform_hook.hook(flow_state)
+            state = after_transform_hook.hook(state)
         # after_jump
         for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(flow_state)
+            next_template_id = after_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
-        return flow_state
+                state.jump_to_id = next_template_id
+                return state
+        return state
 
     def __str__(self) -> str:
         if "\n" in self.content:
@@ -258,15 +258,15 @@ class LoopTemplate(ControlTemplate):
         for template in self.templates:
             template.after_control.append(hook)
 
-    def _render(self, flow_state: FlowState) -> FlowState:
+    def _render(self, state: State) -> State:
         # render
         message = StatefulMessage(
             content="",
             sender=self.role,
             template_id=self.template_id,
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
-        return flow_state
+        state.session_history.messages.append(message)  # type: ignore
+        return state
 
     def list_child_templates(self) -> List[Template]:
         return [self] + [template for template in self.templates]
@@ -310,18 +310,18 @@ class IfTemplate(ControlTemplate):
         self.after_transform = after_transform
         self.after_control = after_control
 
-    def _render(self, flow_state: FlowState) -> FlowState:
+    def _render(self, state: State) -> State:
         message = StatefulMessage(
             content="",
             sender=self.role,
             template_id=self.template_id,
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
-        if self.condition.hook(flow_state):
-            flow_state.jump_to_id = self.true_template.template_id
+        state.session_history.messages.append(message)  # type: ignore
+        if self.condition.hook(state):
+            state.jump_to_id = self.true_template.template_id
         else:
-            flow_state.jump_to_id = self.false_template.template_id
-        return flow_state
+            state.jump_to_id = self.false_template.template_id
+        return state
 
     def list_child_templates(self) -> List[Template]:
         return [self, self.true_template, self.false_template]
@@ -370,15 +370,15 @@ class LinearTemplate(ControlTemplate):
         self.after_transform = after_transform
         self.after_control = after_control
 
-    def _render(self, flow_state: FlowState) -> FlowState:
+    def _render(self, state: State) -> State:
         # render
         message = StatefulMessage(
             content="",
             sender=self.role,
             template_id=self.template_id,
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
-        return flow_state
+        state.session_history.messages.append(message)  # type: ignore
+        return state
 
     def list_child_templates(self) -> List[Template]:
         return [self] + [template for template in self.templates]
@@ -418,44 +418,44 @@ class GenerateTemplate(MessageTemplate):
         self.before_control = before_control
         self.after_control = after_control
 
-    def _render(self, flow_state: "FlowState") -> "FlowState":
+    def _render(self, state: "State") -> "State":
         # before_transform
         for before_transform_hook in self.before_transform:
-            flow_state = before_transform_hook.hook(flow_state)
+            state = before_transform_hook.hook(state)
         # before_jump
         for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(flow_state)
+            next_template_id = before_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
+                state.jump_to_id = next_template_id
+                return state
         # render
-        if flow_state.model is None:
+        if state.model is None:
             raise ValueError(
                 "Model must be given to use GenerateTemplate. Please set model to the runner."
             )
-        if flow_state.parameters is None:
+        if state.parameters is None:
             raise ValueError(
                 "Parameters must be given to use GenerateTemplate. Please set parameters to the runner."
             )
-        rendered_content = flow_state.model.send(
-            flow_state.parameters, flow_state.session_history
+        rendered_content = state.model.send(
+            state.parameters, state.session_history
         ).content
         message = StatefulMessage(
             content=rendered_content,
             sender=self.role,
             template_id=self.template_id,
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
+        state.session_history.messages.append(message)  # type: ignore
         # after_transform
         for after_transform_hook in self.after_transform:
-            flow_state = after_transform_hook.hook(flow_state)
+            state = after_transform_hook.hook(state)
         # after_jump
         for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(flow_state)
+            next_template_id = after_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
-        return flow_state
+                state.jump_to_id = next_template_id
+                return state
+        return state
 
 
 class UserInputTextTemplate(MessageTemplate):
@@ -486,24 +486,24 @@ class UserInputTextTemplate(MessageTemplate):
         self.before_control = before_control
         self.after_control = after_control
 
-    def _render(self, flow_state: "FlowState") -> "FlowState":
+    def _render(self, state: "State") -> "State":
         # before_transform
         for before_transform_hook in self.before_transform:
-            flow_state = before_transform_hook.hook(flow_state)
+            state = before_transform_hook.hook(state)
         # before_jump
         for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(flow_state)
+            next_template_id = before_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
+                state.jump_to_id = next_template_id
+                return state
         # render
-        if flow_state.runner is None:
+        if state.runner is None:
             raise ValueError(
-                "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via FlowState."
+                "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via State."
             )
 
-        rendered_content = flow_state.runner.user_interaction_provider.ask(
-            flow_state, self.description, self.default
+        rendered_content = state.runner.user_interaction_provider.ask(
+            state, self.description, self.default
         )
         message = StatefulMessage(
             content=rendered_content,
@@ -511,17 +511,17 @@ class UserInputTextTemplate(MessageTemplate):
             template_id=self.template_id,
         )
         # TODO: Sequence cannot have append method, this causd a bug already. Need to be fixed
-        flow_state.session_history.messages.append(message)  # type: ignore
+        state.session_history.messages.append(message)  # type: ignore
         # after_transform
         for after_transform_hook in self.after_transform:
-            flow_state = after_transform_hook.hook(flow_state)
+            state = after_transform_hook.hook(state)
         # after_jump
         for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(flow_state)
+            next_template_id = after_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
-        return flow_state
+                state.jump_to_id = next_template_id
+                return state
+        return state
 
 
 class OpenAIMessageTemplate(MessageTemplate):
@@ -593,45 +593,43 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         )
         self.functions = {func.name: func for func in functions}
 
-    def _render(self, flow_state: "FlowState") -> "FlowState":
+    def _render(self, state: "State") -> "State":
         # before_transform
         for before_transform_hook in self.before_transform:
-            flow_state = before_transform_hook.hook(flow_state)
+            state = before_transform_hook.hook(state)
         # before_jump
         for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(flow_state)
+            next_template_id = before_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
+                state.jump_to_id = next_template_id
+                return state
         # render
-        if flow_state.model is None:
+        if state.model is None:
             raise ValueError(
                 "Model must be given to use GenerateTemplate. Please set model to the runner."
             )
-        if flow_state.parameters is None:
+        if state.parameters is None:
             raise ValueError(
                 "Parameters must be given to use GenerateTemplate. Please set parameters to the runner."
             )
-        if not isinstance(flow_state.model, OpenAIChatCompletionModel):
+        if not isinstance(state.model, OpenAIChatCompletionModel):
             raise ValueError(
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
         # TODO: Temporaly rewrite parameters for function calling. Is this good?
-        old_state_parameters = flow_state.parameters.model_copy()
-        flow_state.parameters.functions = self.functions
+        old_state_parameters = state.parameters.model_copy()
+        state.parameters.functions = self.functions
 
         # 1st message
-        rendered_message = flow_state.model.send(
-            flow_state.parameters, flow_state.session_history
-        )
-        flow_state.parameters = old_state_parameters
+        rendered_message = state.model.send(state.parameters, state.session_history)
+        state.parameters = old_state_parameters
         message = StatefulMessage(
             content=rendered_message.content,
             sender=self.role,
             template_id=self.template_id,
             data=rendered_message.data,
         )
-        flow_state.session_history.messages.append(message)  # type: ignore
+        state.session_history.messages.append(message)  # type: ignore
 
         # 2nd message
         if rendered_message.data.get("function_call"):
@@ -644,34 +642,32 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 rendered_message.data["function_call"]["arguments"],
                 function.argument_types,
             )
-            result = function.call(arguments, flow_state)  # type: ignore
+            result = function.call(arguments, state)  # type: ignore
             # Send result
             function_message = Message(
                 sender="function",
                 data={"function_call": {"name": function.name}},
                 content=json.dumps(result.show()),
             )
-            flow_state.session_history.messages.append(function_message)  # type: ignore
-            second_response = flow_state.model.send(
-                flow_state.parameters, flow_state.session_history
-            )
+            state.session_history.messages.append(function_message)  # type: ignore
+            second_response = state.model.send(state.parameters, state.session_history)
             message = StatefulMessage(
                 content=second_response.content,
                 sender=second_response.sender,
                 template_id=self.template_id,
             )
-            flow_state.session_history.messages.append(message)  # type: ignore
+            state.session_history.messages.append(message)  # type: ignore
 
         # after_transform
         for after_transform_hook in self.after_transform:
-            flow_state = after_transform_hook.hook(flow_state=flow_state)
+            state = after_transform_hook.hook(state=state)
         # after_jump
         for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(flow_state)
+            next_template_id = after_jump_hook.hook(state)
             if next_template_id is not None:
-                flow_state.jump_to_id = next_template_id
-                return flow_state
-        return flow_state
+                state.jump_to_id = next_template_id
+                return state
+        return state
 
 
 # EndTemplate is singleton
@@ -687,5 +683,5 @@ class EndTemplate(Template):
             cls._instance = super(EndTemplate, cls).__new__(cls)
         return cls._instance
 
-    def _render(self, flow_state: FlowState) -> FlowState:
+    def _render(self, state: State) -> State:
         raise ValueError("EndTemplate should not be rendered. Something is wrong.")

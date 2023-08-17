@@ -52,8 +52,8 @@ class StatefulSession(Session):
 #         self.sender = sender
 
 
-class FlowState(object):
-    """FlowState hold the all state of the conversation."""
+class State(object):
+    """State hold the all state of the conversation."""
 
     def __init__(
         self,
@@ -121,7 +121,7 @@ class FlowState(object):
             current_template_json = self.current_template_id
         jump_json = pformat(self.jump_to_id)
 
-        return f"""FlowState(
+        return f"""State(
     data=
     {data_json_line_list},
     message_history=

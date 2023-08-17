@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 from prompttrail.const import CONTROL_TEMPLATE_ROLE
 
 
@@ -9,7 +9,7 @@ class UserInteractionProvider(object):
     @abstractmethod
     def ask(
         self,
-        flow_state: FlowState,
+        state: State,
         description: Optional[str],
         default: Optional[str] = None,
     ) -> str:
@@ -19,7 +19,7 @@ class UserInteractionProvider(object):
 class UserInteractionTextCLIProvider(UserInteractionProvider):
     def ask(
         self,
-        flow_state: FlowState,
+        state: State,
         description: Optional[str] = "Input>",
         default: Optional[str] = None,
     ) -> str:
@@ -39,13 +39,13 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
 
     def ask(
         self,
-        flow_state: FlowState,
+        state: State,
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
         valid_messages = [
             x
-            for x in flow_state.session_history.messages
+            for x in state.session_history.messages
             if x.sender != CONTROL_TEMPLATE_ROLE
         ]
         last_message = valid_messages[-1].content
@@ -57,8 +57,8 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
 class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
     def ask(
         self,
-        flow_state: FlowState,
+        state: State,
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
-        return flow_state.get_last_message().content
+        return state.get_last_message().content

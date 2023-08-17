@@ -4,7 +4,7 @@ import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from prompttrail.agent.core import FlowState
+    from prompttrail.agent.core import State
     from prompttrail.agent.hook.core import Hook
 
 
@@ -15,18 +15,18 @@ def logger_multiline(logger: logging.Logger, message: str, level: int = logging.
 
 def hook_logger(
     hook: "Hook",
-    flow_state: "FlowState",
+    state: "State",
     message: str,
     level: int = logging.DEBUG,
 ):
-    if flow_state.current_template_id is not None:
+    if state.current_template_id is not None:
         # To avoid circular import
         from prompttrail.agent.template import Template
 
-        if isinstance(flow_state.current_template_id, Template):
-            template_id = flow_state.current_template_id.template_id
+        if isinstance(state.current_template_id, Template):
+            template_id = state.current_template_id.template_id
         else:
-            template_id = flow_state.current_template_id
+            template_id = state.current_template_id
 
         logger = logging.getLogger(hook.__class__.__name__ + "@" + str(template_id))
     else:
