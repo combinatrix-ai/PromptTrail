@@ -160,7 +160,7 @@ class Tool(object):
     result_type: Type[ToolResult]
 
     @abstractmethod
-    def _call(self, args: Sequence[ToolArgument]) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
         ...
 
     def call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
@@ -176,7 +176,7 @@ class Tool(object):
                     missing_predefs.append(arg_predef)  # type: ignore
             if flag:
                 raise ValueError("Missing required arguments", missing_predefs)
-        result = self._call(args)
+        result = self._call(args, state)
         if not isinstance(result, self.result_type):
             raise ValueError("Invalid result type")
         return result

@@ -48,7 +48,7 @@ class MyTool(Tool):
     argument_types = [ToolArgument1]
     result_type = ToolResult1
 
-    def _call(self, args: Sequence[ToolArgument]) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
         return ToolResult1(key="key")
 
 
