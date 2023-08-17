@@ -55,6 +55,7 @@ doc = { chain = ["doc:clean_build", "doc:clean_autodoc", "doc:apidoc", "doc:buil
 "doc:apidoc" = "sphinx-apidoc --implicit-namespaces -F -o docs/sphinx src/prompttrail"
 "doc:build" = "sphinx-build -b html docs/sphinx docs/"
 pyreverse = "pyreverse src.prompttrail -o png"
+"dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true

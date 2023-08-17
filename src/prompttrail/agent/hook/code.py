@@ -1,7 +1,7 @@
 import logging
 import re
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 from prompttrail.util import hook_logger
 
 from .core import TransformHook
@@ -12,15 +12,15 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
         self.key = key
         self.lang = lang
 
-    def hook(self, flow_state: FlowState) -> FlowState:
-        markdown = flow_state.get_last_message().content
+    def hook(self, state: State) -> State:
+        markdown = state.get_last_message().content
         match = re.search(r"```" + self.lang + r"\n(.+?)```", markdown, re.DOTALL)
         if match:
             code_block = match.group(1)
         else:
             code_block = None
-        flow_state.data[self.key] = code_block
-        return flow_state
+        state.data[self.key] = code_block
+        return state
 
 
 class EvaluatePythonCodeHook(TransformHook):
@@ -28,17 +28,17 @@ class EvaluatePythonCodeHook(TransformHook):
         self.key = key
         self.code_key = code
 
-    def hook(self, flow_state: FlowState) -> FlowState:
-        python_segment = flow_state.data[self.code_key]
+    def hook(self, state: State) -> State:
+        python_segment = state.data[self.code_key]
         if python_segment is None:
             # TODO: Hook must know which template it is in, to let user know which template is failing.
             hook_logger(
                 self,
-                flow_state,
+                state,
                 f"No code block found for key {self.key}",
                 level=logging.WARNING,
             )
-            return flow_state
+            return state
         # rewrite python segment
         # remove leading spaces if all lines have the same number of leading spaces
         lines = python_segment.splitlines()
@@ -53,10 +53,10 @@ class EvaluatePythonCodeHook(TransformHook):
         except Exception as e:
             hook_logger(
                 self,
-                flow_state,
+                state,
                 f"Failed to evaluate python code: {python_segment}",
                 level=logging.WARNING,
             )
             raise e
-        flow_state.data[self.key] = answer
-        return flow_state
+        state.data[self.key] = answer
+        return state

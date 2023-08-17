@@ -83,8 +83,8 @@ class TestOpenAI(unittest.TestCase):
         # Tools are already tested in test_tool.py
         # Here, we use the example from examples/agent/weather_forecast.py
 
-        flow_state = weather_forecast.runner.run(max_messages=10)
-        messages = flow_state.session_history.messages
+        state = weather_forecast.runner.run(max_messages=10)
+        messages = state.session_history.messages
         messages = [m for m in messages if m.sender != CONTROL_TEMPLATE_ROLE]
         senders = [m.sender for m in messages]
         # system, user, function call by assistant, function result by function, assistant

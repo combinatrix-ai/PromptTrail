@@ -19,7 +19,7 @@
 #             templates=[
 #                 UserInputTemplate(key="question", after_transform = )),
 #                 MessageTemplate(
-#                     before_transform = VectorSearchHook(lambda flow_state: flow_state.data.get("question")),
+#                     before_transform = VectorSearchHook(lambda state: state.data.get("question")),
 #                     content="""
 # Additional Information:
 

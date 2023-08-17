@@ -4,6 +4,7 @@ import enum
 import os
 from typing import Any, Dict, Optional, Sequence
 
+from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import (
     LinearTemplate,
@@ -72,7 +73,7 @@ class WeatherForecastTool(Tool):
     argument_types = [Place, TemperatureUnit]
     result_type = WeatherForecastResult
 
-    def _call(self, args: Sequence[ToolArgument]) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
         return WeatherForecastResult(temperature=0, weather="sunny")
 
 

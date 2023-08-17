@@ -97,7 +97,7 @@ Calculation:
                         # You can do this using IfJumpHook
                         # In this case, if no python code block is found, jump to first template and retry with another question given by user
                         IfJumpHook(
-                            condition=lambda flow_state: "answer" in flow_state.data,
+                            condition=lambda state: "answer" in state.data,
                             true_template="gather_feedback",
                             false_template=first.template_id,
                         )
@@ -134,10 +134,10 @@ Calculation:
                 # Check if the loop is finished, see exit_condition below.
             ],
             exit_condition=BooleanHook(
-                condition=lambda flow_state:
+                condition=lambda state:
                 # Exit condition: if the last message given by API is END, then exit, else continue (in this case, go to top of loop)
-                flow_state.get_current_template().template_id == check_end.template_id
-                and "END" in flow_state.get_last_message().content
+                state.get_current_template().template_id == check_end.template_id
+                and "END" in state.get_last_message().content
             ),
         ),
     ],

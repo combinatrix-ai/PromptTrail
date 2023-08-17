@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Sequence, Type, TypeAlias, Union
 from pydantic import BaseModel
 from typing_inspect import get_args, is_optional_type  # type: ignore
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 
 logger = logging.getLogger(__name__)
 
@@ -160,10 +160,10 @@ class Tool(object):
     result_type: Type[ToolResult]
 
     @abstractmethod
-    def _call(self, args: Sequence[ToolArgument]) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
         ...
 
-    def call(self, args: Sequence[ToolArgument], flow_state: "FlowState") -> ToolResult:
+    def call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
         for arg in args:
             if not any([isinstance(arg, x) for x in self.argument_types]):
                 raise ValueError("Given argument type is not supported", arg.__class__)
@@ -176,7 +176,7 @@ class Tool(object):
                     missing_predefs.append(arg_predef)  # type: ignore
             if flag:
                 raise ValueError("Missing required arguments", missing_predefs)
-        result = self._call(args)
+        result = self._call(args, state)
         if not isinstance(result, self.result_type):
             raise ValueError("Invalid result type")
         return result

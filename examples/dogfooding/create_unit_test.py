@@ -7,7 +7,7 @@ from typing import List, Optional
 
 import click
 
-from prompttrail.agent.core import FlowState
+from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate
 from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
@@ -118,15 +118,15 @@ def main(
 
     load_file_content = open(load_file, "r")
     context_file_contents = {x: open(x, mode="r").read() for x in context_files}
-    initial_state = FlowState(
+    initial_state = State(
         data={
             "code": load_file_content.read(),
             "context_files": context_file_contents,
             "description": description,
         }
     )
-    flow_state = runner.run(flow_state=initial_state)
-    last_message = flow_state.get_last_message()
+    state = runner.run(state=initial_state)
+    last_message = state.get_last_message()
     print(last_message.content)
     if len(sys.argv) > 2:
         save_file_io = open(save_file, "w")
