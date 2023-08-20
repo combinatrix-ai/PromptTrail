@@ -1,4 +1,3 @@
-import json
 import logging
 from abc import abstractmethod
 from pprint import pformat
@@ -10,11 +9,9 @@ from pydantic import BaseModel
 
 from prompttrail.agent import State
 from prompttrail.agent.core import StatefulMessage
-from prompttrail.agent.hook import BooleanHook, JumpHook, TransformHook
-from prompttrail.agent.tool import Tool, check_arguments
-from prompttrail.const import END_TEMPLATE_ID, OPENAI_SYSTEM_ROLE, RESERVED_TEMPLATE_IDS
+from prompttrail.agent.hook import JumpHook, TransformHook
+from prompttrail.const import RESERVED_TEMPLATE_IDS
 from prompttrail.core import Message
-from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +88,6 @@ class MessageTemplate(Template):
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             template_id=template_id,
@@ -146,210 +141,6 @@ class MessageTemplate(Template):
         return Stack(template_id=self.template_id)
 
 
-class ControlTemplate(Template):
-    # ControlTemplate must handle its child templates.
-
-    @abstractmethod
-    def __init__(
-        self,
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
-        )
-
-    @abstractmethod
-    def walk(
-        self, visited_templates: Sequence["Template"] = []
-    ) -> Generator["Template", None, None]:
-        raise NotImplementedError(
-            "Derived class of ControlTemplate must implement its own walk method"
-        )
-
-    @abstractmethod
-    def create_stack(self, state: "State") -> "Stack":
-        raise NotImplementedError(
-            "Derived class of ControlTemplate must implement its own create_stack method"
-        )
-
-
-class LoopTemplateStack(Stack):
-    cumulative_index: int
-    n_children: int
-
-    def get_loop_idx(self) -> int:
-        return self.cumulative_index // self.n_children
-
-    def get_idx(self) -> int:
-        return self.cumulative_index % self.n_children
-
-    def next(self) -> None:
-        self.cumulative_index += 1
-
-
-class LoopTemplate(ControlTemplate):
-    def __init__(
-        self,
-        templates: Sequence[Template],
-        exit_condition: BooleanHook,
-        template_id: Optional[str] = None,
-        exit_loop_count: Optional[int] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-        self.templates = templates
-        self.exit_condition = exit_condition
-        self.exit_loop_count = exit_loop_count
-
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        stack = state.stack[-1]
-        if not isinstance(stack, LoopTemplateStack):
-            raise RuntimeError("LoopTemplateStack is not the last stack")
-        while True:
-            idx = stack.get_idx()
-            template = self.templates[idx]
-            gen = template.render(state)
-            state = yield from gen
-            if self.exit_condition.hook(state):
-                break
-            stack.next()
-            if (
-                self.exit_loop_count is not None
-                and stack.get_loop_idx() >= self.exit_loop_count
-            ):
-                logger.warning(
-                    msg=f"Loop count is over {self.exit_loop_count}. Breaking the loop."
-                )
-                break
-        return state
-
-    def walk(
-        self, visited_templates: Sequence["Template"] = []
-    ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
-            return
-        visited_templates.append(self)  # type: ignore
-        yield self
-        for template in self.templates:
-            yield from template.walk(visited_templates)
-
-    def create_stack(self, state: "State") -> "Stack":
-        return LoopTemplateStack(
-            template_id=self.template_id,
-            n_children=len(self.templates),
-            cumulative_index=0,
-        )
-
-
-class IfTemplate(ControlTemplate):
-    def __init__(
-        self,
-        true_template: Template,
-        false_template: Template,
-        condition: BooleanHook,
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-        self.true_template = true_template
-        self.false_template = false_template
-        self.condition = condition
-
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        if self.condition.hook(state):
-            state = yield from self.true_template.render(state)
-        else:
-            state = yield from self.false_template.render(state)
-        return state
-
-    def walk(
-        self, visited_templates: Sequence["Template"] = []
-    ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
-            return
-        visited_templates.append(self)  # type: ignore
-        yield self
-        yield from self.true_template.walk(visited_templates)
-        yield from self.false_template.walk(visited_templates)
-
-    def create_stack(self, state: "State") -> "Stack":
-        return Stack(template_id=self.template_id)
-
-
-class LinearTemplateStack(Stack):
-    idx: int
-
-
-class LinearTemplate(ControlTemplate):
-    def __init__(
-        self,
-        templates: Sequence[Template],
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-        self.templates = templates
-
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        stack = state.stack[-1]
-        if not isinstance(stack, LinearTemplateStack):
-            raise RuntimeError("LinearTemplateStack is not the last stack")
-
-        while 1:
-            state = yield from self.templates[stack.idx].render(state)
-            stack.idx += 1
-            # when the last template is rendered, break the loop
-            if stack.idx >= len(self.templates):
-                break
-        return state
-
-    def walk(
-        self, visited_templates: Sequence["Template"] = []
-    ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
-            return
-        visited_templates.append(self)  # type: ignore
-        yield self
-        for template in self.templates:
-            yield from template.walk(visited_templates)
-
-    def create_stack(self, state: "State") -> LinearTemplateStack:
-        return LinearTemplateStack(template_id=self.template_id, idx=0)
-
-
 class GenerateTemplate(MessageTemplate):
     def __init__(
         self,
@@ -357,8 +148,6 @@ class GenerateTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
@@ -366,8 +155,6 @@ class GenerateTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
         )
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
@@ -411,8 +198,6 @@ class UserInputTextTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
         )
         self.role = role
         self.description = description
@@ -443,167 +228,3 @@ class UserInputTextTemplate(MessageTemplate):
         for after_transform_hook in self.after_transform:
             state = after_transform_hook.hook(state)
         return state
-
-
-class OpenAIMessageTemplate(MessageTemplate):
-    def __init__(
-        self,
-        content: str,
-        role: OpenAIrole,
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            content=content,
-            template_id=template_id,
-            role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-
-
-class OpenAIGenerateTemplate(GenerateTemplate):
-    def __init__(
-        self,
-        role: OpenAIrole,
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-
-
-class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
-    def __init__(
-        self,
-        role: OpenAIrole,
-        functions: Sequence[Tool],
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
-        )
-        self.functions = {func.name: func for func in functions}
-
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        # before_transform
-        for before_transform_hook in self.before_transform:
-            state = before_transform_hook.hook(state)
-        # render
-        runner = state.runner
-        if runner is None:
-            raise ValueError(
-                "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via State."
-            )
-        if not isinstance(runner.model, OpenAIChatCompletionModel):
-            raise ValueError(
-                "Function calling can only be used with OpenAIChatCompletionModel."
-            )
-
-        temporary_parameters = runner.parameters.model_copy()
-        temporary_parameters.functions = self.functions
-
-        # 1st message: pass functions and let the model use it
-        rendered_message = runner.model.send(
-            temporary_parameters, state.session_history
-        )
-        message = StatefulMessage(
-            content=rendered_message.content,
-            sender=self.role,
-            template_id=self.template_id,
-            data=rendered_message.data,
-        )
-        state.session_history.messages.append(message)  # type: ignore
-        yield message
-
-        if rendered_message.data.get("function_call"):
-            # 2nd message: call function if the model asks for it
-            if rendered_message.data["function_call"]["name"] not in self.functions:
-                raise ValueError(
-                    f"Function {rendered_message.data['function_call']['name']} is not defined in the template."
-                )
-            function = self.functions[rendered_message.data["function_call"]["name"]]
-            arguments = check_arguments(
-                rendered_message.data["function_call"]["arguments"],
-                function.argument_types,
-            )
-            result = function.call(arguments, state)  # type: ignore
-            # Send result
-            function_message = Message(
-                sender="function",
-                data={"function_call": {"name": function.name}},
-                content=json.dumps(result.show()),
-            )
-            state.session_history.messages.append(function_message)  # type: ignore
-            yield function_message
-            second_response = runner.model.send(
-                runner.parameters, state.session_history
-            )
-            message = StatefulMessage(
-                content=second_response.content,
-                sender=second_response.sender,
-                template_id=self.template_id,
-            )
-            state.session_history.messages.append(message)  # type: ignore
-            yield message
-
-        # after_transform
-        for after_transform_hook in self.after_transform:
-            state = after_transform_hook.hook(state=state)
-        return state
-
-
-# EndTemplate is singleton
-class EndTemplate(Template):
-    template_id = END_TEMPLATE_ID
-    _instance = None
-
-    def __init__(self):
-        pass
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(EndTemplate, cls).__new__(cls)
-        return cls._instance
-
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        raise ValueError("EndTemplate should not be rendered. Something is wrong.")
-
-    def create_stack(self, state: State) -> Stack:
-        return super().create_stack(state)
-
-
-class OpenAISystemTemplate(MessageTemplate):
-    def __init__(
-        self,
-        content: str,
-        template_id: Optional[str] = None,
-    ):
-        super().__init__(
-            content=content,
-            template_id=template_id,
-            role=OPENAI_SYSTEM_ROLE,
-        )
