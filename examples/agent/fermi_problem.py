@@ -31,6 +31,7 @@ agent_template = LinearTemplate(
         MessageTemplate(
             # First, let's give an instruction to the API
             # In OpenAI API, system is a special role that gives instruction to the API
+            template_id="instruction",
             role="system",
             content="""
 You're a helpful assistant to solve Fermi Problem.
@@ -64,12 +65,15 @@ Calculation:
                 # UserInputTextTemplate is a template that ask user for their input.
                 # As we see later, we use CLIRunner to run this model in CLI, so the input is given via console.
                 first := UserInputTextTemplate(
-                    # Note: we can name the template using walrus operator (though not recommended), this is used later.
+                    template_id="ask_question",
+                    # Note: we can refer to this template later, so we give it a name: "first" with walrus operator.
+                    # You can also use template_id to refer to a template.
                     role="user",
                     description="Input:",
                     default="How many elephants in Japan?",
                 ),
                 GenerateTemplate(
+                    template_id="generate_answer",
                     role="assistant",
                     # Now we have the user's question, we can ask the API to generate the answer
                     # Let's use GenerateTemplate to do this
@@ -115,6 +119,7 @@ Calculation:
                 ),
                 UserInputTextTemplate(
                     # Here is where we ask user for their feedback
+                    template_id="get_feedback",
                     role="user",
                     description="Input:",
                     default="Yes, I'm satisfied.",
@@ -122,10 +127,12 @@ Calculation:
                 MessageTemplate(
                     # Based on the feedback, we can decide to retry or end the conversation
                     # Ask the API to analyze the user's sentiment
+                    template_id="instruction_sentiment",
                     role="assistant",
                     content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
                 ),
                 check_end := GenerateTemplate(
+                    template_id="analyze_sentiment",
                     role="assistant",
                     # API will return END or RETRY (mostly!)
                 ),
@@ -136,8 +143,8 @@ Calculation:
             exit_condition=BooleanHook(
                 condition=lambda state:
                 # Exit condition: if the last message given by API is END, then exit, else continue (in this case, go to top of loop)
-                state.get_current_template().template_id == check_end.template_id
-                and "END" in state.get_last_message().content
+                "END"
+                in state.get_last_message().content
             ),
         ),
     ],
@@ -173,7 +180,7 @@ if not is_in_test_env():
             )
         ),
         parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
-        templates=[agent_template],
+        template=agent_template,
         user_interaction_provider=UserInteractionTextCLIProvider(),
     )
     if __name__ == "__main__":
@@ -217,7 +224,7 @@ else:
             }
         ),
         parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
-        templates=[agent_template],
+        template=agent_template,
     )
     if __name__ == "__main__":
         conversation = runner.run()
