@@ -110,7 +110,6 @@ class MessageTemplate(Template):
             message = StatefulMessage(
                 content=rendered_content, sender=self.role, template_id=self.template_id
             )
-            state.session_history.messages.append(message)  # type: ignore
             # after_transform
             for after_transform_hook in self.after_transform:
                 state = after_transform_hook.hook(state)
