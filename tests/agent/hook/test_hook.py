@@ -10,7 +10,6 @@ from prompttrail.agent.hook.core import (
     JumpHook,
     TransformHook,
 )
-from prompttrail.agent.template import TemplateId
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,8 @@ class TestJumpHook(unittest.TestCase):
 class TestIfJumpHook(unittest.TestCase):
     def test_hook(self):
         state = State()
-        true_template = TemplateId()
-        false_template = TemplateId()
+        true_template = str()
+        false_template = str()
         if_jump_hook = IfJumpHook(lambda x: True, true_template, false_template)
         result = if_jump_hook.hook(state)
         self.assertEqual(result, true_template)

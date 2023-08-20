@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from prompttrail.agent.runner import Runner
-    from prompttrail.agent.template import Stack, TemplateId
+    from prompttrail.agent.template import Stack
 
 
 class StatefulMessage(Message):
@@ -60,13 +60,11 @@ class State(object):
         runner: Optional["Runner"] = None,
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
-        jump_to_id: Optional["TemplateId"] = None,
         stack: Sequence["Stack"] = [],
     ):
         self.runner = runner
         self.data = data
         self.session_history = session_history
-        self.jump_to_id = jump_to_id
         self.stack = stack
 
     def get_last_message(self) -> StatefulMessage:
@@ -77,13 +75,13 @@ class State(object):
     def get_current_data(self) -> Dict[str, Any]:
         return self.data
 
-    def get_jump(self) -> Optional["TemplateId"]:
+    def get_jump(self) -> Optional[str]:
         return self.jump_to_id
 
-    def set_jump(self, jump_to_id: Optional["TemplateId"]) -> None:
+    def set_jump(self, jump_to_id: Optional[str]) -> None:
         self.jump_to_id = jump_to_id
 
-    def get_current_template_id(self) -> "TemplateId":
+    def get_current_template_id(self) -> str:
         return self.stack[-1].template_id
 
     def __str__(self):
