@@ -2,7 +2,7 @@ import json
 import logging
 from abc import abstractmethod
 from pprint import pformat
-from typing import Generator, List, Optional, Sequence, TypeAlias
+from typing import Generator, List, Optional, Sequence
 from uuid import uuid4
 
 import jinja2
@@ -18,11 +18,9 @@ from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
 
 logger = logging.getLogger(__name__)
 
-TemplateId: TypeAlias = str
 
-
-# TODO: How can I force the user to use check_template_id?
-def check_template_id(template_id: TemplateId) -> None:
+# TODO: How can I force the user to use check_template_id on init?
+def check_template_id(template_id: str) -> None:
     if template_id in RESERVED_TEMPLATE_IDS:
         raise ValueError(
             f"Template id {template_id} is reserved. Please use another template id."
@@ -30,7 +28,7 @@ def check_template_id(template_id: TemplateId) -> None:
 
 
 class Stack(BaseModel):
-    template_id: TemplateId
+    template_id: str
 
 
 class Template(object):
@@ -39,18 +37,14 @@ class Template(object):
     @abstractmethod
     def __init__(
         self,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
     ):
         self.template_id: str = template_id if template_id is not None else self._name()
         check_template_id(self.template_id)
         self.before_transform = before_transform
         self.after_transform = after_transform
-        self.before_control = before_control
-        self.after_control = after_control
 
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
@@ -94,7 +88,7 @@ class MessageTemplate(Template):
         self,
         content: str,
         role: str,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -104,8 +98,6 @@ class MessageTemplate(Template):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
         )
         self.content = content
         self.jinja_template = jinja2.Template(self.content)
@@ -116,11 +108,6 @@ class MessageTemplate(Template):
         # before_transform
         for before_transform_hook in self.before_transform:
             state = before_transform_hook.hook(state)
-        # before_jump
-        for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
         # no jump, then render
         if not state.jump_to_id:
             # render
@@ -132,15 +119,6 @@ class MessageTemplate(Template):
             # after_transform
             for after_transform_hook in self.after_transform:
                 state = after_transform_hook.hook(state)
-            # after_jump
-            for after_jump_hook in self.after_control:
-                next_template_id = after_jump_hook.hook(state)
-                if next_template_id is not None and state.jump_to_id is None:
-                    state.jump_to_id = next_template_id
-                else:
-                    logger.warning(
-                        f"Jump is already specified by someone. Ignoring {after_jump_hook}."
-                    )
             state.session_history.messages.append(message)  # type: ignore
             yield message
         return state
@@ -161,16 +139,8 @@ class MessageTemplate(Template):
             after_transform_part = ", after_transform=" + pformat(self.after_transform)
         else:
             after_transform_part = ""
-        if self.before_control:
-            before_jump_part = ", before_jump=" + pformat(self.before_control)
-        else:
-            before_jump_part = ""
-        if self.after_control:
-            after_jump_part = ", after_jump=" + pformat(self.after_control)
-        else:
-            after_jump_part = ""
 
-        return f"MessageTemplate(id={self.template_id}, {content_part}{before_transform_part}{after_transform_part}{before_jump_part}{after_jump_part})"
+        return f"MessageTemplate(id={self.template_id}, {content_part}{before_transform_part}{after_transform_part})"
 
     def create_stack(self, state: "State") -> "Stack":
         return Stack(template_id=self.template_id)
@@ -182,7 +152,7 @@ class ControlTemplate(Template):
     @abstractmethod
     def __init__(
         self,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -192,15 +162,15 @@ class ControlTemplate(Template):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            before_control=before_control,
-            after_control=after_control,
         )
 
     @abstractmethod
     def walk(
         self, visited_templates: Sequence["Template"] = []
     ) -> Generator["Template", None, None]:
-        raise NotImplementedError("walk method is not implemented")
+        raise NotImplementedError(
+            "Derived class of ControlTemplate must implement its own walk method"
+        )
 
     @abstractmethod
     def create_stack(self, state: "State") -> "Stack":
@@ -228,7 +198,7 @@ class LoopTemplate(ControlTemplate):
         self,
         templates: Sequence[Template],
         exit_condition: BooleanHook,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         exit_loop_count: Optional[int] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
@@ -292,7 +262,7 @@ class IfTemplate(ControlTemplate):
         true_template: Template,
         false_template: Template,
         condition: BooleanHook,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -338,7 +308,7 @@ class LinearTemplate(ControlTemplate):
     def __init__(
         self,
         templates: Sequence[Template],
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -384,7 +354,7 @@ class GenerateTemplate(MessageTemplate):
     def __init__(
         self,
         role: str,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -404,12 +374,6 @@ class GenerateTemplate(MessageTemplate):
         # before_transform
         for before_transform_hook in self.before_transform:
             state = before_transform_hook.hook(state)
-        # before_jump
-        for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         # render
         if state.runner is None:
             raise ValueError("runner is not set")
@@ -426,12 +390,6 @@ class GenerateTemplate(MessageTemplate):
         # after_transform
         for after_transform_hook in self.after_transform:
             state = after_transform_hook.hook(state)
-        # after_jump
-        for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         return state
 
 
@@ -441,7 +399,7 @@ class UserInputTextTemplate(MessageTemplate):
         role: str,
         description: Optional[str] = None,
         default: Optional[str] = None,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -464,12 +422,6 @@ class UserInputTextTemplate(MessageTemplate):
         # before_transform
         for before_transform_hook in self.before_transform:
             state = before_transform_hook.hook(state)
-        # before_jump
-        for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         # render
         if state.runner is None:
             raise ValueError(
@@ -490,12 +442,6 @@ class UserInputTextTemplate(MessageTemplate):
         # after_transform
         for after_transform_hook in self.after_transform:
             state = after_transform_hook.hook(state)
-        # after_jump
-        for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         return state
 
 
@@ -504,7 +450,7 @@ class OpenAIMessageTemplate(MessageTemplate):
         self,
         content: str,
         role: OpenAIrole,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -525,7 +471,7 @@ class OpenAIGenerateTemplate(GenerateTemplate):
     def __init__(
         self,
         role: OpenAIrole,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -546,7 +492,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         self,
         role: OpenAIrole,
         functions: Sequence[Tool],
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
         before_control: List[JumpHook] = [],
@@ -566,12 +512,6 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         # before_transform
         for before_transform_hook in self.before_transform:
             state = before_transform_hook.hook(state)
-        # before_jump
-        for before_jump_hook in self.before_control:
-            next_template_id = before_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         # render
         runner = state.runner
         if runner is None:
@@ -633,12 +573,6 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         # after_transform
         for after_transform_hook in self.after_transform:
             state = after_transform_hook.hook(state=state)
-        # after_jump
-        for after_jump_hook in self.after_control:
-            next_template_id = after_jump_hook.hook(state)
-            if next_template_id is not None:
-                state.jump_to_id = next_template_id
-                return state
         return state
 
 
@@ -666,7 +600,7 @@ class OpenAISystemTemplate(MessageTemplate):
     def __init__(
         self,
         content: str,
-        template_id: Optional[TemplateId] = None,
+        template_id: Optional[str] = None,
     ):
         super().__init__(
             content=content,

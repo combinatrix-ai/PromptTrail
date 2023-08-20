@@ -1,11 +1,8 @@
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import Any, Callable, Optional
 
 from prompttrail.agent.core import State
-
-if TYPE_CHECKING:
-    from prompttrail.agent.template import TemplateId
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +30,10 @@ class BooleanHook(Hook):
 
 
 class JumpHook(Hook):
-    def __init__(self, function: Callable[[State], Optional["TemplateId"]]):
+    def __init__(self, function: Callable[[State], Optional[str]]):
         self.function = function
 
-    def hook(self, state: State) -> Optional["TemplateId"]:
+    def hook(self, state: State) -> Optional[str]:
         raise NotImplementedError("hook method is not implemented")
 
 
@@ -44,14 +41,14 @@ class IfJumpHook(JumpHook):
     def __init__(
         self,
         condition: Callable[[State], bool],
-        true_template: "TemplateId",
-        false_template: Optional["TemplateId"] = None,
+        true_template: str,
+        false_template: Optional[str] = None,
     ):
         self.condition = condition
         self.true_template = true_template
         self.false_template = false_template
 
-    def hook(self, state: State) -> Optional["TemplateId"]:
+    def hook(self, state: State) -> Optional[str]:
         if self.condition(state):
             state.set_jump(self.true_template)
             return self.true_template
