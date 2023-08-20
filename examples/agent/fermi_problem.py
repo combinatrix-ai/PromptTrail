@@ -13,9 +13,13 @@ from prompttrail.agent.hook import (
     ExtractMarkdownCodeBlockHook,
     IfJumpHook,
 )
-from prompttrail.agent.template import LinearTemplate, LoopTemplate, MessageTemplate
-from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template import UserInputTextTemplate
+from prompttrail.agent.template import (
+    LinearTemplate,
+    LoopTemplate,
+    MessageTemplate,
+    UserInputTextTemplate,
+)
+from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
     UserInteractionTextCLIProvider,

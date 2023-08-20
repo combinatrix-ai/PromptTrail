@@ -1,8 +1,7 @@
 # simple meta templates
 from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import (
-    LinearTemplate,
-    MessageTemplate,
+from prompttrail.agent.template import LinearTemplate, MessageTemplate
+from prompttrail.agent.template.openai import (
     OpenAIGenerateTemplate,
     OpenAISystemTemplate,
 )

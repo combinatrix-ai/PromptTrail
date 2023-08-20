@@ -6,8 +6,8 @@ import os
 from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate
-from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.template.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.provider.openai import (
     OpenAIChatCompletionModel,

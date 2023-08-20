@@ -6,11 +6,8 @@ from typing import Any, Dict, Optional, Sequence
 
 from prompttrail.agent.core import State
 from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import (
-    LinearTemplate,
-    MessageTemplate,
-    OpenAIGenerateWithFunctionCallingTemplate,
-)
+from prompttrail.agent.template import LinearTemplate, MessageTemplate
+from prompttrail.agent.template.openai import OpenAIGenerateWithFunctionCallingTemplate
 from prompttrail.agent.tool import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.provider.openai import (
