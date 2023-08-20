@@ -44,7 +44,7 @@ model = OpenAIChatCompletionModel(configuration=configuration)
 runner = CommandLineRunner(
     model=model,
     parameters=parameter,
-    templates=[templates],
+    template=templates,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 

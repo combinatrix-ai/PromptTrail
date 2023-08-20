@@ -113,7 +113,7 @@ runner = CommandLineRunner(
         max_tokens=1000,
         temperature=0,
     ),
-    templates=[template],
+    template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 

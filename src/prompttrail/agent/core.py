@@ -2,14 +2,14 @@ import logging
 from pprint import pformat
 from typing import TYPE_CHECKING, Any, Dict, Optional, Sequence
 
-from prompttrail.core import Message, Model, Parameters, Session
+from prompttrail.core import Message, Session
 
 logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
     from prompttrail.agent.runner import Runner
-    from prompttrail.agent.template import Template, TemplateId
+    from prompttrail.agent.template import Stack, TemplateId
 
 
 class StatefulMessage(Message):
@@ -58,20 +58,16 @@ class State(object):
     def __init__(
         self,
         runner: Optional["Runner"] = None,
-        model: Optional[Model] = None,
-        parameters: Optional[Parameters] = None,
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
-        current_template_id: Optional["TemplateId"] = None,
         jump_to_id: Optional["TemplateId"] = None,
+        stack: Sequence["Stack"] = [],
     ):
         self.runner = runner
-        self.model = model
-        self.parameters = parameters
         self.data = data
         self.session_history = session_history
-        self.current_template_id = current_template_id
         self.jump_to_id = jump_to_id
+        self.stack = stack
 
     def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
@@ -87,12 +83,8 @@ class State(object):
     def set_jump(self, jump_to_id: Optional["TemplateId"]) -> None:
         self.jump_to_id = jump_to_id
 
-    def get_current_template(self) -> "Template":
-        if self.current_template_id is None:
-            raise ValueError("Current template is not set.")
-        if self.runner is None:
-            raise ValueError("Runner is not set.")
-        return self.runner.search_template(self.current_template_id)
+    def get_current_template_id(self) -> "TemplateId":
+        return self.stack[-1].template_id
 
     def __str__(self):
         # Create PrettyPrinted string
@@ -111,14 +103,7 @@ class State(object):
             ]
         )
         # If runner is set, template can be searched.
-        if self.runner is not None:
-            current_template_json = pformat(
-                self.runner.search_template(self.current_template_id)
-                if self.current_template_id is not None
-                else self.current_template_id
-            )
-        else:
-            current_template_json = self.current_template_id
+        current_template_json = self.get_current_template_id()
         jump_json = pformat(self.jump_to_id)
 
         return f"""State(
@@ -129,3 +114,12 @@ class State(object):
     current_template={current_template_json},
     jump={jump_json},
 )"""
+
+    def push_stack(self, stack: "Stack") -> None:
+        self.stack.append(stack)  # type: ignore
+
+    def pop_stack(self) -> "Stack":
+        return self.stack.pop()  # type: ignore
+
+    def head_jump(self) -> "Stack":
+        return self.stack[-1]  # type: ignore

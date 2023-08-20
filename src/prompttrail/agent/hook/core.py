@@ -90,15 +90,13 @@ class GenerateChatHook(TransformHook):
         self.key = key
 
     def hook(self, state: State) -> State:
-        if state.parameters is None:
+        if state.runner is None:
             raise ValueError(
-                "Parameters must be given to use GenerateChatHook. Please set parameters to the runner."
+                "Runner must be given to use GenerateChatHook. Please set runner to the state."
             )
-        if state.model is None:
-            raise ValueError(
-                "Model must be given to use GenerateChatHook. Please set model to the runner."
-            )
-        message = state.model.send(state.parameters, state.session_history)
+        message = state.runner.model.send(
+            state.runner.parameters, state.session_history
+        )
         state.data[self.key] = message.content
         return state
 
@@ -108,9 +106,19 @@ class CountUpHook(TransformHook):
         pass
 
     def hook(self, state: State) -> State:
-        template = state.get_current_template()
-        if template.template_id not in state.data:
-            state.data[template.template_id] = 0
+        template_id = state.get_current_template_id()
+        if template_id not in state.data:
+            state.data[template_id] = 0
         else:
-            state.data[template.template_id] += 1
+            state.data[template_id] += 1
+        return state
+
+
+class DebugHook(TransformHook):
+    def __init__(self, message_shown_when_called: str):
+        self.message = message_shown_when_called
+
+    def hook(self, state: State) -> State:
+        print(self.message + " template_id: " + state.get_current_template_id())
+        print(self.message + " data: " + str(state.data))
         return state

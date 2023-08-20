@@ -1,8 +1,11 @@
 # simple meta templates
-from prompttrail.agent.hook.core import BooleanHook, CountUpHook
 from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate, LoopTemplate, MessageTemplate
-from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.template import (
+    LinearTemplate,
+    MessageTemplate,
+    OpenAIGenerateTemplate,
+    OpenAISystemTemplate,
+)
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.mock import EchoMockProvider
 from prompttrail.provider.openai import (
@@ -11,39 +14,24 @@ from prompttrail.provider.openai import (
     OpenAIModelParameters,
 )
 
-template = LinearTemplate(
-    templates=[
-        LoopTemplate(
-            templates=[
-                MessageTemplate(
-                    content="You must repeat what the user said.", role="system"
-                ),
-                LoopTemplate(
-                    templates=[
-                        MessageTemplate(
-                            role="user",
-                            content="TEST",
-                        ),
-                        assistant_reply := GenerateTemplate(
-                            role="assistant", after_transform=[CountUpHook()]
-                        ),
-                    ],
-                    exit_condition=BooleanHook(
-                        lambda state: len(state.session_history.messages) > 10
-                    ),
-                ),
-            ],
-            exit_condition=BooleanHook(
-                lambda state: state.data[assistant_reply.template_id] >= 2
-                if assistant_reply.template_id in state.data
-                else False
+# Run various templates
+
+# TODO: Add tests for all templates
+
+
+def test_linear_template():
+    template = LinearTemplate(
+        templates=[
+            OpenAISystemTemplate(content="Repeat what the user said."),
+            MessageTemplate(
+                content="Lazy fox jumps over the brown dog.",
+                role="user",
             ),
-        )
-    ]
-)
-
-
-def test_runner():
+            OpenAIGenerateTemplate(
+                role="assistant",
+            ),
+        ]
+    )
     runner = CommandLineRunner(
         model=OpenAIChatCompletionModelMock(
             configuration=OpenAIModelConfiguration(
@@ -55,7 +43,18 @@ def test_runner():
             model_name="gpt-3.5-turbo",
         ),
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
-        templates=[template],
+        template=template,
     )
-    state = runner.run(max_messages=100)
-    print(state)
+    state = runner.run(max_messages=10)
+
+    print(state.session_history.messages)
+    assert len(state.session_history.messages) == 3
+    assert state.session_history.messages[0].content == "Repeat what the user said."
+    assert (
+        state.session_history.messages[1].content
+        == "Lazy fox jumps over the brown dog."
+    )
+    assert (
+        state.session_history.messages[2].content
+        == "Lazy fox jumps over the brown dog."
+    )

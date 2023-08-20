@@ -19,18 +19,8 @@ def hook_logger(
     message: str,
     level: int = logging.DEBUG,
 ):
-    if state.current_template_id is not None:
-        # To avoid circular import
-        from prompttrail.agent.template import Template
-
-        if isinstance(state.current_template_id, Template):
-            template_id = state.current_template_id.template_id
-        else:
-            template_id = state.current_template_id
-
-        logger = logging.getLogger(hook.__class__.__name__ + "@" + str(template_id))
-    else:
-        logger = logging.getLogger(hook.__class__.__name__)
+    template_id = state.get_current_template_id()
+    logger = logging.getLogger(hook.__class__.__name__ + "@" + str(template_id))
     logger_multiline(logger, message, level)
 
 
