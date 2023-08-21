@@ -5,6 +5,7 @@ Agent is a library for building a LLM-based agent with a simple DSL.
 In this library, an agent is defined as an executable control flow of a text generation session using LLMs, tools, and other functions.
 
 You can use the agent via CLI, API, etc. Therefore, you can build a chatbot on Agent, but you can also build any application that requires multiple-step text generation. If you're only building applications with single-turn text generation, you just need to use prompttrail.providers, which allows you to use LLMs with a simple API.
+
 ## Introduction
 
 ### `agent.template`
@@ -29,11 +30,8 @@ templates = LinearTemplate(
         MessageTemplate(
             content="""
 You're an AI proofreader that helps users fix markdown.
-
 You're given markdown content by the user.
-
 You only emit the corrected markdown. No explanation, comments, or anything else is needed.
-
 Do not remove > in the code section, which represents the prompt.
 """,
             role="system",
@@ -138,18 +136,18 @@ result = runner.run(
 
 You will see the following output on your terminal.
 
-```
+```python
 StatefulMessage(
-{'content': '\nYou're an AI proofreader that helps users fix markdown.\nYou're given markdown content by the user.\nYou only emit the corrected markdown. No explanation, comments, or anything else is needed.\nDo not remove > in the code section, which represents the prompt.',
- 'sender': 'system',
-)
+  'content': """\nYou're an AI proofreader that helps users fix markdown.\nYou're given markdown content by the user.\nYou only emit the corrected markdown. No explanation, comments, or anything else is needed.\nDo not remove > in the code section, which represents the prompt.""",
+  'sender': 'system',
+),
 StatefulMessage(
-{'content': '\n# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.',
- 'sender': 'user',
-)
+  'content': """\n# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.""",
+  'sender': 'user',
+),
 StatefulMessage(
-{'content': '# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.',
- 'sender': 'assistant',
+  'content': """'# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.""",
+  'sender': 'assistant',
 )
 ```
 
@@ -174,7 +172,7 @@ print(corrected_markdown)
 
 The result is (may vary depending on the LLM):
 
-```
+```markdown
 # PromptTrail
 
 PromptTrail is a library to build a text generation agent with LLMs.
@@ -185,7 +183,8 @@ Great! We have built our first agent!
 Here we have reviewed the core concepts of `prompttrail.agent`.
 
 You may start using `prompttrail.agent` to build your own agent now!
-## Going deeper!
+
+## Going deeper
 
 ### mocking agent
 
@@ -244,6 +243,7 @@ If the last message before asking for user input is `Hello`, it returns `Hi` as 
 We have other mocking methods, see [prompttrail.mock] for more details.
 
 You can see a more complicated mocking example in [examples/agent/fermi_problem.py].
+
 ## `agent.hook`
 
 Hooks are used to enhance the template.
@@ -258,14 +258,7 @@ GenerateTemplate(
             key="python_segment", lang="python"
         ),
         EvaluatePythonCodeHook(key="answer", code="python_segment"),
-    ],
-    after_control=[
-        IfJumpHook(
-            condition=lambda state: "answer" in state.data,
-            true_template="gather_feedback",
-            false_template=first.template_id,
-        )
-    ],
+    ]
 ),
 ```
 
@@ -281,8 +274,6 @@ Let's see what they do.
 
 As a convention, `key` is used to represent the key of `state.data` to store the result of the hook.
 
-After that, `after_control` is called. `IfJumpHook` jumps to the `gather_feedback` template if `answer` is in `state.data`, or `first.template_id` otherwise. We will explain State later. Now you should remember that the hook is dealing with State.
-
 `gather_feedback` and `first.template_id` are template ids, the unique identifier of the template passed to the runner. `template_id` can be set at instantiation like:
 
 ```python
@@ -297,15 +288,14 @@ However, you can omit it. In that case, `template_id` is automatically generated
 
 Anyway, we omitted the templates in this example, so we will not explain it here. See [examples/agent/fermi_problem.py] for more details.
 
-As there are `after_transform` and `after_control`, there are `before_transform` and `before_control`. They are called before the `rendering` of the template.
+As there are `after_transform` and there are `before_transform`. They are called before the `rendering` of the template.
 
 The order of hooks is:
 
 - `before_transform`
-- `before_control`
 - (rendering)
 - `after_transform`
-- `after_control`
+
 ## rendering
 
 `rendering` is a process to create a message from a template.
@@ -319,6 +309,7 @@ For `GenerateTemplate`, it calls the LLM and returns the result as a message.
 For `InputTemplate`, it asks for user input using `user_interaction_provider` and returns the result as a message.
 
 You can also add your own template. See [template.py] for more details.
+
 ## `State`
 
 `State` is a state that is passed to the templates and holds the state of the conversation.
@@ -346,7 +337,6 @@ class State(object):
         data: Dict[str, Any] = {},
         session_history: StatefulSession = StatefulSession(),
         current_template_id: Optional["TemplateId"] = None,
-        jump_to_id: Optional["TemplateId"] = None,
     ):
         self.runner = runner
         self.model = model
@@ -354,7 +344,6 @@ class State(object):
         self.data = data
         self.session_history = session_history
         self.current_template_id = current_template_id
-        self.jump_to_id = jump_to_id
 ```
 
 Other attributes can also be accessed:
@@ -365,7 +354,6 @@ Other attributes can also be accessed:
 
 - `session_history`: You can access the session history. You can review the history of the conversation.
 
-- `jump_to_id`: This is where you order the runner to jump to another template. Usually, this is manipulated via hooks.
 ## `agent.tool` (Function Calling)
 
 `agent.tool` is a set of tools that can be used by LLMs, especially OpenAI's function calling feature.
@@ -437,7 +425,7 @@ class WeatherForecastTool(Tool):
 
 This tool definition is converted to the following function call:
 
-```
+```json
 {
    "name":"get_weather_forecast",
    "description":"Get the current weather in a given location and date",
@@ -467,7 +455,7 @@ This tool definition is converted to the following function call:
 
 Then, you can let LLM use this function by using `OpenAIGenerateWithFunctionCallingTemplate`:
 
-```
+```python
 template = LinearTemplate(
     templates=[
         MessageTemplate(

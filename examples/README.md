@@ -37,4 +37,3 @@ In this directory, we give examples of how to use `prompttrail` as we actually u
 - [`dogfooding/fix_markdown.py`](dogfooding/fix_markdown.py)
   - This shows how to use `prompttrail` to fix markdown files in this repository.
   - You can see the result in this [PR](https://github.com/combinatrix-ai/PromptTrail/pull/3)
-
