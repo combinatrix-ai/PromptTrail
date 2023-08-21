@@ -3,7 +3,7 @@ from prompttrail.agent.core import State
 from prompttrail.agent.hook.core import BooleanHook, TransformHook
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate, MessageTemplate
-from prompttrail.agent.template.control import IfTemplate, LoopTemplate
+from prompttrail.agent.template.control import EndTemplate, IfTemplate, LoopTemplate
 from prompttrail.agent.template.openai import (
     OpenAIGenerateTemplate,
     OpenAISystemTemplate,
@@ -231,3 +231,47 @@ def test_nested_loop_template():
     ]
     for idx, message in enumerate(state.session_history.messages):
         assert message.content == expected_messages[idx]
+
+
+def test_end_template():
+    template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="{{ content }}",
+                role="system",
+            ),
+            IfTemplate(
+                true_template=MessageTemplate(
+                    content="True",
+                    role="assistant",
+                ),
+                false_template=EndTemplate(),
+                condition=BooleanHook(
+                    lambda state: state.session_history.messages[-1].content == "TRUE"
+                ),
+            ),
+            MessageTemplate(
+                role="assistant",
+                content="This is rendered if the previous message was TRUE",
+            ),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=template,
+    )
+    state = runner.run(state=State(data={"content": "TRUE"}), max_messages=10)
+
+    assert len(state.session_history.messages) == 3
+    assert state.session_history.messages[0].content == "TRUE"
+    assert state.session_history.messages[1].content == "True"
+    assert (
+        state.session_history.messages[2].content
+        == "This is rendered if the previous message was TRUE"
+    )
+
+    state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
+    assert len(state.session_history.messages) == 1
+    assert state.session_history.messages[0].content == "FALSE"

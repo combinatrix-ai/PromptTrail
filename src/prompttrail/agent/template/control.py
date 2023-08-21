@@ -5,7 +5,7 @@ from typing import Generator, List, Optional, Sequence
 from prompttrail.agent.core import State
 from prompttrail.agent.hook.core import BooleanHook, TransformHook
 from prompttrail.agent.template.core import Stack, Template
-from prompttrail.const import END_TEMPLATE_ID
+from prompttrail.const import END_TEMPLATE_ID, ReachedEndTemplateException
 from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ class EndTemplate(Template):
         return cls._instance
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
-        raise ValueError("EndTemplate should not be rendered. Something is wrong.")
+        raise ReachedEndTemplateException()
 
     def create_stack(self, state: State) -> Stack:
         return super().create_stack(state)

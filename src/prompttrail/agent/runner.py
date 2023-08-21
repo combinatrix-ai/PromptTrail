@@ -6,6 +6,7 @@ from prompttrail.agent import State
 from prompttrail.agent.core import StatefulSession
 from prompttrail.agent.template import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
+from prompttrail.const import ReachedEndTemplateException
 from prompttrail.core import Model, Parameters
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,11 @@ class CommandLineRunner(Runner):
             # render template until exhausted
             try:
                 message = next(gen)
+            except ReachedEndTemplateException:
+                logger.warning(
+                    f"End template {EndTemplate.template_id} is reached. Flow is forced to stop."
+                )
+                break
             except StopIteration as e:
                 # For generator, type support for return value is not so good.
                 state_ = e.value
