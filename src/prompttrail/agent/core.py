@@ -41,17 +41,6 @@ class StatefulSession(Session):
     messages: Sequence[StatefulMessage] = []
 
 
-# TODO: Use control message below to make control flow more explicit.
-# class ControlMessage(StatefulMessage):
-#     content: Any = None
-
-#     # ControlMessage is not expected to edit by human, so kill the edit method.
-#     def __init__(self, sender: str, template_id: str, data: Dict[str, Any]):
-#         self.template_id = template_id
-#         self.data = data
-#         self.sender = sender
-
-
 class State(object):
     """State hold the all state of the conversation."""
 
@@ -59,9 +48,11 @@ class State(object):
         self,
         runner: Optional["Runner"] = None,
         data: Dict[str, Any] = {},
-        session_history: StatefulSession = StatefulSession(),
+        session_history: Optional[StatefulSession] = None,
         stack: Sequence["Stack"] = [],
     ):
+        if session_history is None:
+            session_history = StatefulSession()
         self.runner = runner
         self.data = data
         self.session_history = session_history
