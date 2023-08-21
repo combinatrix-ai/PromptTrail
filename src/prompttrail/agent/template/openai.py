@@ -3,7 +3,7 @@ from typing import Generator, List, Optional, Sequence
 
 from prompttrail.agent import State
 from prompttrail.agent.core import StatefulMessage
-from prompttrail.agent.hook import JumpHook, TransformHook
+from prompttrail.agent.hook import TransformHook
 from prompttrail.agent.template.core import GenerateTemplate, MessageTemplate
 from prompttrail.agent.tool import Tool, check_arguments
 from prompttrail.const import OPENAI_SYSTEM_ROLE
@@ -18,8 +18,6 @@ class OpenAIGenerateTemplate(GenerateTemplate):
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             template_id=template_id,

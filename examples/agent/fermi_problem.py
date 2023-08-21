@@ -11,7 +11,6 @@ from prompttrail.agent.hook import (
     BooleanHook,
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
-    IfJumpHook,
 )
 from prompttrail.agent.template import (
     LinearTemplate,
@@ -99,16 +98,6 @@ Calculation:
                         # Note that the key "python_segment" from ExtractMarkdownCodeBlockHook is used here
                         # The result of the evaluation is stored in key: "answer"
                         EvaluatePythonCodeHook(key="answer", code="python_segment"),
-                    ],
-                    after_control=[
-                        # Maybe you want to jump to another template based on the answer
-                        # You can do this using IfJumpHook
-                        # In this case, if no python code block is found, jump to first template and retry with another question given by user
-                        IfJumpHook(
-                            condition=lambda state: "answer" in state.data,
-                            true_template="gather_feedback",
-                            false_template=first.template_id,
-                        )
                     ],
                 ),
                 MessageTemplate(

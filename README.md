@@ -4,8 +4,8 @@ PromptTrail is a lightweight library to interact with LLM.
 
 ## Qucikstart
 
-- If you want to just use unified interface to various LLMs, see [exapmles/provider/](examples/provider/).
-- If you want to build complex LLM applications, see [src/prompttrail/agents](src/prompttrail/agents/).
+- If you want to just use unified interface to various LLMs, see [exapmles/README.md#provider](examples/README.md#provider).
+- If you want to build complex LLM applications, see [src/prompttrail/agent/README.md](src/prompttrail/agent/README.md)
 - [Documentation (WIP)](https://combinatrix-ai.github.io/PromptTrail/)
 
 ## Installation
@@ -238,9 +238,9 @@ runner.run()
 
 - [ ] Examples
 - [ ] Documentation
-- [ ] Runner
+- [x] Runner
+  - [ ] Comprehensive test
   - [ ] Sophisticated CLI experience for intuitive demo
-  - [ ] Turn-based execution that can be used by other libraries
 - [ ] Vector Search Integration
 - [ ] Better error messages that help debugging
 - [x] Caching of API call
@@ -253,7 +253,7 @@ runner.run()
 - [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
-- [ ] Tooling
+- [ ] Genral Tooling
 - [ ] Local LLMs
 
 ## License

@@ -9,8 +9,8 @@ from pydantic import BaseModel
 
 from prompttrail.agent import State
 from prompttrail.agent.core import StatefulMessage
-from prompttrail.agent.hook import JumpHook, TransformHook
-from prompttrail.const import RESERVED_TEMPLATE_IDS
+from prompttrail.agent.hook import TransformHook
+from prompttrail.const import RESERVED_TEMPLATE_IDS, ReachedEndTemplateException
 from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
@@ -50,6 +50,8 @@ class Template(object):
         state.stack.append(self.create_stack(state))  # type: ignore
         try:
             res = yield from self._render(state)
+        except ReachedEndTemplateException as e:
+            raise e
         except Exception as e:
             self.get_logger().error(f"RenderingTemplateError@{self.template_id}")
             raise e
@@ -188,8 +190,6 @@ class UserInputTextTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
-        before_control: List[JumpHook] = [],
-        after_control: List[JumpHook] = [],
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
