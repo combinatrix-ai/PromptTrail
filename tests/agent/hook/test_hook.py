@@ -6,8 +6,6 @@ from prompttrail.agent.hook.core import (
     BooleanHook,
     GenerateChatHook,
     Hook,
-    IfJumpHook,
-    JumpHook,
     TransformHook,
 )
 
@@ -36,36 +34,6 @@ class TestBooleanHook(unittest.TestCase):
         boolean_hook = BooleanHook(lambda x: True)
         result = boolean_hook.hook(state)
         self.assertTrue(result)
-
-
-class TestJumpHook(unittest.TestCase):
-    def test_hook(self):
-        state = State()
-        jump_hook = JumpHook(lambda x: None)
-        with self.assertRaises(NotImplementedError):
-            jump_hook.hook(state)
-
-
-class TestIfJumpHook(unittest.TestCase):
-    def test_hook(self):
-        state = State()
-        true_template = str()
-        false_template = str()
-        if_jump_hook = IfJumpHook(lambda x: True, true_template, false_template)
-        result = if_jump_hook.hook(state)
-        self.assertEqual(result, true_template)
-
-
-# AskUserHook uses input() which is not testable for now!
-# class TestAskUserHook(unittest.TestCase):
-#     def test_hook(self):
-#         state = State()
-#         key = "test_key"
-#         description = "test_description"
-#         default = "test_default"
-#         ask_user_hook = AskUserHook(key, description, default)
-#         with self.assertRaises(ValueError):
-#             ask_user_hook.hook(state)
 
 
 class TestGenerateChatHook(unittest.TestCase):

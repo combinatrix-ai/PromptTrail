@@ -29,36 +29,6 @@ class BooleanHook(Hook):
         return self.condition(state)
 
 
-class JumpHook(Hook):
-    def __init__(self, function: Callable[[State], Optional[str]]):
-        self.function = function
-
-    def hook(self, state: State) -> Optional[str]:
-        raise NotImplementedError("hook method is not implemented")
-
-
-class IfJumpHook(JumpHook):
-    def __init__(
-        self,
-        condition: Callable[[State], bool],
-        true_template: str,
-        false_template: Optional[str] = None,
-    ):
-        self.condition = condition
-        self.true_template = true_template
-        self.false_template = false_template
-
-    def hook(self, state: State) -> Optional[str]:
-        if self.condition(state):
-            state.set_jump(self.true_template)
-            return self.true_template
-        else:
-            if self.false_template is None:
-                return None
-            state.set_jump(self.false_template)
-            return self.false_template
-
-
 class AskUserHook(TransformHook):
     def __init__(
         self,
