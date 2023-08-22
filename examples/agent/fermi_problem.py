@@ -12,12 +12,13 @@ from prompttrail.agent.hook import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
 )
+from prompttrail.agent.hook.core import ResetDataHook
 from prompttrail.agent.template import (
-    LinearTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
 )
+from prompttrail.agent.template.control import BreakTemplate, IfTemplate
 from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
@@ -29,7 +30,7 @@ from prompttrail.util import is_in_test_env
 
 logging.basicConfig(level=logging.DEBUG)
 
-agent_template = LinearTemplate(
+agent_template = LoopTemplate(
     [
         MessageTemplate(
             # First, let's give an instruction to the API
@@ -62,7 +63,8 @@ Calculation:
 ```""",
         ),
         LoopTemplate(
-            [
+            template_id="fermi_problem_loop",
+            templates=[
                 # Then, we can start the conversation with user
                 # First, we ask user for their question
                 # UserInputTextTemplate is a template that ask user for their input.
@@ -100,47 +102,51 @@ Calculation:
                         EvaluatePythonCodeHook(key="answer", code="python_segment"),
                     ],
                 ),
-                MessageTemplate(
-                    # You can also give assistant message without using model, as if the assistant said it
-                    # In this case, we want to ask user if the answer is satisfied or not
-                    # Analysing the user response is always hard, so we let the API to decide
-                    # First, we must ask user for their feedback
-                    # Let's ask user for question!
-                    template_id="gather_feedback",
-                    role="assistant",
-                    content="The answer is {{ answer }} . Satisfied?",
+                IfTemplate(
+                    true_template=MessageTemplate(
+                        role="assistant",
+                        content="LLM seems to unable to estimate. Try different question! Starting over...",
+                    ),
+                    false_template=BreakTemplate(),
+                    condition=BooleanHook(lambda state: "answer" not in state.data),
                 ),
-                UserInputTextTemplate(
-                    # Here is where we ask user for their feedback
-                    template_id="get_feedback",
-                    role="user",
-                    description="Input:",
-                    default="Yes, I'm satisfied.",
-                ),
-                MessageTemplate(
-                    # Based on the feedback, we can decide to retry or end the conversation
-                    # Ask the API to analyze the user's sentiment
-                    template_id="instruction_sentiment",
-                    role="assistant",
-                    content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
-                ),
-                check_end := GenerateTemplate(
-                    template_id="analyze_sentiment",
-                    role="assistant",
-                    # API will return END or RETRY (mostly!)
-                ),
-                # Then, we can decide to end the conversation or retry.
-                # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
-                # Check if the loop is finished, see exit_condition below.
             ],
-            exit_condition=BooleanHook(
-                condition=lambda state:
-                # Exit condition: if the last message given by API is END, then exit, else continue (in this case, go to top of loop)
-                "END"
-                in state.get_last_message().content
-            ),
+            before_transform=[ResetDataHook()],
+        ),
+        MessageTemplate(
+            # You can also give assistant message without using model, as if the assistant said it
+            # In this case, we want to ask user if the answer is satisfied or not
+            # Analysing the user response is always hard, so we let the API to decide
+            # First, we must ask user for their feedback
+            # Let's ask user for question!
+            template_id="gather_feedback",
+            role="assistant",
+            content="The answer is {{ answer }} . Satisfied?",
+        ),
+        UserInputTextTemplate(
+            # Here is where we ask user for their feedback
+            template_id="get_feedback",
+            role="user",
+            description="Input:",
+            default="Yes, I'm satisfied.",
+        ),
+        MessageTemplate(
+            # Based on the feedback, we can decide to retry or end the conversation
+            # Ask the API to analyze the user's sentiment
+            template_id="instruction_sentiment",
+            role="assistant",
+            content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
+        ),
+        check_end := GenerateTemplate(
+            template_id="analyze_sentiment",
+            role="assistant",
+            # API will return END or RETRY (mostly!)
         ),
     ],
+    # Then, we can decide to end the conversation or retry.
+    # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
+    # Check if the loop is finished, see exit_condition below.
+    exit_condition=BooleanHook(lambda state: state.get_last_message().content == "END"),
 )
 
 # Then, let's run this agent!
@@ -172,7 +178,7 @@ if not is_in_test_env():
                 api_key=os.environ.get("OPENAI_API_KEY", "")
             )
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
+        parameters=OpenAIModelParameters(model_name="gpt-4"),
         template=agent_template,
         user_interaction_provider=UserInteractionTextCLIProvider(),
     )
@@ -216,7 +222,7 @@ else:
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
+        parameters=OpenAIModelParameters(model_name="gpt-4"),
         template=agent_template,
     )
     if __name__ == "__main__":

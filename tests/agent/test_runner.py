@@ -3,7 +3,12 @@ from prompttrail.agent.core import State
 from prompttrail.agent.hook.core import BooleanHook, TransformHook
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.template import LinearTemplate, MessageTemplate
-from prompttrail.agent.template.control import EndTemplate, IfTemplate, LoopTemplate
+from prompttrail.agent.template.control import (
+    BreakTemplate,
+    EndTemplate,
+    IfTemplate,
+    LoopTemplate,
+)
 from prompttrail.agent.template.openai import (
     OpenAIGenerateTemplate,
     OpenAISystemTemplate,
@@ -275,3 +280,125 @@ def test_end_template():
     state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
     assert len(state.session_history.messages) == 1
     assert state.session_history.messages[0].content == "FALSE"
+
+
+def test_break_template():
+    template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="{{ content }}",
+                role="system",
+            ),
+            IfTemplate(
+                true_template=MessageTemplate(
+                    content="True",
+                    role="assistant",
+                ),
+                false_template=BreakTemplate(),
+                condition=BooleanHook(
+                    lambda state: state.session_history.messages[-1].content == "TRUE"
+                ),
+            ),
+            MessageTemplate(
+                role="assistant",
+                content="This is rendered if the previous message was TRUE",
+            ),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=template,
+    )
+    state = runner.run(state=State(data={"content": "TRUE"}), max_messages=10)
+
+    assert len(state.session_history.messages) == 3
+    assert state.session_history.messages[0].content == "TRUE"
+    assert state.session_history.messages[1].content == "True"
+    assert (
+        state.session_history.messages[2].content
+        == "This is rendered if the previous message was TRUE"
+    )
+
+    state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
+    assert len(state.session_history.messages) == 1
+    assert state.session_history.messages[0].content == "FALSE"
+
+
+def test_nested_loop_with_break_template():
+    outer_loop_counter = 0
+    inner_loop_counter = 0
+
+    def update_outer_loop_counter(state: State) -> State:
+        nonlocal outer_loop_counter
+        outer_loop_counter += 1
+        state.data["outer_loop_counter"] = outer_loop_counter
+        # reset inner loop counter
+        nonlocal inner_loop_counter
+        inner_loop_counter = 0
+        return state
+
+    def update_inner_loop_counter(state: State) -> State:
+        nonlocal inner_loop_counter
+        inner_loop_counter = (inner_loop_counter + 1) % 5  # Reset after 5 iterations
+        state.data["inner_loop_counter"] = inner_loop_counter
+        return state
+
+    inner_loop_template = LoopTemplate(
+        templates=[
+            IfTemplate(
+                before_transform=[TransformHook(update_inner_loop_counter)],
+                true_template=BreakTemplate(),
+                false_template=MessageTemplate(
+                    role="assistant",
+                    content="Inner loop iteration {{ inner_loop_counter }} of outer iteration {{ outer_loop_counter }}",
+                ),
+                condition=BooleanHook(
+                    lambda state: state.data["inner_loop_counter"] > 2
+                ),
+            ),
+        ],
+    )
+
+    outer_loop_template = LoopTemplate(
+        templates=[
+            MessageTemplate(
+                before_transform=[TransformHook(update_outer_loop_counter)],
+                role="assistant",
+                content="Starting outer loop iteration {{ outer_loop_counter }}",
+            ),
+            inner_loop_template,
+        ],
+        exit_condition=BooleanHook(
+            condition=lambda state: state.data["outer_loop_counter"] >= 3
+        ),
+    )
+
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=outer_loop_template,
+    )
+
+    # We'll break the inner loop on the 3rd iteration
+    state = runner.run(
+        state=State(data={"outer_loop_counter": 0, "inner_loop_counter": 0}),
+        max_messages=10,
+        debug_mode=True,
+    )
+    # Expecting the inner loop to break on the 3rd iteration for each outer loop iteration
+    expected_messages = [
+        "Starting outer loop iteration 1",
+        "Inner loop iteration 1 of outer iteration 1",
+        "Inner loop iteration 2 of outer iteration 1",
+        "Starting outer loop iteration 2",
+        "Inner loop iteration 1 of outer iteration 2",
+        "Inner loop iteration 2 of outer iteration 2",
+        "Starting outer loop iteration 3",
+        "Inner loop iteration 1 of outer iteration 3",
+        "Inner loop iteration 2 of outer iteration 3",
+    ]
+    for idx, message in enumerate(state.session_history.messages):
+        assert message.content == expected_messages[idx]

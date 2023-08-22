@@ -50,6 +50,7 @@ class State(object):
         data: Dict[str, Any] = {},
         session_history: Optional[StatefulSession] = None,
         stack: Sequence["Stack"] = [],
+        debug_mode: Optional[bool] = None,
     ):
         if session_history is None:
             session_history = StatefulSession()
@@ -57,6 +58,7 @@ class State(object):
         self.data = data
         self.session_history = session_history
         self.stack = stack
+        self.debug_mode = debug_mode
 
     def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
@@ -72,7 +74,9 @@ class State(object):
     def set_jump(self, jump_to_id: Optional[str]) -> None:
         self.jump_to_id = jump_to_id
 
-    def get_current_template_id(self) -> str:
+    def get_current_template_id(self) -> Optional[str]:
+        if len(self.stack) == 0:
+            return None
         return self.stack[-1].template_id
 
     def __str__(self):
