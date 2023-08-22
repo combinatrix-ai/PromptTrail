@@ -172,6 +172,9 @@ class GenerateTemplate(MessageTemplate):
         # render
         if state.runner is None:
             raise ValueError("runner is not set")
+        logger.info(
+            f"Generating content with {state.runner.model.__class__.__name__}..."
+        )
         rendered_content = state.runner.model.send(
             state.runner.parameters, state.session_history
         ).content

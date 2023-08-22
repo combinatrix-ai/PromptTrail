@@ -58,6 +58,8 @@ def cutify_sender(sender: Optional[str]):
         return "👤 user"
     if sender == "assistant":
         return "🤖 assistant"
+    if sender == "function":
+        return "🧮 function"
     if sender is None:
         return "❓ None"
     return sender
@@ -83,8 +85,7 @@ class CommandLineRunner(Runner):
             )
         else:
             if state.runner is None or state.runner != self:
-                logger.log(
-                    logging.INFO,
+                logger.warning(
                     f"Given flow state has different runner {state.runner} from the runner {self}. Overriding the flow state.",
                 )
                 state.runner = self
@@ -102,6 +103,7 @@ class CommandLineRunner(Runner):
         n_messages = 0
         template = self.search_template(current_template_id)
         gen = template.render(state_)
+        print("===== Start =====")
         while 1:
             # render template until exhausted
             try:
@@ -125,14 +127,20 @@ class CommandLineRunner(Runner):
                 state_ = e.value
                 break
             if message:
-                print("==================")
                 print("From: " + cutify_sender(message.sender))
-                print(message.content)
-                print("==================")
+                if message.content:
+                    print("message: ", message.content)
+                elif message.data:
+                    print("data: ", end=" ")
+                    print(message.data)
+                else:
+                    print("Empty message!")
                 n_messages += 1
             if max_messages and n_messages >= max_messages:
                 logger.warning(
                     f"Max messages {max_messages} is reached. Flow is forced to stop."
                 )
                 break
+            print("=================")
+        print("====== End ======")
         return state_

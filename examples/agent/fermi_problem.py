@@ -28,7 +28,7 @@ from prompttrail.core import Message
 from prompttrail.mock import OneTurnConversationMockProvider
 from prompttrail.util import is_in_test_env
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 agent_template = LoopTemplate(
     [
@@ -128,7 +128,7 @@ Calculation:
             template_id="get_feedback",
             role="user",
             description="Input:",
-            default="Yes, I'm satisfied.",
+            # default="Yes, I'm satisfied.",
         ),
         MessageTemplate(
             # Based on the feedback, we can decide to retry or end the conversation
@@ -185,6 +185,7 @@ if not is_in_test_env():
     if __name__ == "__main__":
         conversation = runner.run()
         # You can keep the conversation data for later use!
+        print("=== Summary ===")
         print(conversation)
 else:
     # Here, we will run the agent in automatically for testing!
@@ -227,4 +228,5 @@ else:
     )
     if __name__ == "__main__":
         conversation = runner.run()
+        print("=== Summary ===")
         print(conversation)

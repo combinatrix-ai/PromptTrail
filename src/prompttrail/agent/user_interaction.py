@@ -1,8 +1,11 @@
+import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
 from prompttrail.agent.core import State
 from prompttrail.const import CONTROL_TEMPLATE_ROLE
+
+logger = logging.getLogger(__name__)
 
 
 class UserInteractionProvider(object):
@@ -24,8 +27,17 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         default: Optional[str] = None,
     ) -> str:
         raw = input(description).strip()
-        if (not raw) and default is not None:
-            raw = default
+        while 1:
+            if (not raw) and default is not None:
+                logger.info(f"No input. Using default value: {default}")
+                raw = default
+            if raw:
+                break
+            else:
+                logger.warning(
+                    "You must input something or set default value for template. Please try again."
+                )
+                raw = input(description).strip()
         return raw
 
 
