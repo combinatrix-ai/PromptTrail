@@ -70,7 +70,7 @@ class GenerateChatHook(TransformHook):
 
 class CountUpHook(TransformHook):
     def __init__(self):
-        pass
+        pass  # No configuration is needed here.
 
     def hook(self, state: State) -> State:
         template_id = state.get_current_template_id()
@@ -95,7 +95,7 @@ class DebugHook(TransformHook):
 
 class ResetDataHook(TransformHook):
     def __init__(self):
-        pass
+        pass  # No configuration is needed here.
 
     def hook(self, state: State) -> State:
         state.data = {}

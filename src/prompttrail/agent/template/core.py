@@ -40,13 +40,13 @@ class Template(object):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         self.template_id: str = template_id if template_id is not None else self._name()
         check_template_id(self.template_id)
-        self.before_transform = before_transform
-        self.after_transform = after_transform
+        self.before_transform = before_transform if before_transform is not None else []
+        self.after_transform = after_transform if after_transform is not None else []
 
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
@@ -102,13 +102,13 @@ class MessageTemplate(Template):
         content: str,
         role: str,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.content = content
         self.jinja_template = jinja2.Template(self.content)
@@ -155,15 +155,15 @@ class GenerateTemplate(MessageTemplate):
         self,
         role: str,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
             role=role,
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
@@ -190,15 +190,15 @@ class UserInputTextTemplate(MessageTemplate):
         description: Optional[str] = None,
         default: Optional[str] = None,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
             role=role,
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.role = role
         self.description = description
