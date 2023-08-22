@@ -82,8 +82,10 @@ class Template(object):
         raise NotImplementedError("render method is not implemented")
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        if visited_templates is None:
+            visited_templates = set()
         if self in visited_templates:
             return
         visited_templates.add(self)
