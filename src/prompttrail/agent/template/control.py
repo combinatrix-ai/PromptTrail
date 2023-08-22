@@ -223,6 +223,7 @@ class LinearTemplate(ControlTemplate):
 class EndTemplate(Template):
     template_id = END_TEMPLATE_ID
     _instance = None
+    before_transform = []
 
     def __init__(self):
         pass
@@ -284,6 +285,7 @@ class BreakTemplate(ControlTemplate):
         super().__init__(
             template_id=template_id,
             before_transform=before_transform,
+            # after_transform is unavailable for the templates raise errors
         )
 
     def _render(self, state: "State") -> Generator[Message, None, State]:

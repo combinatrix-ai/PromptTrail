@@ -54,7 +54,12 @@ class Template(object):
     def render(self, state: "State") -> Generator[Message, None, State]:
         state.stack.append(self.create_stack(state))  # type: ignore
         try:
+            for hook in self.before_transform:
+                state = hook.hook(state)
             res = yield from self._render(state)
+            # TODO: After transform is skipped if BreakTemplate, JumpTemplate, or EndTemplate is used. This is natural?
+            for hook in self.after_transform:
+                state = hook.hook(state)
         except BreakException as e:
             raise e
         except ReachedEndTemplateException as e:
@@ -111,9 +116,6 @@ class MessageTemplate(Template):
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
         state.jump_to_id = None
-        # before_transform
-        for before_transform_hook in self.before_transform:
-            state = before_transform_hook.hook(state)
         # no jump, then render
         if not state.jump_to_id:
             # render
@@ -121,9 +123,6 @@ class MessageTemplate(Template):
             message = StatefulMessage(
                 content=rendered_content, sender=self.role, template_id=self.template_id
             )
-            # after_transform
-            for after_transform_hook in self.after_transform:
-                state = after_transform_hook.hook(state)
             state.session_history.messages.append(message)  # type: ignore
             yield message
         return state
@@ -168,9 +167,6 @@ class GenerateTemplate(MessageTemplate):
         )
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
-        # before_transform
-        for before_transform_hook in self.before_transform:
-            state = before_transform_hook.hook(state)
         # render
         if state.runner is None:
             raise ValueError("runner is not set")
@@ -184,9 +180,6 @@ class GenerateTemplate(MessageTemplate):
         )
         state.session_history.messages.append(message)  # type: ignore
         yield message
-        # after_transform
-        for after_transform_hook in self.after_transform:
-            state = after_transform_hook.hook(state)
         return state
 
 
@@ -212,9 +205,6 @@ class UserInputTextTemplate(MessageTemplate):
         self.default = default
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
-        # before_transform
-        for before_transform_hook in self.before_transform:
-            state = before_transform_hook.hook(state)
         # render
         if state.runner is None:
             raise ValueError(
@@ -232,7 +222,4 @@ class UserInputTextTemplate(MessageTemplate):
         # TODO: Sequence cannot have append method, this causd a bug already. Need to be fixed
         state.session_history.messages.append(message)  # type: ignore
         yield message
-        # after_transform
-        for after_transform_hook in self.after_transform:
-            state = after_transform_hook.hook(state)
         return state

@@ -50,6 +50,7 @@ class State(object):
         data: Dict[str, Any] = {},
         session_history: Optional[StatefulSession] = None,
         stack: Sequence["Stack"] = [],
+        debug_mode: Optional[bool] = None,
     ):
         if session_history is None:
             session_history = StatefulSession()
@@ -57,6 +58,7 @@ class State(object):
         self.data = data
         self.session_history = session_history
         self.stack = stack
+        self.debug_mode = debug_mode
 
     def get_last_message(self) -> StatefulMessage:
         if len(self.session_history.messages) == 0:
