@@ -57,7 +57,7 @@ def main(
     # show all log levels
     import logging
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     load_file_content = open(load_file, "r")
     initial_state = State(
