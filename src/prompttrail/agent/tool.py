@@ -116,6 +116,7 @@ def function_calling_type_to_partial_property(
     else:
         if not issubclass(T, enum.Enum):
             raise ValueError("Invalid type", T)
+
         return FunctionCallingPartialProperty(
             type="string", required=True, enum=[x.value for x in T]
         )
@@ -149,7 +150,7 @@ def check_arguments(
         if not any(
             [arg_name == arg_passed.get_name() for arg_passed in args_of_function]
         ):
-            logger.warning("Unused argument:", arg_name)
+            logger.warning("Unused argument:" + arg_name)
     return result  # type: ignore
 
 

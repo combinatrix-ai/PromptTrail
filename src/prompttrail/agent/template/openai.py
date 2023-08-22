@@ -81,16 +81,16 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 raise ValueError(
                     f"Function {rendered_message.data['function_call']['name']} is not defined in the template."
                 )
-            function = self.functions[rendered_message.data["function_call"]["name"]]
+            function_ = self.functions[rendered_message.data["function_call"]["name"]]
             arguments = check_arguments(
                 rendered_message.data["function_call"]["arguments"],
-                function.argument_types,
+                function_.argument_types,
             )
-            result = function.call(arguments, state)  # type: ignore
+            result = function_.call(arguments, state)  # type: ignore
             # Send result
             function_message = Message(
                 sender="function",
-                data={"function_call": {"name": function.name}},
+                data={"function_call": {"name": function_.name}},
                 content=json.dumps(result.show()),
             )
             state.session_history.messages.append(function_message)  # type: ignore
