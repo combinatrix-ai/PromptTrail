@@ -74,6 +74,8 @@ class CountUpHook(TransformHook):
 
     def hook(self, state: State) -> State:
         template_id = state.get_current_template_id()
+        if template_id is None:
+            raise ValueError("template_id is not set")
         if template_id not in state.data:
             state.data[template_id] = 0
         else:
@@ -86,6 +88,15 @@ class DebugHook(TransformHook):
         self.message = message_shown_when_called
 
     def hook(self, state: State) -> State:
-        print(self.message + " template_id: " + state.get_current_template_id())
+        print(self.message + " template_id: " + str(state.get_current_template_id()))
         print(self.message + " data: " + str(state.data))
+        return state
+
+
+class ResetDataHook(TransformHook):
+    def __init__(self):
+        pass
+
+    def hook(self, state: State) -> State:
+        state.data = {}
         return state

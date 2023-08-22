@@ -11,5 +11,5 @@ from examples.agent import fermi_problem  # type: ignore # noqa: E402
 
 def test_fermi_problem():
     # In the example, mocked model is loaded in pytest environment.
-    fermi_problem.runner.run(max_messages=10)
+    _ = fermi_problem.runner.run(max_messages=10)
     # TODO: Can be done without mocking? But it may make unintended loop or something.
