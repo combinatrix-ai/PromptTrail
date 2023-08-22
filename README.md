@@ -8,6 +8,7 @@ PromptTrail is a lightweight library to interact with LLM.
   - [What PromptTrail can do?](#what-prompttrail-can-do)
   - [Examples](#examples)
     - [LLM API Call](#llm-api-call)
+    - [Developer Tools](#developer-tools)
     - [Agent as Code](#agent-as-code)
     - [Tooling](#tooling)
   - [Next](#next)
@@ -39,29 +40,23 @@ When we release the first version, we will publish this package to PyPI.
 ## What PromptTrail can do?
 
 - PromptTrail offers the following features:
-  - Thin layer of abstraction for LLMs that you can intuitively understand
-    - Message
-    - Session
-    - Model
-  - Unified interface to various LLMs
+  - [Unified interface to various LLMs](#llm-api-call)
     - OpenAI
     - Google Cloud
     - [TODO] Local LLMs
-  - Tools for basic prompt programming
+  - [Developer Tools for prompt programming](#developer-tools)
     - Mocking LLMs for testing
     - [TODO] Logging
     - [TODO] Debugging
-  - Everything you need to do "Agent as Code"
+  - [Everything you need to do "Agent as Code"](#agent-as-code)
     - Template
     - Runner
-    - Agent
     - Hooks
-      - PytorchLightning-like hook-based agent definition is supported
-    - Unified interface to build/parse LLM input/output and agent for function calling.
     - Calling other APIs other than LLMs (Tooling)
-      - [TODO] Vector Search
-    - [TODO] Multiple Conversation Flow
-      - [TODO] Concurrent Execution
+      - Function Calling
+      - Built-in Tools
+        - [TODO] Code Execution
+        - [TODO] Vector Search
 
 ## Examples
 
@@ -100,7 +95,10 @@ If you want streaming output, you can use the `send_async` method if the provide
 Hello! How can # text is incrementally typed
 ```
 
-If you want to mock LLM, you can use various mock models:
+### Developer Tools
+
+We provide various tools for developers to build LLM applications.
+For example, you can mock LLMs for testing.
 
 ```python
 > # Change model class to mock model class
@@ -230,10 +228,9 @@ message:  END
 ====== End ======
 ````
 
-
 ### Tooling
 
-You can use function calling!
+You can use function calling! See [documentation)](src/prompttrail/agent/README.md#`agent.tool`\(Function Calling\)) for more information
 
 ```console
 ===== Start =====
