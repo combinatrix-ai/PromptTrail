@@ -33,14 +33,14 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         role: OpenAIrole,
         functions: Sequence[Tool],
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
             role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.functions = {func.name: func for func in functions}
 

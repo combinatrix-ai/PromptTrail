@@ -249,11 +249,11 @@ class JumpTemplate(ControlTemplate):
         jump_to: Template | TemplateId,
         condition: BooleanHook,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
+            before_transform=before_transform if before_transform is not None else [],
             # after_transform is unavailable for the templates raise errors
         )
         if isinstance(jump_to, Template):
@@ -284,11 +284,11 @@ class BreakTemplate(ControlTemplate):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
+            before_transform=before_transform if before_transform is not None else [],
             # after_transform is unavailable for the templates raise errors
         )
 

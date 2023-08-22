@@ -47,17 +47,17 @@ class State(object):
     def __init__(
         self,
         runner: Optional["Runner"] = None,
-        data: Dict[str, Any] = {},
+        data: Optional[Dict[str, Any]] = None,
         session_history: Optional[StatefulSession] = None,
-        stack: Sequence["Stack"] = [],
+        stack: Optional[Sequence["Stack"]] = None,
         debug_mode: Optional[bool] = None,
     ):
         if session_history is None:
             session_history = StatefulSession()
         self.runner = runner
-        self.data = data
+        self.data = data if data is not None else {}
         self.session_history = session_history
-        self.stack = stack
+        self.stack: Sequence[Stack] = stack if stack is not None else []
         self.debug_mode = debug_mode
 
     def get_last_message(self) -> StatefulMessage:
