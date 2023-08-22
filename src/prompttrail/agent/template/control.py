@@ -293,7 +293,7 @@ class BreakTemplate(ControlTemplate):
         )
 
     def _render(self, state: "State") -> Generator[Message, None, State]:
-        logger.warning(msg=f"Breaking the loop from {self.template_id}.")
+        logger.info(msg=f"Breaking the loop from {self.template_id}.")
         raise BreakException()
 
     def walk(

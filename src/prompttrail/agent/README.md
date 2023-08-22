@@ -184,9 +184,9 @@ Here we have reviewed the core concepts of `prompttrail.agent`.
 
 You may start using `prompttrail.agent` to build your own agent now!
 
-## Going deeper
+## Going Deeper
 
-### mocking agent
+### Mocking Agent
 
 Let's go deeper. We have created an agent. Yay! But, how do we test it?
 
@@ -296,7 +296,7 @@ The order of hooks is:
 - (rendering)
 - `after_transform`
 
-## rendering
+## Rendering
 
 `rendering` is a process to create a message from a template.
 

@@ -114,7 +114,7 @@ def main(
     # show all log levels
     import logging
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     load_file_content = open(load_file, "r")
     context_file_contents = {x: open(x, mode="r").read() for x in context_files}
