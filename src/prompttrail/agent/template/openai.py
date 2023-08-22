@@ -33,14 +33,14 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         role: OpenAIrole,
         functions: Sequence[Tool],
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
             role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.functions = {func.name: func for func in functions}
 
@@ -81,16 +81,16 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 raise ValueError(
                     f"Function {rendered_message.data['function_call']['name']} is not defined in the template."
                 )
-            function = self.functions[rendered_message.data["function_call"]["name"]]
+            function_ = self.functions[rendered_message.data["function_call"]["name"]]
             arguments = check_arguments(
                 rendered_message.data["function_call"]["arguments"],
-                function.argument_types,
+                function_.argument_types,
             )
-            result = function.call(arguments, state)  # type: ignore
+            result = function_.call(arguments, state)  # type: ignore
             # Send result
             function_message = Message(
                 sender="function",
-                data={"function_call": {"name": function.name}},
+                data={"function_call": {"name": function_.name}},
                 content=json.dumps(result.show()),
             )
             state.session_history.messages.append(function_message)  # type: ignore

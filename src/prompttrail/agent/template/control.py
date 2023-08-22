@@ -25,18 +25,18 @@ class ControlTemplate(Template):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
 
     @abstractmethod
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
         raise NotImplementedError(
             "Derived class of ControlTemplate must implement its own walk method"
@@ -70,13 +70,13 @@ class LoopTemplate(ControlTemplate):
         exit_condition: Optional[BooleanHook] = None,
         template_id: Optional[str] = None,
         exit_loop_count: Optional[int] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.templates = templates
         self.exit_condition = exit_condition
@@ -109,8 +109,9 @@ class LoopTemplate(ControlTemplate):
         return state
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        visited_templates = visited_templates or set()
         if self in visited_templates:
             return
         visited_templates.add(self)
@@ -133,13 +134,13 @@ class IfTemplate(ControlTemplate):
         true_template: Template,
         false_template: Optional[Template] = None,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.true_template = true_template
         self.false_template = false_template
@@ -156,8 +157,9 @@ class IfTemplate(ControlTemplate):
         return state
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        visited_templates = visited_templates or set()
         if self in visited_templates:
             return
         visited_templates.add(self)
@@ -179,13 +181,13 @@ class LinearTemplate(ControlTemplate):
         self,
         templates: Sequence[Template],
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
-            after_transform=after_transform,
+            before_transform=before_transform if before_transform is not None else [],
+            after_transform=after_transform if after_transform is not None else [],
         )
         self.templates = templates
 
@@ -206,8 +208,9 @@ class LinearTemplate(ControlTemplate):
         return state
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        visited_templates = visited_templates or set()
         if self in visited_templates:
             return
         visited_templates.add(self)
@@ -226,7 +229,7 @@ class EndTemplate(Template):
     before_transform = []
 
     def __init__(self):
-        pass
+        pass  # No configuration is needed here.
 
     def __new__(cls):
         if cls._instance is None:
@@ -246,11 +249,11 @@ class JumpTemplate(ControlTemplate):
         jump_to: Template | TemplateId,
         condition: BooleanHook,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
+            before_transform=before_transform if before_transform is not None else [],
             # after_transform is unavailable for the templates raise errors
         )
         if isinstance(jump_to, Template):
@@ -265,8 +268,9 @@ class JumpTemplate(ControlTemplate):
         raise JumpException(self.jump_to)
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        visited_templates = visited_templates or set()
         if self in visited_templates:
             return
         visited_templates.add(self)
@@ -280,11 +284,11 @@ class BreakTemplate(ControlTemplate):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
+        before_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform,
+            before_transform=before_transform if before_transform is not None else [],
             # after_transform is unavailable for the templates raise errors
         )
 
@@ -293,8 +297,9 @@ class BreakTemplate(ControlTemplate):
         raise BreakException()
 
     def walk(
-        self, visited_templates: Set[Template] = set()
-    ) -> Generator[Template, None, None]:
+        self, visited_templates: Optional[Set["Template"]] = None
+    ) -> Generator["Template", None, None]:
+        visited_templates = visited_templates or set()
         yield self
 
     def create_stack(self, state: "State") -> Stack:
