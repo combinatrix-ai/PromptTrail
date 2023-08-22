@@ -2,6 +2,24 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
+- [PromptTrail](#prompttrail)
+  - [Qucikstart](#qucikstart)
+  - [Installation](#installation)
+  - [What PromptTrail can do?](#what-prompttrail-can-do)
+  - [Examples](#examples)
+    - [LLM API Call](#llm-api-call)
+    - [Agent as Code](#agent-as-code)
+    - [Tooling](#tooling)
+  - [Next](#next)
+    - [Before the first release](#before-the-first-release)
+    - [Big Features](#big-features)
+  - [License](#license)
+  - [Contributing](#contributing)
+  - [Q\&A](#qa)
+    - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
+    - [Environment Variables](#environment-variables)
+    - [Module Architecture](#module-architecture)
+
 ## Qucikstart
 
 - If you want to just use unified interface to various LLMs, see [exapmles/README.md#provider](examples/README.md#provider).
@@ -17,12 +35,6 @@ pip install -e .
 ```
 
 When we release the first version, we will publish this package to PyPI.
-
-## Why bother yet another LLM library?
-
-- PromptTrail is designed to be lightweight and easy to use.
-- Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
-- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
 
 ## What PromptTrail can do?
 
@@ -51,11 +63,11 @@ When we release the first version, we will publish this package to PyPI.
     - [TODO] Multiple Conversation Flow
       - [TODO] Concurrent Execution
 
-## Example
+## Examples
 
 You can find more examples in [examples](examples) directory.
 
-## LLM API Call
+### LLM API Call
 
 This is the simplest example of how to use PromptTrail as a thin wrapper around LLMs of various providers.
 
@@ -113,124 +125,135 @@ If you want to mock LLM, you can use various mock models:
 TextMessage(content="1215973652716", sender="assistant")
 ```
 
-## Agent
+### Agent as Code
 
-You can write a simple agent like this:
+You can write a simple agent like below. Without reading the documentation, you can understand what this agent does!
 
 ```python
-flow_template = LinearTemplate(
+template = LinearTemplate(
     [
         MessageTemplate(
             role="system",
-            content="""
-            You're a math teacher. You're teaching a student how to solve equations. 
-            """,
-        ),
-        MessageTemplate(
-            role="user",
-            before_transform=[
-                AskUserHook(
-                    key="prompt",
-                    description="Input:",
-                    default="Tell me about yourself:",
-                )
-            ],
-            content="""
-            {% prompt %}
-            """,
+            content="You're a math teacher. You're teaching a student how to solve equations.",
         ),
         LoopTemplate(
             [
-                MessageTemplate(
+                UserInputTextTemplate(
                     role="user",
-                    before_transform=[
-                        AskUserHook(
-                            key="prompt",
-                            description="Input:",
-                            default="Why can't you divide a number by zero?",
-                        )
-                    ],
-                    content="""
-                    {% prompt %}
-                    """,
+                    description="Let's ask question to AI:",
+                    default="Why can't you divide a number by zero?",
                 ),
-                MessageTemplate(
+                GenerateTemplate(
                     role="assistant",
-                    before_transform=[GenerateChatHook(key="generated_text")],
-                    content="""
-                    {% generated_text %}
-
-                    Are you satisfied?
-                    """,
                 ),
-                MessageTemplate(
+                MessageTemplate(role="assistant", content="Are you satisfied?"),
+                UserInputTextTemplate(
                     role="user",
-                    before_transform=[
-                        AskUserHook(
-                            key="feedback", description="Input:", default="Explain more."
-                        )
-                    ],
-                    content="""
-                    {% feedback %}
-                    """,
+                    description="Input:",
+                    default="Explain more.",
                 ),
+                # Let the LLM decide whether to end the conversation or not
                 MessageTemplate(
                     role="assistant",
                     content="""
-                    The user has stated their feedback. If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
+                    The user has stated their feedback.
+                    If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
                     """,
                 ),
-                check_end := MessageTemplate(
+                check_end := GenerateTemplate(
                     role="assistant",
-                    before_transform=[GenerateChatHook(key="generated_text")],
-                    content="""
-                    {% generated_text %}
-                    """,
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda state: (
-                    state.get_current_template().id == check_end.id
-                    and "END" in state.get_last_message().content
-                )
+                condition=lambda state: ("END" in state.get_last_message().content)
             ),
         ),
     ],
 )
 
-
-runner = FlowRunner(
+runner = CommandLineRunner(
     model=OpenAIChatCompletionModel(
         configuration=OpenAIModelConfiguration(
             api_key=os.environ.get("OPENAI_API_KEY", "")
         )
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-3.5-turbo"),
-    templates=[flow_template],
+    parameters=OpenAIModelParameters(model_name="gpt-4"),
+    template=template,
+    user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
 runner.run()
 ```
 
-## Design Principles
+You can talk with the agent on your console like below:
 
-- If you know what an LLM is, you must be able to use PromptTrail.
-- Agent (Flow) as Code
-  - Agent that can be written in one place by code
-    - Hook-based agent definition like PyTorch Lightning
-- Provide an easy way to debug prompt program
-  - Turn-based execution
-  - Record everything for later inspection
-  - Easy to read error messages with template id, hook name, etc... is included
-- Intuitive and explicit (but sometimes convention)
-  - Everything evolves fast here. You can't be sure what is right now. So explicit is better than implicit. Code is better than document.
-    - No hidden templates and configurations
-    - Every parameter should be passed explicitly and be able to be understood by types
-      - Easy to work with on VSCode and JetBrains IDEs
-  - Everything must be clear by class inheritance and types. I don't want to read docs.
-    - Unified access to templates, parameters of agents
-    - Hook-based agent definition
-    - More default values
+````console
+===== Start =====
+From: 📝 system
+message:
+You're a helpful assistant to solve Fermi Problem.... (omitted)
+=================
+Input: How many elephants in Japan?
+From: 👤 user
+message:  How many elephants in Japan?
+=================
+INFO:prompttrail.agent.template.core:Generating content with OpenAIChatCompletionModel...
+From: 🤖 assistant
+message:  Thoughts:
+- Elephants are not native to Japan, so the only elephants in Japan would be in zoos.
+- According to the Japan Association of Zoos and Aquariums, there are 89 zoos in Japan.
+- Not all zoos have elephants, but let's assume that half of them do.
+- A large zoo might have up to 5 elephants, but smaller zoos might only have 1 or 2. Let's estimate an average of 3 elephants per zoo.
+
+Equation to be calculated:
+- Total Number of Elephants in Japan = Number of Zoos in Japan * Rate of Zoos having elephants * Average Number of Elephants Per Zoo
+
+Calculation:
+```python
+89 * 0.5 * 3
+```
+=================
+From: 🤖 assistant
+message:  The answer is 133.5 . Satisfied?
+=================
+Input: Yes, I'm satisfied.
+From: 👤 user
+message:  Yes, I'm satisfied.
+=================
+From: 🤖 assistant
+message:  The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.
+=================
+INFO:prompttrail.agent.template.core:Generating content with OpenAIChatCompletionModel...
+From: 🤖 assistant
+message:  END
+=================
+====== End ======
+````
+
+
+### Tooling
+
+You can use function calling!
+
+```console
+===== Start =====
+From: 📝 system
+message:  You're an AI weather forecast assistant that help your users to find the weather forecast.
+=================
+From: 👤 user
+message:  What's the weather in Tokyo tomorrow?
+=================
+From: 🤖 assistant
+data:  {'function_call': {'name': 'get_weather_forecast', 'arguments': {'place': 'Tokyo', 'temperatureunit': 'Celsius'}}}
+=================
+From: 🧮 function
+message:  {"temperature": 0, "weather": "sunny"}
+=================
+From: 🤖 assistant
+message:  The weather in Tokyo tomorrow is expected to be sunny with a temperature of 0 degrees Celsius.
+=================
+====== End ======
+```
 
 ## Next
 
@@ -239,8 +262,8 @@ runner.run()
 - [ ] Examples
 - [ ] Documentation
 - [x] Runner
-  - [ ] Comprehensive test
-  - [ ] Sophisticated CLI experience for intuitive demo
+  - [x] Comprehensive test
+  - [x] Sophisticated CLI experience for intuitive demo
 - [ ] Vector Search Integration
 - [ ] Better error messages that help debugging
 - [x] Caching of API call
@@ -264,14 +287,23 @@ runner.run()
 ## Contributing
 
 - Contributions are welcome!
+- If you build something with PromptTrail, please share it with us via Issues or Discussions!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
-## Environment Variables
+## Q&A
+
+### Why bother yet another LLM library?
+
+- PromptTrail is designed to be lightweight and easy to use.
+- Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
+- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
+
+### Environment Variables
 
 - `OPENAI_API_KEY`: API key for OpenAI API
 - `GOOGLE_CLOUD_API_KEY`: API key for Google Cloud API
 
-## Module Architecture
+### Module Architecture
 
 - core: Base classes such as message, session etc...
 - provider: Unified interface to various LLMs
@@ -297,8 +329,3 @@ Your typical workflow is as follows:
 - If you want to use it in your application, use APIRunner!
   - See the examples for server side usage.
 - Mock your agent with MockProvider and MockUserInteraction let them automatically test on your CI.
-
-## Real World Examples
-
-- I have created some services with PromptTrail!
-- Please let me know via issue if you have created one! I'll add it here.

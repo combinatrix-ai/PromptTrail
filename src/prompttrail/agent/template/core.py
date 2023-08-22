@@ -82,8 +82,10 @@ class Template(object):
         raise NotImplementedError("render method is not implemented")
 
     def walk(
-        self, visited_templates: Set["Template"] = set()
+        self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
+        if visited_templates is None:
+            visited_templates = set()
         if self in visited_templates:
             return
         visited_templates.add(self)
@@ -170,6 +172,9 @@ class GenerateTemplate(MessageTemplate):
         # render
         if state.runner is None:
             raise ValueError("runner is not set")
+        logger.info(
+            f"Generating content with {state.runner.model.__class__.__name__}..."
+        )
         rendered_content = state.runner.model.send(
             state.runner.parameters, state.session_history
         ).content
