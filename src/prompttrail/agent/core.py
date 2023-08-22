@@ -72,7 +72,9 @@ class State(object):
     def set_jump(self, jump_to_id: Optional[str]) -> None:
         self.jump_to_id = jump_to_id
 
-    def get_current_template_id(self) -> str:
+    def get_current_template_id(self) -> Optional[str]:
+        if len(self.stack) == 0:
+            return None
         return self.stack[-1].template_id
 
     def __str__(self):

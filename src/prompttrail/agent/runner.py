@@ -1,12 +1,12 @@
 import logging
 from abc import abstractmethod
-from typing import Dict, Optional, Sequence
+from typing import Dict, Optional, Set
 
 from prompttrail.agent import State
 from prompttrail.agent.core import StatefulSession
 from prompttrail.agent.template import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.const import ReachedEndTemplateException
+from prompttrail.const import JumpException, ReachedEndTemplateException
 from prompttrail.core import Model, Parameters
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class Runner(object):
         self.user_interaction_provider = user_interaction_provider
         self.template = template
         self.template_dict: Dict[str, Template] = {}
-        visited_templates: Sequence[Template] = []
+        visited_templates: Set[Template] = set()
         for next_template in template.walk(visited_templates):
             if next_template.template_id in self.template_dict:
                 raise ValueError(
@@ -93,6 +93,15 @@ class CommandLineRunner(Runner):
                     f"End template {EndTemplate.template_id} is reached. Flow is forced to stop."
                 )
                 break
+            except JumpException as e:
+                # Jump to another template
+                current_template_id = e.jump_to
+                template = self.search_template(current_template_id)
+                # reset stack
+                assert len(state_.stack) == 0  # type: ignore
+                state_.stack = []
+                gen = template.render(state_)
+                continue
             except StopIteration as e:
                 # For generator, type support for return value is not so good.
                 state_ = e.value

@@ -1,14 +1,21 @@
 import logging
 from abc import abstractmethod
-from typing import Generator, List, Optional, Sequence
+from typing import Generator, List, Optional, Sequence, Set, TypeAlias
 
 from prompttrail.agent.core import State
 from prompttrail.agent.hook.core import BooleanHook, TransformHook
 from prompttrail.agent.template.core import Stack, Template
-from prompttrail.const import END_TEMPLATE_ID, ReachedEndTemplateException
+from prompttrail.const import (
+    END_TEMPLATE_ID,
+    BreakException,
+    JumpException,
+    ReachedEndTemplateException,
+)
 from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
+
+TemplateId: TypeAlias = str
 
 
 class ControlTemplate(Template):
@@ -29,7 +36,7 @@ class ControlTemplate(Template):
 
     @abstractmethod
     def walk(
-        self, visited_templates: Sequence[Template] = []
+        self, visited_templates: Set["Template"] = set()
     ) -> Generator["Template", None, None]:
         raise NotImplementedError(
             "Derived class of ControlTemplate must implement its own walk method"
@@ -60,7 +67,7 @@ class LoopTemplate(ControlTemplate):
     def __init__(
         self,
         templates: Sequence[Template],
-        exit_condition: BooleanHook,
+        exit_condition: Optional[BooleanHook] = None,
         template_id: Optional[str] = None,
         exit_loop_count: Optional[int] = None,
         before_transform: List[TransformHook] = [],
@@ -83,8 +90,12 @@ class LoopTemplate(ControlTemplate):
             idx = stack.get_idx()
             template = self.templates[idx]
             gen = template.render(state)
-            state = yield from gen
-            if self.exit_condition.hook(state):
+            try:
+                state = yield from gen
+            except BreakException:
+                # TODO: Should give state back?
+                break
+            if self.exit_condition and self.exit_condition.hook(state):
                 break
             stack.next()
             if (
@@ -98,11 +109,11 @@ class LoopTemplate(ControlTemplate):
         return state
 
     def walk(
-        self, visited_templates: Sequence["Template"] = []
+        self, visited_templates: Set["Template"] = set()
     ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
+        if self in visited_templates:
             return
-        visited_templates.append(self)  # type: ignore
+        visited_templates.add(self)
         yield self
         for template in self.templates:
             yield from template.walk(visited_templates)
@@ -118,9 +129,9 @@ class LoopTemplate(ControlTemplate):
 class IfTemplate(ControlTemplate):
     def __init__(
         self,
-        true_template: Template,
-        false_template: Template,
         condition: BooleanHook,
+        true_template: Template,
+        false_template: Optional[Template] = None,
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],
@@ -138,18 +149,22 @@ class IfTemplate(ControlTemplate):
         if self.condition.hook(state):
             state = yield from self.true_template.render(state)
         else:
-            state = yield from self.false_template.render(state)
+            if self.false_template is None:
+                pass  # Just skip to next template
+            else:
+                state = yield from self.false_template.render(state)
         return state
 
     def walk(
-        self, visited_templates: Sequence["Template"] = []
+        self, visited_templates: Set["Template"] = set()
     ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
+        if self in visited_templates:
             return
-        visited_templates.append(self)  # type: ignore
+        visited_templates.add(self)
         yield self
         yield from self.true_template.walk(visited_templates)
-        yield from self.false_template.walk(visited_templates)
+        if self.false_template is not None:
+            yield from self.false_template.walk(visited_templates)
 
     def create_stack(self, state: "State") -> "Stack":
         return Stack(template_id=self.template_id)
@@ -180,7 +195,10 @@ class LinearTemplate(ControlTemplate):
             raise RuntimeError("LinearTemplateStack is not the last stack")
 
         while 1:
-            state = yield from self.templates[stack.idx].render(state)
+            try:
+                state = yield from self.templates[stack.idx].render(state)
+            except BreakException:
+                break
             stack.idx += 1
             # when the last template is rendered, break the loop
             if stack.idx >= len(self.templates):
@@ -188,11 +206,11 @@ class LinearTemplate(ControlTemplate):
         return state
 
     def walk(
-        self, visited_templates: Sequence["Template"] = []
+        self, visited_templates: Set["Template"] = set()
     ) -> Generator["Template", None, None]:
-        if self.template_id in visited_templates:
+        if self in visited_templates:
             return
-        visited_templates.append(self)  # type: ignore
+        visited_templates.add(self)
         yield self
         for template in self.templates:
             yield from template.walk(visited_templates)
@@ -219,3 +237,63 @@ class EndTemplate(Template):
 
     def create_stack(self, state: State) -> Stack:
         return super().create_stack(state)
+
+
+class JumpTemplate(ControlTemplate):
+    def __init__(
+        self,
+        jump_to: Template | TemplateId,
+        condition: BooleanHook,
+        template_id: Optional[str] = None,
+        before_transform: List[TransformHook] = [],
+    ):
+        super().__init__(
+            template_id=template_id,
+            before_transform=before_transform,
+            # after_transform is unavailable for the templates raise errors
+        )
+        if isinstance(jump_to, Template):
+            jump_to = jump_to.template_id
+        self.jump_to = jump_to
+        self.condition = condition
+
+    def _render(self, state: "State") -> Generator[Message, None, State]:
+        logger.warning(
+            msg=f"Jumping to {self.jump_to} from {self.template_id}. This reset the stack therefore the dialogue will not come back to this template."
+        )
+        raise JumpException(self.jump_to)
+
+    def walk(
+        self, visited_templates: Set["Template"] = set()
+    ) -> Generator["Template", None, None]:
+        if self in visited_templates:
+            return
+        visited_templates.add(self)
+        yield self
+
+    def create_stack(self, state: "State") -> LinearTemplateStack:
+        return LinearTemplateStack(template_id=self.template_id, idx=0)
+
+
+class BreakTemplate(ControlTemplate):
+    def __init__(
+        self,
+        template_id: Optional[str] = None,
+        before_transform: List[TransformHook] = [],
+    ):
+        super().__init__(
+            template_id=template_id,
+            before_transform=before_transform,
+        )
+
+    def _render(self, state: "State") -> Generator[Message, None, State]:
+        logger.warning(msg=f"Breaking the loop from {self.template_id}.")
+        raise BreakException()
+
+    def walk(
+        self, visited_templates: Set[Template] = set()
+    ) -> Generator[Template, None, None]:
+        yield self
+
+    def create_stack(self, state: "State") -> Stack:
+        return Stack(template_id=self.template_id)

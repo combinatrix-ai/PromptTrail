@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from pprint import pformat
-from typing import Generator, List, Optional, Sequence
+from typing import Generator, List, Optional, Set
 from uuid import uuid4
 
 import jinja2
@@ -10,7 +10,12 @@ from pydantic import BaseModel
 from prompttrail.agent import State
 from prompttrail.agent.core import StatefulMessage
 from prompttrail.agent.hook import TransformHook
-from prompttrail.const import RESERVED_TEMPLATE_IDS, ReachedEndTemplateException
+from prompttrail.const import (
+    RESERVED_TEMPLATE_IDS,
+    BreakException,
+    JumpException,
+    ReachedEndTemplateException,
+)
 from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
@@ -50,7 +55,11 @@ class Template(object):
         state.stack.append(self.create_stack(state))  # type: ignore
         try:
             res = yield from self._render(state)
+        except BreakException as e:
+            raise e
         except ReachedEndTemplateException as e:
+            raise e
+        except JumpException as e:
             raise e
         except Exception as e:
             self.get_logger().error(f"RenderingTemplateError@{self.template_id}")
@@ -68,11 +77,11 @@ class Template(object):
         raise NotImplementedError("render method is not implemented")
 
     def walk(
-        self, visited_templates: Sequence["Template"] = []
+        self, visited_templates: Set["Template"] = set()
     ) -> Generator["Template", None, None]:
         if self in visited_templates:
             return
-        visited_templates.append(self)  # type: ignore
+        visited_templates.add(self)
         yield self
 
     def __str__(self) -> str:
