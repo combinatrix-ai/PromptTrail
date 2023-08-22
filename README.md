@@ -19,7 +19,6 @@ PromptTrail is a lightweight library to interact with LLM.
     - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
     - [Environment Variables](#environment-variables)
     - [Module Architecture](#module-architecture)
-  - [Real World Examples](#real-world-examples)
 
 ## Qucikstart
 
@@ -288,6 +287,7 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 ## Contributing
 
 - Contributions are welcome!
+- If you build something with PromptTrail, please share it with us via Issues or Discussions!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Q&A
@@ -329,8 +329,3 @@ Your typical workflow is as follows:
 - If you want to use it in your application, use APIRunner!
   - See the examples for server side usage.
 - Mock your agent with MockProvider and MockUserInteraction let them automatically test on your CI.
-
-## Real World Examples
-
-- I have created some services with PromptTrail!
-- Please let me know via issue if you have created one! I'll add it here.
