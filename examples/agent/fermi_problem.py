@@ -128,7 +128,7 @@ Calculation:
             template_id="get_feedback",
             role="user",
             description="Input:",
-            # default="Yes, I'm satisfied.",
+            default="Yes, I'm satisfied.",
         ),
         MessageTemplate(
             # Based on the feedback, we can decide to retry or end the conversation
