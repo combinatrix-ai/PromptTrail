@@ -2,6 +2,25 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
+- [PromptTrail](#prompttrail)
+  - [Qucikstart](#qucikstart)
+  - [Installation](#installation)
+  - [What PromptTrail can do?](#what-prompttrail-can-do)
+  - [Examples](#examples)
+    - [LLM API Call](#llm-api-call)
+    - [Agent as Code](#agent-as-code)
+    - [Tooling](#tooling)
+  - [Next](#next)
+    - [Before the first release](#before-the-first-release)
+    - [Big Features](#big-features)
+  - [License](#license)
+  - [Contributing](#contributing)
+  - [Q\&A](#qa)
+    - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
+    - [Environment Variables](#environment-variables)
+    - [Module Architecture](#module-architecture)
+  - [Real World Examples](#real-world-examples)
+
 ## Qucikstart
 
 - If you want to just use unified interface to various LLMs, see [exapmles/README.md#provider](examples/README.md#provider).
@@ -17,12 +36,6 @@ pip install -e .
 ```
 
 When we release the first version, we will publish this package to PyPI.
-
-## Why bother yet another LLM library?
-
-- PromptTrail is designed to be lightweight and easy to use.
-- Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
-- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
 
 ## What PromptTrail can do?
 
@@ -51,11 +64,11 @@ When we release the first version, we will publish this package to PyPI.
     - [TODO] Multiple Conversation Flow
       - [TODO] Concurrent Execution
 
-## Example
+## Examples
 
 You can find more examples in [examples](examples) directory.
 
-## LLM API Call
+### LLM API Call
 
 This is the simplest example of how to use PromptTrail as a thin wrapper around LLMs of various providers.
 
@@ -113,7 +126,7 @@ If you want to mock LLM, you can use various mock models:
 TextMessage(content="1215973652716", sender="assistant")
 ```
 
-## Agent
+### Agent as Code
 
 You can write a simple agent like below. Without reading the documentation, you can understand what this agent does!
 
@@ -219,7 +232,7 @@ message:  END
 ````
 
 
-## Tooling
+### Tooling
 
 You can use function calling!
 
@@ -277,12 +290,20 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 - Contributions are welcome!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
-## Environment Variables
+## Q&A
+
+### Why bother yet another LLM library?
+
+- PromptTrail is designed to be lightweight and easy to use.
+- Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
+- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
+
+### Environment Variables
 
 - `OPENAI_API_KEY`: API key for OpenAI API
 - `GOOGLE_CLOUD_API_KEY`: API key for Google Cloud API
 
-## Module Architecture
+### Module Architecture
 
 - core: Base classes such as message, session etc...
 - provider: Unified interface to various LLMs
