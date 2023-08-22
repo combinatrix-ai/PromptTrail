@@ -57,6 +57,23 @@ Note: You can run all of these commands at once using `rye run all`. GitHub Acti
 
 ## Coding Principles
 
+- If you know what an LLM is, you must be able to use PromptTrail.
+- Agent (Flow) as Code
+  - Agent that can be written in one place by code
+    - Hook-based agent definition like PyTorch Lightning
+- Provide an easy way to debug prompt program
+  - Record everything for later inspection
+  - Easy to read error messages with template id, hook name, etc... is included
+- Intuitive and explicit (but sometimes convention)
+  - Everything evolves fast here. You can't be sure what is right now. So explicit is better than implicit. Code is better than document.
+    - No hidden templates and configurations
+    - Every parameter should be passed explicitly and be able to be understood by types
+      - Easy to work with on VSCode and JetBrains IDEs
+  - Everything must be clear by class inheritance and types. I don't want to read docs.
+    - Unified access to templates, parameters of agents
+    - Hook-based agent definition
+    - More default values
+
 ### Type Checking
 
 - We use pylance (strict) in VSCode and mypy.
