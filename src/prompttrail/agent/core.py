@@ -13,11 +13,17 @@ if TYPE_CHECKING:
 
 
 class StatefulMessage(Message):
+    """
+    A message that holds additional data and template ID.
+    """
+
     data: Dict[str, Any] = {}
     template_id: Optional[str] = None
 
     def __str__(self) -> str:
-        # construct json
+        """
+        Return a string representation of the message.
+        """
         return (
             "StatefulMessage(\n"
             + pformat(
@@ -32,17 +38,25 @@ class StatefulMessage(Message):
         )
 
     def __hash__(self) -> int:
-        # TODO: How to hash this?
+        """
+        Return a hash value of the message.
+        """
         return hash(str(self))
 
 
 class StatefulSession(Session):
+    """
+    A session that holds additional data and stateful messages.
+    """
+
     data: Dict[str, Any] = {}
     messages: Sequence[StatefulMessage] = []
 
 
 class State(object):
-    """State hold the all state of the conversation."""
+    """
+    State holds all the state of the conversation.
+    """
 
     def __init__(
         self,
@@ -61,26 +75,43 @@ class State(object):
         self.debug_mode = debug_mode
 
     def get_last_message(self) -> StatefulMessage:
+        """
+        Get the last message in the session history.
+        """
         if len(self.session_history.messages) == 0:
             raise IndexError("Session has no message.")
         return self.session_history.messages[-1]
 
     def get_current_data(self) -> Dict[str, Any]:
+        """
+        Get the current data in the state.
+        """
         return self.data
 
     def get_jump(self) -> Optional[str]:
+        """
+        Get the jump ID in the state.
+        """
         return self.jump_to_id
 
     def set_jump(self, jump_to_id: Optional[str]) -> None:
+        """
+        Set the jump ID in the state.
+        """
         self.jump_to_id = jump_to_id
 
     def get_current_template_id(self) -> Optional[str]:
+        """
+        Get the ID of the current template in the state.
+        """
         if len(self.stack) == 0:
             return None
         return self.stack[-1].template_id
 
     def __str__(self):
-        # Create PrettyPrinted string
+        """
+        Return a string representation of the state.
+        """
         data_json_line_list = "\n".join(
             ["    " + line for line in pformat(self.data).splitlines()]
         )
@@ -95,7 +126,6 @@ class State(object):
                 ).splitlines()
             ]
         )
-        # If runner is set, template can be searched.
         current_template_json = self.get_current_template_id()
         jump_json = pformat(self.jump_to_id)
 
@@ -109,10 +139,19 @@ class State(object):
 )"""
 
     def push_stack(self, stack: "Stack") -> None:
+        """
+        Push a stack onto the state.
+        """
         self.stack.append(stack)  # type: ignore
 
     def pop_stack(self) -> "Stack":
+        """
+        Pop a stack from the state.
+        """
         return self.stack.pop()  # type: ignore
 
     def head_jump(self) -> "Stack":
+        """
+        Get the head of the stack in the state.
+        """
         return self.stack[-1]  # type: ignore
