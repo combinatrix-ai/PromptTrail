@@ -37,6 +37,9 @@ dev-dependencies = [
     "coverage>=7.2.7",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    "pydoc-markdown>=4.8.2",
+    "mkdocs>=1.5.2",
+    "setuptools>=68.1.2",
 ]
 
 [tool.rye.scripts]

@@ -1,0 +1,93 @@
+loaders:
+- type: python
+  search_path: [../src/]
+processors:
+- type: filter
+  documented_only: true
+- type: smart
+- type: crossref
+renderer:
+  type: mkdocs
+  markdown:
+    source_linker:
+      type: github
+      repo: combinatrix-ai/PromptTrail
+      root: ..
+    source_position: before signature
+    source_format: |
+      <span style="float: right; font-size: 75%;">
+      [[view source]]({url})
+      </span>
+  pages:
+  - title: Home
+    name: index
+    source: sources/index.md
+  - title: Library Reference
+    name: docs
+    children:
+    - title: Basic Class
+      name: core
+      contents: [prompttrail.core.*]
+    - title: LLM Provider (API/Local)
+      name: prompttrail.provider
+      contents: [prompttrail.provider.*]
+      children:
+        - title: OpenAI
+          name: prompttrail.provider.openai
+          contents: [prompttrail.provider.openai]
+        - title: Google Cloud
+          name: prompttrail.provider.openai
+          contents: [prompttrail.provider.google_cloud]
+      
+  - title: Contributing
+    name: contributing
+    source: ../CONTRIBUTING.md
+  - title: Licence
+    name: licence
+    source: ../LICENCE
+  mkdocs_config:
+    site_name: PromptTrail documentation
+    site_description: A Fast, Extensible Progress Meter
+    site_url: https://combinatrix-ai.github.io/PromptTrail/
+    site_author: combinatrix.ai
+    repo_name: combinatrix-ai/PromptTrail
+    repo_url: https://github.com/combinatrix-ai/PromptTrail/
+    copyright: |
+      &copy; combinatrix.ai 2023
+    edit_uri: https://github.com/combinatrix-ai/PromptTrail/docs/
+    extra_css: [css/extra.css]
+
+    extra:
+      # analytics:
+      #   provider: google
+      #   property: G-XWQHSY53XB
+      generator: false
+      social:
+      - icon: fontawesome/brands/github
+        link: https://github.com/combinatrix-ai/PromptTrail/
+    theme:
+      name: material
+      logo: material/library-outline
+      favicon: material/library-outline
+      # custom_dir: ../../custom_theme/
+      palette:
+      - scheme: default
+        primary: indigo
+        toggle:
+          icon: material/toggle-switch-off-outline
+          name: Switch to dark mode
+      - scheme: slate
+        primary: orange
+        toggle:
+          icon: material/toggle-switch
+          name: Switch to light mode
+    plugins:
+    - search
+    # - minify:
+    #     minify_js: true
+    #     minify_html: true
+    markdown_extensions:
+    - admonition
+    - toc:
+        permalink: '#'
+    - pymdownx.superfences

@@ -14,15 +14,9 @@ dist
 .coverage
 coverage.xml
 
-# Sphinx
+# Docs
 
-docs/*/*
-!docs/sphinx/*
-docs/*.html
-docs/*.js
-docs/*.inv
-docs/.buildinfo
-docs/sphinx/prompttrail*.rst
+docs/build/
 
 # Others
 
