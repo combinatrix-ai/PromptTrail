@@ -16,19 +16,32 @@ logger = getLogger(__name__)
 
 
 class GoogleCloudConfiguration(Configuration):
+    """Configuration for GoogleCloudChatModel."""
     api_key: str
-
+    """API key for Google Cloud Chat API."""
 
 class GoogleCloudChatExample(BaseModel):
+    """Example for Google Cloud Chat API."""
     prompt: str
+    """ Prompt for the example. """
     response: str
+    """ Response for the example. """
 
 
 class GoogleCloudChatParameters(Parameters):
+    """Parameter for GoogleCloudChatModel.
+    
+    For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
+    """
+
     model_name: str = "models/chat-bison-001"
+    """ Name of the model to use. use GoogleCloudChatModel.list_models() to get the list of available models. """
     temperature: Optional[float] = 0
+    """ Temperature for sampling. """
     max_output_tokens: Optional[int] = 1000
+    """ Maximum number of tokens to generate. """
     top_p: Optional[float] = None
+    """ Top-p value for sampling. """
     top_k: Optional[int] = None
     candidate_count: Optional[int] = None
     context: Optional[str] = None
@@ -38,6 +51,7 @@ class GoogleCloudChatParameters(Parameters):
 
 
 class GoogleCloudChatModel(Model):
+    """Model for Google Cloud Chat API."""
     configuration: GoogleCloudConfiguration
 
     def _authenticate(self) -> None:
