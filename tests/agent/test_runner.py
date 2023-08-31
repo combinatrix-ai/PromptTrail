@@ -1,21 +1,22 @@
 # simple meta templates
-from prompttrail.agent.core import State
-from prompttrail.agent.hook.core import BooleanHook, TransformHook
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate, MessageTemplate
-from prompttrail.agent.template.control import (
+from prompttrail.agent import State
+from prompttrail.agent.hooks import BooleanHook, TransformHook
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import (
     BreakTemplate,
     EndTemplate,
     IfTemplate,
+    LinearTemplate,
     LoopTemplate,
+    MessageTemplate,
 )
-from prompttrail.agent.template.openai import (
+from prompttrail.agent.templates.openai import (
     OpenAIGenerateTemplate,
     OpenAISystemTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
-from prompttrail.mock import EchoMockProvider
-from prompttrail.provider.openai import (
+from prompttrail.core.mocks import EchoMockProvider
+from prompttrail.models.openai import (
     OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

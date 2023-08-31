@@ -3,8 +3,8 @@ from typing import Any, Dict, Optional, Sequence
 
 import pytest
 
-from prompttrail.agent.core import State
-from prompttrail.agent.tool import (
+from prompttrail.agent import State
+from prompttrail.agent.tools import (
     FunctionCallingPartialProperty,
     FunctionCallingProperty,
     Tool,

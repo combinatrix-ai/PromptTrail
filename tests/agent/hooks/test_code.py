@@ -1,10 +1,7 @@
 import unittest
 
-from prompttrail.agent.core import State
-from prompttrail.agent.hook.code import (
-    EvaluatePythonCodeHook,
-    ExtractMarkdownCodeBlockHook,
-)
+from prompttrail.agent import State
+from prompttrail.agent.hooks import EvaluatePythonCodeHook, ExtractMarkdownCodeBlockHook
 from prompttrail.core import Message
 
 

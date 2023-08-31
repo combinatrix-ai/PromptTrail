@@ -7,16 +7,15 @@ from uuid import uuid4
 import jinja2
 from pydantic import BaseModel
 
-from prompttrail.agent import State
-from prompttrail.agent.core import StatefulMessage
-from prompttrail.agent.hook import TransformHook
-from prompttrail.const import (
+from prompttrail.agent import State, StatefulMessage
+from prompttrail.agent.hooks import TransformHook
+from prompttrail.core import Message
+from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
     JumpException,
     ReachedEndTemplateException,
 )
-from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
 
@@ -173,9 +172,9 @@ class GenerateTemplate(MessageTemplate):
         if state.runner is None:
             raise ValueError("runner is not set")
         logger.info(
-            f"Generating content with {state.runner.model.__class__.__name__}..."
+            f"Generating content with {state.runner.models.__class__.__name__}..."
         )
-        rendered_content = state.runner.model.send(
+        rendered_content = state.runner.models.send(
             state.runner.parameters, state.session_history
         ).content
         message = StatefulMessage(

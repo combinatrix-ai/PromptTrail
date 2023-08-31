@@ -4,8 +4,8 @@ import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from prompttrail.agent.core import State
-    from prompttrail.agent.hook.core import Hook
+    from prompttrail.agent import State
+    from prompttrail.agent.hooks import Hook
 
 
 def logger_multiline(logger: logging.Logger, message: str, level: int = logging.DEBUG):

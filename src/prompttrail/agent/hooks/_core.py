@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from typing import Any, Callable, Optional
 
-from prompttrail.agent.core import State
+from prompttrail.agent import State
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class GenerateChatHook(TransformHook):
             raise ValueError(
                 "Runner must be given to use GenerateChatHook. Please set runner to the state."
             )
-        message = state.runner.model.send(
+        message = state.runner.models.send(
             state.runner.parameters, state.session_history
         )
         state.data[self.key] = message.content

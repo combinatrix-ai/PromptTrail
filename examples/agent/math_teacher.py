@@ -1,13 +1,19 @@
 import logging
 import os
 
-from prompttrail.agent.hook.core import BooleanHook
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template.control import LinearTemplate, LoopTemplate
-from prompttrail.agent.template.core import MessageTemplate, UserInputTextTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.hooks import BooleanHook
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import (
+    LinearTemplate,
+    LoopTemplate,
+    MessageTemplate,
+    UserInputTextTemplate,
+)
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateTemplate as GenerateTemplate,
+)
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.provider.openai import (
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

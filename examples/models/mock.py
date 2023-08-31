@@ -1,8 +1,8 @@
 import os
 
 from prompttrail.core import Message, Session
-from prompttrail.mock import OneTurnConversationMockProvider
-from prompttrail.provider.openai import (
+from prompttrail.core.mocks import OneTurnConversationMockProvider
+from prompttrail.models.openai import (
     OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

@@ -2,10 +2,10 @@ import os
 import sys
 import unittest
 
-from prompttrail.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core import Message, Session
-from prompttrail.error import ParameterValidationError
-from prompttrail.provider.openai import (
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.core.errors import ParameterValidationError
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

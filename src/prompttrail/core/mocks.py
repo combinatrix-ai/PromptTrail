@@ -4,8 +4,8 @@ from typing import Callable, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from prompttrail.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core import Message, Session
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 logger = logging.getLogger(__name__)
 

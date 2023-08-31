@@ -2,16 +2,16 @@ import logging
 from abc import abstractmethod
 from typing import Generator, List, Optional, Sequence, Set, TypeAlias
 
-from prompttrail.agent.core import State
-from prompttrail.agent.hook.core import BooleanHook, TransformHook
-from prompttrail.agent.template.core import Stack, Template
-from prompttrail.const import (
+from prompttrail.agent import State
+from prompttrail.agent.hooks import BooleanHook, TransformHook
+from prompttrail.agent.templates._core import Stack, Template
+from prompttrail.core import Message
+from prompttrail.core.const import (
     END_TEMPLATE_ID,
     BreakException,
     JumpException,
     ReachedEndTemplateException,
 )
-from prompttrail.core import Message
 
 logger = logging.getLogger(__name__)
 

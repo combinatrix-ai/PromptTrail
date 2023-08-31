@@ -1,7 +1,7 @@
 import unittest
 
-from prompttrail.cache import LRUCacheProvider
 from prompttrail.core import Message, Parameters, Session
+from prompttrail.core.cache import LRUCacheProvider
 
 
 class TestLRUCacheProvider(unittest.TestCase):

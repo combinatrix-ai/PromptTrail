@@ -1,10 +1,9 @@
 import logging
 import re
 
-from prompttrail.agent.core import State
-from prompttrail.util import hook_logger
-
-from .core import TransformHook
+from prompttrail.agent import State
+from prompttrail.agent.hooks._core import TransformHook
+from prompttrail.core.utils import hook_logger
 
 
 class ExtractMarkdownCodeBlockHook(TransformHook):

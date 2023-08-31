@@ -14,8 +14,8 @@ from typing import (
 
 from pydantic import BaseModel, ConfigDict
 
-from prompttrail.cache import CacheProvider
-from prompttrail.util import logger_multiline
+from prompttrail.core.cache import CacheProvider
+from prompttrail.core.utils import logger_multiline
 
 logger = logging.getLogger(__name__)
 

@@ -7,26 +7,29 @@
 import logging
 import os
 
-from prompttrail.agent.hook import (
+from prompttrail.agent.hooks import (
     BooleanHook,
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
+    ResetDataHook,
 )
-from prompttrail.agent.hook.core import ResetDataHook
-from prompttrail.agent.template import (
+from prompttrail.agent.templates import (
+    BreakTemplate,
+    IfTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
 )
-from prompttrail.agent.template.control import BreakTemplate, IfTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateTemplate as GenerateTemplate,
+)
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
     UserInteractionTextCLIProvider,
 )
 from prompttrail.core import Message
-from prompttrail.mock import OneTurnConversationMockProvider
-from prompttrail.util import is_in_test_env
+from prompttrail.core.mocks import OneTurnConversationMockProvider
+from prompttrail.core.utils import is_in_test_env
 
 logging.basicConfig(level=logging.INFO)
 
@@ -152,11 +155,11 @@ Calculation:
 # Then, let's run this agent!
 # You can run templates using runner.
 # This runner runs models in cli.
-from prompttrail.agent.runner import CommandLineRunner  # noqa: E402
+from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
-from prompttrail.provider.openai import (  # noqa: E402
+from prompttrail.models.openai import (  # noqa: E402
     OpenAIChatCompletionModel,
     OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,

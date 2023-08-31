@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Sequence, Type, TypeAlias, Union
 from pydantic import BaseModel
 from typing_inspect import get_args, is_optional_type  # type: ignore
 
-from prompttrail.agent.core import State
+from prompttrail.agent import State
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
-from .control import *
-from .core import *
+from ._control import *
+from ._core import *
 
 """
 Control module provides control flow templates for building conversation templates.

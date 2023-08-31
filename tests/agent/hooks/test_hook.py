@@ -1,13 +1,8 @@
 import logging
 import unittest
 
-from prompttrail.agent.core import State
-from prompttrail.agent.hook.core import (
-    BooleanHook,
-    GenerateChatHook,
-    Hook,
-    TransformHook,
-)
+from prompttrail.agent import State
+from prompttrail.agent.hooks import BooleanHook, GenerateChatHook, Hook, TransformHook
 
 logger = logging.getLogger(__name__)
 

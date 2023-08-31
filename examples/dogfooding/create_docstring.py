@@ -6,13 +6,15 @@ from typing import List
 
 from tqdm import tqdm
 
-from prompttrail.agent.core import State
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent import State
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import LinearTemplate
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateTemplate as GenerateTemplate,
+)
+from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.provider.openai import (
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
@@ -90,6 +92,8 @@ def main(
 if __name__ == "__main__":
     # Recursively visit all .py files and pass to main
     for file in tqdm(list(glob.glob("src/**/*.py", recursive=True))):
-        main(load_file=file,
-             readme_files=["./README.md", "src/prompttrail/agent/README.md"],
-             save_file=file)
+        main(
+            load_file=file,
+            readme_files=["./README.md", "src/prompttrail/agent/README.md"],
+            save_file=file,
+        )

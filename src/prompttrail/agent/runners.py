@@ -2,12 +2,11 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional, Set
 
-from prompttrail.agent import State
-from prompttrail.agent.core import StatefulSession
-from prompttrail.agent.template import EndTemplate, Template
+from prompttrail.agent import State, StatefulSession
+from prompttrail.agent.templates import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.const import JumpException, ReachedEndTemplateException
 from prompttrail.core import Model, Parameters
+from prompttrail.core.const import JumpException, ReachedEndTemplateException
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class Runner(object):
         template: "Template",
         user_interaction_provider: UserInteractionProvider,
     ):
-        self.model = model
+        self.models = model
         self.parameters = parameters
         self.user_interaction_provider = user_interaction_provider
         self.template = template

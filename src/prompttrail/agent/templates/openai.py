@@ -1,14 +1,13 @@
 import json
 from typing import Generator, List, Optional, Sequence
 
-from prompttrail.agent import State
-from prompttrail.agent.core import StatefulMessage
-from prompttrail.agent.hook import TransformHook
-from prompttrail.agent.template.core import GenerateTemplate, MessageTemplate
-from prompttrail.agent.tool import Tool, check_arguments
-from prompttrail.const import OPENAI_SYSTEM_ROLE
+from prompttrail.agent import State, StatefulMessage
+from prompttrail.agent.hooks import TransformHook
+from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
+from prompttrail.agent.tools import Tool, check_arguments
 from prompttrail.core import Message
-from prompttrail.provider.openai import OpenAIChatCompletionModel, OpenAIrole
+from prompttrail.core.const import OPENAI_SYSTEM_ROLE
+from prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIrole
 
 
 class OpenAIGenerateTemplate(GenerateTemplate):
@@ -54,7 +53,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             raise ValueError(
                 "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via State."
             )
-        if not isinstance(runner.model, OpenAIChatCompletionModel):
+        if not isinstance(runner.models, OpenAIChatCompletionModel):
             raise ValueError(
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
@@ -63,7 +62,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         temporary_parameters.functions = self.functions
 
         # 1st message: pass functions and let the model use it
-        rendered_message = runner.model.send(
+        rendered_message = runner.models.send(
             temporary_parameters, state.session_history
         )
         message = StatefulMessage(
@@ -95,7 +94,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             )
             state.session_history.messages.append(function_message)  # type: ignore
             yield function_message
-            second_response = runner.model.send(
+            second_response = runner.models.send(
                 runner.parameters, state.session_history
             )
             message = StatefulMessage(

@@ -1,4 +1,4 @@
-# from prompttrail.agent.template.core import LoopTemplate, MessageTemplate
+# from prompttrail.agent.templates.core import LoopTemplate, MessageTemplate
 
 
 # main_flow = LinearTemplate(

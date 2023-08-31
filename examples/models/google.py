@@ -1,7 +1,7 @@
 import os
 
 from prompttrail.core import Message, Session
-from prompttrail.provider.google_cloud import (
+from prompttrail.models.google_cloud import (
     GoogleCloudChatModel,
     GoogleCloudChatParameters,
     GoogleCloudConfiguration,

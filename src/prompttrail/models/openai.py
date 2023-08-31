@@ -6,11 +6,11 @@ from typing import Dict, Generator, List, Literal, Optional, Tuple
 import openai
 from pydantic import ConfigDict
 
-from prompttrail.agent.tool import Tool
-from prompttrail.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.agent.tools import Tool
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
-from prompttrail.error import ParameterValidationError
-from prompttrail.mock import MockModel, MockProvider
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.core.errors import ParameterValidationError
+from prompttrail.core.mocks import MockModel, MockProvider
 
 logger = logging.getLogger(__name__)
 

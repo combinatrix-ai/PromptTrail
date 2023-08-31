@@ -4,13 +4,13 @@ Agent is a library for building a LLM-based agent with a simple DSL.
 
 In this library, an agent is defined as an executable control flow of a text generation session using LLMs, tools, and other functions.
 
-You can use the agent via CLI, API, etc. Therefore, you can build a chatbot on Agent, but you can also build any application that requires multiple-step text generation. If you're only building applications with single-turn text generation, you just need to use prompttrail.providers, which allows you to use LLMs with a simple API.
+You can use the agent via CLI, API, etc. Therefore, you can build a chatbot on Agent, but you can also build any application that requires multiple-step text generation. If you're only building applications with single-turn text generation, you just need to use prompttrail.models, which allows you to use LLMs with a simple API.
 
 ## Introduction
 
-### `agent.template`
+### `agent.templates`
 
-`agent.template` is a library for building a template of a text generation session.
+`agent.templates` is a library for building a template of a text generation session.
 
 You can write how you would like to interact with the user, LLM, and functions in it.
 
@@ -21,9 +21,9 @@ This is actually used in this repository to housekeep README.md, etc.
 See [examples/dogfooding/fix_markdown.py](../../examples/dogfooding/fix_markdown.py).
 
 ```python
-from prompttrail.agent.template import LinearTemplate
-from prompttrail.agent.template import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import LinearTemplate
+from prompttrail.agent.templates import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.templates import OpenAIMessageTemplate as MessageTemplate
 
 templates = LinearTemplate(
     templates=[
@@ -63,9 +63,9 @@ OK. You may grasp what's going on here. Let's run this agent.
 
 ### `agent.runner`
 
-`agent.runner` is a library to run the conversation defined in `agent.template`.
+`agent.runner` is a library to run the conversation defined in `agent.templates`.
 
-We have defined how the conversation should go in `agent.template`.
+We have defined how the conversation should go in `agent.templates`.
 
 Then, we need to define how the conversation is actually carried out. You need to pass the following arguments:
 
@@ -81,7 +81,7 @@ import os
 from prompttrail.agent import State
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.provider.openai import (
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
@@ -244,7 +244,7 @@ We have other mocking methods, see [prompttrail.mock] for more details.
 
 You can see a more complicated mocking example in [examples/agent/fermi_problem.py].
 
-## `agent.hook`
+## `agent.hooks`
 
 Hooks are used to enhance the template.
 
@@ -339,7 +339,7 @@ class State(object):
         current_template_id: Optional["TemplateId"] = None,
     ):
         self.runner = runner
-        self.model = model
+        self.models = model
         self.parameters = parameters
         self.data = data
         self.session_history = session_history

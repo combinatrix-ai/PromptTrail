@@ -1,5 +1,5 @@
-from .code import *
-from .core import *
+from ._code import *
+from ._core import *
 
 """
 Code module provides functions for code manipulation.

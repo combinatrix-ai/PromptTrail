@@ -1,8 +1,8 @@
 import unittest
 
 from prompttrail.core import Message, Session
-from prompttrail.mock import OneTurnConversationMockProvider
-from prompttrail.provider.openai import (
+from prompttrail.core.mocks import OneTurnConversationMockProvider
+from prompttrail.models.openai import (
     OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
@@ -49,7 +49,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
         self.mock_provider = OneTurnConversationMockProvider(
             self.conversation_table, self.second_sender
         )
-        self.model = OpenAIChatCompletionModelMock(
+        self.models = OpenAIChatCompletionModelMock(
             configuration=OpenAIModelConfiguration(
                 api_key="",
             ),
@@ -62,7 +62,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
 
     def test_send_with_known_message(self):
         session = Session(messages=[Message(content="Hello", sender=self.first_sender)])
-        response = self.model.send(parameters=self.parameters, session=session)
+        response = self.models.send(parameters=self.parameters, session=session)
         self.assertEqual(response.content, "Hi")
         self.assertEqual(response.sender, self.second_sender)
 
@@ -71,11 +71,11 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
             messages=[Message(content="Unknown message", sender=self.first_sender)]
         )
         with self.assertRaises(ValueError):
-            self.model.send(parameters=self.parameters, session=session)
+            self.models.send(parameters=self.parameters, session=session)
 
     def test_send_async_with_known_message_yield_all(self):
         session = Session(messages=[Message(content="Hello", sender=self.first_sender)])
-        message_generator = self.model.send_async(
+        message_generator = self.models.send_async(
             parameters=self.parameters, session=session, yield_type="all"
         )
         messages = list(message_generator)
@@ -87,7 +87,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
 
     def test_send_async_with_known_message_yield_new(self):
         session = Session(messages=[Message(content="Hello", sender=self.first_sender)])
-        message_generator = self.model.send_async(
+        message_generator = self.models.send_async(
             parameters=self.parameters, session=session, yield_type="new"
         )
         messages = list(message_generator)
@@ -102,7 +102,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
             messages=[Message(content="Unknown message", sender=self.first_sender)]
         )
         with self.assertRaises(ValueError):
-            message_generator = self.model.send_async(
+            message_generator = self.models.send_async(
                 parameters=self.parameters, session=session, yield_type="all"
             )
             # We need to call the generator to raise the error.

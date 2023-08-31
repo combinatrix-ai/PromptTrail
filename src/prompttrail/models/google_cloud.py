@@ -10,18 +10,21 @@ from google.generativeai.types.discuss_types import (  # type: ignore
 from pydantic import BaseModel, ConfigDict  # type: ignore
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
-from prompttrail.error import ParameterValidationError, ProviderResponseError
+from prompttrail.core.errors import ParameterValidationError, ProviderResponseError
 
 logger = getLogger(__name__)
 
 
 class GoogleCloudConfiguration(Configuration):
     """Configuration for GoogleCloudChatModel."""
+
     api_key: str
     """API key for Google Cloud Chat API."""
 
+
 class GoogleCloudChatExample(BaseModel):
     """Example for Google Cloud Chat API."""
+
     prompt: str
     """ Prompt for the example. """
     response: str
@@ -30,7 +33,7 @@ class GoogleCloudChatExample(BaseModel):
 
 class GoogleCloudChatParameters(Parameters):
     """Parameter for GoogleCloudChatModel.
-    
+
     For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
     """
 
@@ -52,6 +55,7 @@ class GoogleCloudChatParameters(Parameters):
 
 class GoogleCloudChatModel(Model):
     """Model for Google Cloud Chat API."""
+
     configuration: GoogleCloudConfiguration
 
     def _authenticate(self) -> None:
@@ -111,5 +115,5 @@ class GoogleCloudChatModel(Model):
 
     def list_models(self) -> List[str]:
         self._authenticate()
-        response: List[palm.Model] = palm.list_models()  # type: ignore
+        response: List[palm.models] = palm.list_models()  # type: ignore
         return [model.name for model in response]  # type: ignore

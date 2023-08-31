@@ -2,8 +2,8 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent.core import State
-from prompttrail.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.agent import State
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 logger = logging.getLogger(__name__)
 
