@@ -49,7 +49,7 @@ class LRUCacheProvider(CacheProvider):
     This cache provider stores messages in an LRU cache with a fixed number of items.
     """
 
-    def __init__(self, n_items: int):
+    def __init__(self, n_items: int = 10000):
         """
         Initialize the LRUCacheProvider.
 
