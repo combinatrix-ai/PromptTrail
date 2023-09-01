@@ -12,9 +12,10 @@ from typing import (
     TypeAlias,
 )
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from prompttrail.core.cache import CacheProvider
+from prompttrail.core.mocks import MockProvider
 from prompttrail.core.utils import logger_multiline
 
 logger = logging.getLogger(__name__)
@@ -62,10 +63,19 @@ class Configuration(BaseModel):
     # The name is following the naming convention of openai.
     # Configuration does not have parameters that define the behavior of the model.
 
-    cache_provider: Optional[CacheProvider] = None
+    cache_provider: Optional["CacheProvider"] = None
+    """Cache provider to cache the response from the model."""
+    mock_provider: Optional["MockProvider"] = None
+    """Mock provider to mock the response from the model."""
 
     # pydantic
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @model_validator(mode="after")
+    def either_cache_or_mock(self) -> "Configuration":
+        if self.cache_provider is not None and self.mock_provider is not None:
+            raise ValueError("You can only use either cache_provider or mock_provider.")
+        return self
 
 
 class Parameters(BaseModel):
@@ -86,6 +96,14 @@ class Model(BaseModel):
     """A model define an interface to interact with LLM models."""
 
     configuration: Configuration
+
+    def is_mocked(self) -> bool:
+        """is_mocked method returns True if the model is mocked."""
+        return self.configuration.mock_provider is not None
+
+    def is_cached(self) -> bool:
+        """is_cached method returns True if the model use cache."""
+        return self.configuration.cache_provider is not None
 
     @abstractmethod
     def _send(self, parameters: Parameters, session: Session) -> Message:
@@ -120,6 +138,9 @@ class Model(BaseModel):
             message = self.configuration.cache_provider.search(parameters, session)
             if message is not None:
                 return message
+        if self.configuration.mock_provider is not None:
+            # TODO: Should mock also process parameters?
+            return self.configuration.mock_provider.call(session)
 
         parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
@@ -145,6 +166,22 @@ class Model(BaseModel):
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
         """send_async method defines the standard procedure to send a message to the model asynchronously. You dont need to override this method usually."""
+        message: Optional[Message] = None
+        if self.configuration.cache_provider is not None:
+            message = self.configuration.cache_provider.search(parameters, session)
+        if self.configuration.mock_provider is not None:
+            message = self.configuration.mock_provider.call(session)
+        if message is not None:
+            # character by character yield
+            if yield_type == "all":
+                seq = ""
+                for char in message.content:
+                    seq = seq + char
+                    yield Message(content=seq, sender=message.sender)
+            else:
+                for char in message.content:
+                    yield Message(content=char, sender=message.sender)
+            return
         parameters, session = self.prepare(parameters, session, True)
         messages = self._send_async(parameters, session, yield_type)
         for message in messages:

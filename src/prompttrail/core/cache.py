@@ -16,6 +16,7 @@ class CacheProvider(metaclass=ABCMeta):
 
     @abstractmethod
     def add(self, session: "Session", message: "Message") -> None:
+        # TODO: Cache must see `Parameters` as well!
         """
         Add a message to the cache.
 

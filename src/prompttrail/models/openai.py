@@ -10,7 +10,6 @@ from prompttrail.agent.tools import Tool
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
-from prompttrail.core.mocks import MockModel, MockProvider
 
 logger = logging.getLogger(__name__)
 
@@ -170,39 +169,6 @@ class OpenAIChatCompletionModel(Model):
         self._authenticate()
         response = openai.Model.list()  # type: ignore
         return [model.id for model in response.data]  # type: ignore
-
-
-class OpenAIChatCompletionModelMock(OpenAIChatCompletionModel, MockModel):
-    # TODO: This should be integrated to OpenAIChatCompletionModel itself?
-    def setup(self, mock_provider: MockProvider) -> None:
-        self.mock_provider: MockProvider = mock_provider
-
-    def _send(self, parameters: Parameters, session: Session) -> Message:
-        if not isinstance(parameters, OpenAIModelParameters):
-            raise ParameterValidationError(
-                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
-            )
-        return self.mock_provider.call(session)
-
-    def _send_async(
-        self,
-        parameters: Parameters,
-        session: Session,
-        yiled_type: Literal["all", "new"] = "new",
-    ) -> Generator[Message, None, None]:
-        if not isinstance(parameters, OpenAIModelParameters):
-            raise ParameterValidationError(
-                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
-            )
-        message = self.mock_provider.call(session)
-        if yiled_type == "new":
-            for ch in message.content:
-                yield Message(content=ch, sender=message.sender)
-        elif yiled_type == "all":
-            for idx in range(len(message.content)):
-                yield Message(
-                    content=message.content[: (idx + 1)], sender=message.sender
-                )
 
 
 OpenAIrole = Literal["system", "assistant", "user", "function"]

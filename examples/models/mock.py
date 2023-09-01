@@ -3,28 +3,28 @@ import os
 from prompttrail.core import Message, Session
 from prompttrail.core.mocks import OneTurnConversationMockProvider
 from prompttrail.models.openai import (
-    OpenAIChatCompletionModelMock,
+    OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
 
 api_key = os.environ.get("OPENAI_API_KEY", "")
 
-config = OpenAIModelConfiguration(api_key=api_key)
-parameters = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0
-)
-
-model = OpenAIChatCompletionModelMock(configuration=config)
-
-model.setup(
+config = OpenAIModelConfiguration(
+    api_key=api_key,
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={
             "1+1": Message(content="1215973652716", sender="assistant"),
         },
         sender="assistant",
-    )
+    ),
 )
+parameters = OpenAIModelParameters(
+    model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0
+)
+
+model = OpenAIChatCompletionModel(configuration=config)
+
 
 session = Session(
     messages=[
