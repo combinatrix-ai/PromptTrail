@@ -3,13 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to prompttrail's documentation!
+Welcome to PromptTrail!
 =======================================
 
+PromptTrail is a lightweight library to help you build something with LLM.
+PromptTrail aims to provide:
+
+- **Unified LLM Interface**: a unified interface to access various LLM models (`promttrail.modelss`)
+- **Agent as Code**: simple and intuitive DSL to build agent (conversation flow) with code (`promttrail.agents`)
+- **Developer Tools for LLM**: various tools enable mocking, logging, debugging (`promttrail.core`)
+
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
+   quickstart
+   tutorial
+   user-guide
    prompttrail
 
 

@@ -25,7 +25,7 @@ extensions = [
     'sphinx_rtd_theme',
     # 'sphinx_multiversion',
     'sphinxcontrib.autodoc_pydantic',
-    # 'myst_parser'
+    'myst_parser'
 ]
 
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
@@ -37,6 +37,10 @@ autodoc_default_options = {
     'special-members': '__init__',
 }
 
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
