@@ -25,9 +25,11 @@ cachetools==5.3.1
 certifi==2023.5.7
 charset-normalizer==3.2.0
 click==8.1.6
+comm==0.1.4
 coverage==7.2.7
 databind-core==4.4.0
 databind-json==4.4.0
+debugpy==1.6.7.post1
 decorator==5.1.1
 deprecated==1.2.14
 dill==0.3.7
@@ -51,10 +53,13 @@ idna==3.4
 imagesize==1.4.1
 importlib-metadata==6.8.0
 iniconfig==2.0.0
+ipykernel==6.25.1
 ipython==8.14.0
 isort==5.12.0
 jedi==0.18.2
 jinja2==3.1.2
+jupyter-client==8.3.1
+jupyter-core==5.3.1
 lazy-object-proxy==1.9.0
 markdown==3.4.4
 markdown-it-py==3.0.0
@@ -71,6 +76,7 @@ multidict==6.0.4
 mypy==1.4.1
 mypy-extensions==1.0.0
 myst-parser==2.0.0
+nest-asyncio==1.5.7
 nr-date==2.1.0
 nr-stream==1.1.5
 nr-util==0.8.12
@@ -85,6 +91,7 @@ pluggy==1.2.0
 prompt-toolkit==3.0.39
 proto-plus==1.22.3
 protobuf==4.23.4
+psutil==5.9.5
 ptyprocess==0.7.0
 pure-eval==0.2.2
 pyasn1==0.5.0
@@ -106,6 +113,7 @@ python-dateutil==2.8.2
 python-dotenv==1.0.0
 pyyaml==6.0.1
 pyyaml-env-tag==0.1
+pyzmq==25.1.1
 regex==2023.6.3
 requests==2.31.0
 rsa==4.9
@@ -126,6 +134,7 @@ toml==0.10.2
 tomli==2.0.1
 tomli-w==1.0.0
 tomlkit==0.12.1
+tornado==6.3.3
 tqdm==4.65.0
 traitlets==5.9.0
 typeapi==2.1.1

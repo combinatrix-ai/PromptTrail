@@ -2,9 +2,13 @@ import os
 import sys
 import unittest
 
+from pydantic import ValidationError
+
 from prompttrail.core import Message, Session
+from prompttrail.core.cache import LRUCacheProvider
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
+from prompttrail.core.mocks import EchoMockProvider
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -92,6 +96,14 @@ class TestOpenAI(unittest.TestCase):
             senders, ["system", "user", "assistant", "function", "assistant"]
         )
         self.assertIn("Tokyo", messages[-1].content)
+
+    def test_use_both_cache_and_mock(self):
+        with self.assertRaises(ValidationError):
+            OpenAIModelConfiguration(
+                api_key="sk-xxx",
+                mock_provider=EchoMockProvider(sender="assistant"),
+                cache_provider=LRUCacheProvider(),
+            )
 
 
 if __name__ == "__main__":
