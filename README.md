@@ -69,7 +69,7 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 ```python
 > import os
 > from src.prompttrail.core import Session, Message
-> from src.prompttrail.providers.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
+> from src.prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
 > 
 > api_key = os.environ["OPENAI_API_KEY"]
 > config = OpenAIModelConfiguration(api_key=api_key)
@@ -195,7 +195,7 @@ Input: How many elephants in Japan?
 From: 👤 user
 message:  How many elephants in Japan?
 =================
-INFO:prompttrail.agent.template.core:Generating content with OpenAIChatCompletionModel...
+INFO:prompttrail.agent.templates.core:Generating content with OpenAIChatCompletionModel...
 From: 🤖 assistant
 message:  Thoughts:
 - Elephants are not native to Japan, so the only elephants in Japan would be in zoos.
@@ -221,7 +221,7 @@ message:  Yes, I'm satisfied.
 From: 🤖 assistant
 message:  The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.
 =================
-INFO:prompttrail.agent.template.core:Generating content with OpenAIChatCompletionModel...
+INFO:prompttrail.agent.templates.core:Generating content with OpenAIChatCompletionModel...
 From: 🤖 assistant
 message:  END
 =================
@@ -279,7 +279,7 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 ## License
 
 - This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
-  - See [LICENSE](LICENSE) for more details.
+  - See [LICENCE](LICENCE.md) for more details.
 
 ## Contributing
 
