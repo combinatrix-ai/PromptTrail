@@ -277,7 +277,7 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 ## License
 
 - This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
-  - See [LICENCE](LICENCE.md) for more details.
+  - See [LICENCE](LICENCE) for more details.
 
 ## Contributing
 

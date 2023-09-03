@@ -52,7 +52,11 @@ You don't need to implement `CacheProvider` by yourself. PromptTrail has a built
 (mock)=
 ## Mock
 
-When you are developing an app using LLM, you may want to mock the LLM API. PromptTrail has a built-in mock mechanism.
+Say, you successfully build something using LLM. But, how can you test it?
+One way is to call the LLM API, of course. But, it may be costly, slow, and even non-deterministic (e.g., [GPT-3.5 and 4 is non-deterministic even if `temperature` is set to `0`](https://152334h.github.io/blog/non-determinism-in-gpt-4/)).
+
+
+You may want to mock the LLM API. PromptTrail has a built-in mock mechanism.
 
 Mock is implemented as a `MockProvider`. You can pass a `MockProvider` to `Configuration` object like `CacheProvider`.
 

@@ -7,6 +7,7 @@ Welcome to PromptTrail!
 =======================
 
 PromptTrail is a lightweight library to help you build something with LLM.
+
 PromptTrail aims to provide:
 
 - **Unified LLM Interface**: a unified interface to access various LLM models
