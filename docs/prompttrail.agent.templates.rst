@@ -1,9 +1,6 @@
 prompttrail.agent.templates package
 ===================================
 
-Submodules
-----------
-
 prompttrail.agent.templates.openai module
 -----------------------------------------
 

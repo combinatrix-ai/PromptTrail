@@ -1,5 +1,8 @@
-API Reference
+prompttrail package
 ===================
+
+Subpackages
+-----------
 
 .. toctree::
    :maxdepth: 4
@@ -7,3 +10,11 @@ API Reference
    prompttrail.agent
    prompttrail.core
    prompttrail.models
+
+Module contents
+---------------
+
+.. automodule:: prompttrail
+   :members:
+   :undoc-members:
+   :show-inheritance:

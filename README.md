@@ -2,6 +2,7 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
+
 - [PromptTrail](#prompttrail)
   - [Qucikstart](#qucikstart)
   - [Installation](#installation)
@@ -23,9 +24,7 @@ PromptTrail is a lightweight library to interact with LLM.
 
 ## Qucikstart
 
-- If you want to just use unified interface to various LLMs, see [exapmles/README.md#provider](examples/README.md#provider).
-- If you want to build complex LLM applications, see [src/prompttrail/agent/README.md](src/prompttrail/agent/README.md)
-- [Documentation (WIP)](https://combinatrix-ai.github.io/PromptTrail/)
+- See [Documentation](https://github.com/combinatrix-ai/PromptTrail/tree/main/docs) for more details.
 
 ## Installation
 

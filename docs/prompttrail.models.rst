@@ -3,9 +3,6 @@ prompttrail.models namespace
 
 .. py:module:: prompttrail.models
 
-Submodules
-----------
-
 prompttrail.models.google\_cloud module
 ---------------------------------------
 

@@ -1,8 +1,3 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath('./../../src/'))
-sys.path.insert(0, os.path.abspath('./src/'))
-
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -11,42 +6,31 @@ sys.path.insert(0, os.path.abspath('./src/'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'promttrail'
-copyright = '2023, combinatrix.ai'
-author = 'combinatrix.ai'
+project = 'prompttrail'
+copyright = '2023, Author'
+author = 'Author'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    # 'sphinx_fontawesome',
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme',
-    # 'sphinx_multiversion',
-    'sphinxcontrib.autodoc_pydantic',
-    'myst_parser'
+    'sphinx.ext.viewcode',
+    'sphinx.ext.todo',
 ]
 
-autosummary_generate = True  # Turn on sphinx.ext.autosummary
+templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-autodoc_mock_imports = ["openai", "google_cloud"]
-autodoc_pydantic_model_show_json = False
-autodoc_pydantic_model_show_config_summary = False
-autodoc_default_options = {
-    'special-members': '__init__',
-}
 
-source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
-}
+language = 'en'
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['../source/_static']
-html_theme_options = {
-    'collapse_navigation': False,
-}
+html_theme = 'alabaster'
+html_static_path = ['_static']
+
+# -- Options for todo extension ----------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/todo.html#configuration
+
+todo_include_todos = True

@@ -1,8 +1,10 @@
 prompttrail.core package
 ========================
 
-Submodules
-----------
+.. automodule:: prompttrail.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 prompttrail.core.cache module
 -----------------------------
@@ -44,10 +46,3 @@ prompttrail.core.utils module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: prompttrail.core
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -1,8 +1,11 @@
 prompttrail.agent package
 =========================
 
-Subpackages
------------
+.. automodule:: prompttrail.agent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 .. toctree::
    :maxdepth: 4
@@ -10,8 +13,6 @@ Subpackages
    prompttrail.agent.hooks
    prompttrail.agent.templates
 
-Submodules
-----------
 
 prompttrail.agent.runners module
 --------------------------------
@@ -37,10 +38,3 @@ prompttrail.agent.user\_interaction module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: prompttrail.agent
-   :members:
-   :undoc-members:
-   :show-inheritance:
