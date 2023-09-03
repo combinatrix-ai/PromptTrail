@@ -1,6 +1,22 @@
 # PromptTrail
 
-PromptTrail is a lightweight library to interact with LLM.
+PromptTrail is a lightweight library to help you build something with LLM.
+
+PromptTrail provide:
+
+<p align="center">
+  <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/dd766b44-165e-4c55-98a3-f009334bbc1c" width="640px">
+  <br>
+  A unified interface to various LLMs
+</p>
+
+<p align="center">
+  <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/ef50b481-1ef5-4807-b9c4-6e2ef32d5641" width="640px">
+  <br>
+  A simple and intuituve DSL to do "Agent as Code"
+</p>
+
+And various "Developer Tools" to help you build LLM applications.
 
 - [PromptTrail](#prompttrail)
   - [Qucikstart](#qucikstart)
@@ -12,18 +28,14 @@ PromptTrail is a lightweight library to interact with LLM.
     - [Agent as Code](#agent-as-code)
     - [Tooling](#tooling)
   - [Next](#next)
-    - [Before the first release](#before-the-first-release)
-    - [Big Features](#big-features)
   - [License](#license)
   - [Contributing](#contributing)
   - [Q\&A](#qa)
     - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
-    - [Environment Variables](#environment-variables)
-    - [Module Architecture](#module-architecture)
 
 ## Qucikstart
 
-- See [Documentation](https://prompttrail.readthedocs.io/en/latest/) for more details.
+- See [Quickstart](https://prompttrail.readthedocs.io/en/latest/quickstart.html) for more details.
 
 ## Installation
 
@@ -130,13 +142,13 @@ template = LinearTemplate(
     [
         MessageTemplate(
             role="system",
-            content="You're a math teacher. You're teaching a student how to solve equations.",
+            content="You're a math teacher bot.",
         ),
         LoopTemplate(
             [
                 UserInputTextTemplate(
                     role="user",
-                    description="Let's ask question to AI:",
+                    description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
                 GenerateTemplate(
@@ -146,22 +158,20 @@ template = LinearTemplate(
                 UserInputTextTemplate(
                     role="user",
                     description="Input:",
-                    default="Explain more.",
+                    default="Yes.",
                 ),
                 # Let the LLM decide whether to end the conversation or not
                 MessageTemplate(
                     role="assistant",
-                    content="""
-                    The user has stated their feedback.
-                    If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
-                    """,
+                    content="The user has stated their feedback."
+                    + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`."
                 ),
                 check_end := GenerateTemplate(
                     role="assistant",
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda state: ("END" in state.get_last_message().content)
+                condition=lambda state: ("END" == state.get_last_message().content.strip())
             ),
         ),
     ],
@@ -186,49 +196,92 @@ You can talk with the agent on your console like below:
 ````console
 ===== Start =====
 From: 📝 system
-message:
-You're a helpful assistant to solve Fermi Problem.... (omitted)
+message:  You're a math teacher bot.
 =================
-Input: How many elephants in Japan?
+Let's ask a question to AI:
 From: 👤 user
-message:  How many elephants in Japan?
-=================
-INFO:prompttrail.agent.templates.core:Generating content with OpenAIChatCompletionModel...
-From: 🤖 assistant
-message:  Thoughts:
-- Elephants are not native to Japan, so the only elephants in Japan would be in zoos.
-- According to the Japan Association of Zoos and Aquariums, there are 89 zoos in Japan.
-- Not all zoos have elephants, but let's assume that half of them do.
-- A large zoo might have up to 5 elephants, but smaller zoos might only have 1 or 2. Let's estimate an average of 3 elephants per zoo.
-
-Equation to be calculated:
-- Total Number of Elephants in Japan = Number of Zoos in Japan * Rate of Zoos having elephants * Average Number of Elephants Per Zoo
-
-Calculation:
-```python
-89 * 0.5 * 3
-```
+message:  Why can't you divide a number by zero?
 =================
 From: 🤖 assistant
-message:  The answer is 133.5 . Satisfied?
+message:  Dividing a number by zero is undefined in mathematics. Here's why:
+
+Let's say we have a division operation a/b. This operation asks the question: "how many times does b fit into a?" If b is zero, the question becomes "how many times does zero fit into a?", and the answer is undefined because zero can fit into a an infinite number of times.
+
+Moreover, if we look at the operation from the perspective of multiplication (since division is the inverse of multiplication), a/b=c means that b*c=a. If b is zero, there's no possible value for c that would satisfy the equation, because zero times any number is always zero, not a.
+
+So, due to these reasons, division by zero is undefined in mathematics.
 =================
-Input: Yes, I'm satisfied.
+From: 🤖 assistant
+message:  Are you satisfied?
+=================
+Input:
 From: 👤 user
-message:  Yes, I'm satisfied.
+message:  Yes.
 =================
 From: 🤖 assistant
-message:  The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.
+message:  The user has stated their feedback.If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
 =================
-INFO:prompttrail.agent.templates.core:Generating content with OpenAIChatCompletionModel...
 From: 🤖 assistant
 message:  END
 =================
 ====== End ======
 ````
 
+Go to [examples](examples) directory for more examples.
+
 ### Tooling
 
-You can use function calling! See [documentation)](src/prompttrail/agent/README.md#`agent.tool`\(Function Calling\)) for more information
+You can use function calling!
+You can define your own Tools to call and use them in your templates:
+
+```python
+class Place(ToolArgument):
+    description: str = "The location to get the weather forecast"
+    value: str
+
+class TemperatureUnitEnum(enum.Enum):
+    Celsius = "Celsius"
+    Fahrenheit = "Fahrenheit"
+
+class TemperatureUnit(ToolArgument):
+    description: str = "The unit of temperature"
+    value: Optional[TemperatureUnitEnum]
+
+class WeatherForecastResult(ToolResult):
+    temperature: int
+    weather: str
+
+    def show(self) -> Dict[str, Any]:
+        return {"temperature": self.temperature, "weather": self.weather}
+
+class WeatherForecastTool(Tool):
+    name = "get_weather_forecast"
+    description = "Get the current weather in a given location and date"
+    argument_types = [Place, TemperatureUnit]
+    result_type = WeatherForecastResult
+
+    def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
+        return WeatherForecastResult(temperature=0, weather="sunny")
+
+template = LinearTemplate(
+    templates=[
+        MessageTemplate(
+            role="system",
+            content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
+        ),
+        MessageTemplate(
+            role="user",
+            content="What's the weather in Tokyo tomorrow?",
+        ),
+        OpenAIGenerateWithFunctionCallingTemplate(
+            role="assistant",
+            functions=[WeatherForecastTool()],
+        ),
+    ]
+)
+```
+
+The conversation will be like below:
 
 ```console
 ===== Start =====
@@ -250,28 +303,18 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 ====== End ======
 ```
 
+See [documentation)](https://prompttrail.readthedocs.org/en/quickstart-agents.html#tool-function-calling) for more information.
+
+
 ## Next
 
-### Before the first release
-
-- [ ] Examples
-- [ ] Documentation
-- [x] Runner
-  - [x] Comprehensive test
-  - [x] Sophisticated CLI experience for intuitive demo
-- [ ] Vector Search Integration
-- [ ] Better error messages that help debugging
-- [x] Caching of API call
-- [x] Function Calling
-
-### Big Features
-
 - [ ] Provide a way to export / import sessions
+- [ ] Better error messages that help debugging
+- [ ] Vector Search Integration
 - [ ] toml input/output for templates
 - [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
-- [ ] Genral Tooling
 - [ ] Local LLMs
 
 ## License
@@ -292,35 +335,3 @@ message:  The weather in Tokyo tomorrow is expected to be sunny with a temperatu
 - PromptTrail is designed to be lightweight and easy to use.
 - Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
 - PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
-
-### Environment Variables
-
-- `OPENAI_API_KEY`: API key for OpenAI API
-- `GOOGLE_CLOUD_API_KEY`: API key for Google Cloud API
-
-### Module Architecture
-
-- core: Base classes such as message, session etc...
-- provider: Unified interface to various LLMs
-  - openai: OpenAI API
-  - stream: OpenAI API with streaming output
-  - google: Google Cloud API
-  - mock:   Mock of API for testing
-- agent
-  - runner:   Runner execute agent in various media (CLI, API, etc...) based on Templates with Hooks
-  - template: Template for agents, let you write complex agent in a simple way
-  - hook:     Pytorch Lightning style hook for agents, allowing you to customize agents based on your needs
-    - core:   Basic hooks
-    - code:   Hooks for code related tasks
-  - tool:     Tooling for agents incl. function calling
-  - user_interaction: Unified interface to user interaction
-    - console: Console-based user interaction
-    - mock:    Mock of user interaction for testing
-
-Your typical workflow is as follows:
-
-- Create a template using control flow templates (Looptemplate, Iftemplate etc..) and message templates
-- Run them in your CLI with CLIRunner and test it.
-- If you want to use it in your application, use APIRunner!
-  - See the examples for server side usage.
-- Mock your agent with MockProvider and MockUserInteraction let them automatically test on your CI.

@@ -25,13 +25,13 @@ template = LinearTemplate(
     [
         MessageTemplate(
             role="system",
-            content="You're a math teacher. You're teaching a student how to solve equations.",
+            content="You're a math teacher bot.",
         ),
         LoopTemplate(
             [
                 UserInputTextTemplate(
                     role="user",
-                    description="Let's ask question to AI:",
+                    description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
                 GenerateTemplate(
@@ -41,22 +41,22 @@ template = LinearTemplate(
                 UserInputTextTemplate(
                     role="user",
                     description="Input:",
-                    default="Explain more.",
+                    default="Yes.",
                 ),
                 # Let the LLM decide whether to end the conversation or not
                 MessageTemplate(
                     role="assistant",
-                    content="""
-                    The user has stated their feedback.
-                    If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.
-                    """,
+                    content="The user has stated their feedback."
+                    + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.",
                 ),
                 check_end := GenerateTemplate(
                     role="assistant",
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda state: ("END" in state.get_last_message().content)
+                condition=lambda state: (
+                    "END" == state.get_last_message().content.strip()
+                )
             ),
         ),
     ],
