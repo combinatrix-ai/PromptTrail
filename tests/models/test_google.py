@@ -5,21 +5,21 @@ from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.models.google_cloud import (
     GoogleCloudChatModel,
-    GoogleCloudChatParameters,
-    GoogleCloudConfiguration,
+    GoogleCloudChatModelParameters,
+    GoogleCloudChatModelConfiguration,
 )
 
 
 class TestGoogleCloud(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
-        self.configuration = GoogleCloudConfiguration(
+        self.configuration = GoogleCloudChatModelConfiguration(
             api_key=self.api_key,
         )
         self.use_model = "models/chat-bison-001"
-        self.parameters = GoogleCloudChatParameters(
+        self.parameters = GoogleCloudChatModelParameters(
             model_name=self.use_model,
-            max_output_tokens=100,
+            max_tokens=100,
             temperature=0,
         )
         self.models = GoogleCloudChatModel(configuration=self.configuration)

@@ -15,7 +15,7 @@ from prompttrail.core.errors import ParameterValidationError, ProviderResponseEr
 logger = getLogger(__name__)
 
 
-class GoogleCloudConfiguration(Configuration):
+class GoogleCloudChatModelConfiguration(Configuration):
     """Configuration for GoogleCloudChatModel."""
 
     api_key: str
@@ -31,7 +31,7 @@ class GoogleCloudChatExample(BaseModel):
     """ Response for the example. """
 
 
-class GoogleCloudChatParameters(Parameters):
+class GoogleCloudChatModelParameters(Parameters):
     """Parameter for GoogleCloudChatModel.
 
     For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
@@ -41,8 +41,8 @@ class GoogleCloudChatParameters(Parameters):
     """ Name of the model to use. use GoogleCloudChatModel.list_models() to get the list of available models. """
     temperature: Optional[float] = 0
     """ Temperature for sampling. """
-    max_output_tokens: Optional[int] = 1000
-    """ Maximum number of tokens to generate. """
+    max_tokens: Optional[int] = 1024
+    """ Maximum number of tokens to generate. `max_output_tokens` on API. Name is changed to be consistent with other models. """
     top_p: Optional[float] = None
     """ Top-p value for sampling. """
     top_k: Optional[int] = None
@@ -56,7 +56,7 @@ class GoogleCloudChatParameters(Parameters):
 class GoogleCloudChatModel(Model):
     """Model for Google Cloud Chat API."""
 
-    configuration: GoogleCloudConfiguration
+    configuration: GoogleCloudChatModelConfiguration
 
     def _authenticate(self) -> None:
         palm.configure(  # type: ignore
@@ -65,9 +65,9 @@ class GoogleCloudChatModel(Model):
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
-        if not isinstance(parameters, GoogleCloudChatParameters):
+        if not isinstance(parameters, GoogleCloudChatModelParameters):
             raise ParameterValidationError(
-                f"{GoogleCloudChatParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{GoogleCloudChatModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         response: ChatResponse = palm.chat(  # type: ignore

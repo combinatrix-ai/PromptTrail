@@ -134,14 +134,14 @@ import os
 from src.prompttrail.core import Session, Message
 from prompttrail.models.google_cloud import (
     GoogleCloudChatModel, # Change Model
-    GoogleCloudChatParameters, # Change Parameters
-    GoogleCloudConfiguration, # Change Configuration
+    GoogleCloudChatModelParameters, # Change Parameters
+    GoogleCloudChatModelConfiguration, # Change Configuration
 )
 
-api_key = os.environ["API_KEY"]
-config = GoogleCloudConfiguration(api_key=api_key)
+api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
+config = GoogleCloudChatModelConfiguration(api_key=api_key)
 # Change model name, of course Google's model name is different from OpenAI's
-parameters = GoogleCloudChatParameters(model_name="models/chat-bison-001", max_tokens=100, temperature=0)
+parameters = GoogleCloudChatModelParameters(model_name="models/chat-bison-001", max_tokens=100, temperature=0)
 model = GoogleCloudChatModel(configuration=config)
 session = Session(
   messages=[
