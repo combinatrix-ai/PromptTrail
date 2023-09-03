@@ -13,7 +13,7 @@ PromptTrail provide:
 <p align="center">
   <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/ef50b481-1ef5-4807-b9c4-6e2ef32d5641" width="640px">
   <br>
-  A simple and intuituve DSL to do "Agent as Code"
+  A simple and intuituve DSL for "Agent as Code"
 </p>
 
 And various "Developer Tools" to help you build LLM applications.
@@ -32,6 +32,7 @@ And various "Developer Tools" to help you build LLM applications.
   - [Contributing](#contributing)
   - [Q\&A](#qa)
     - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
+  - [Showcase](#showcase)
 
 ## Qucikstart
 
@@ -232,7 +233,21 @@ Go to [examples](examples) directory for more examples.
 ### Tooling
 
 You can use function calling!
-You can define your own Tools to call and use them in your templates:
+In function calling, you need to give LLM instructions to use the tool.
+Then, LLM give you the tool arguments and you need to give the result back to LLM.
+Therefore, you need:
+
+- giving explanation by the way LLM can understand
+- handling of multiple turn conversations
+- validation of tool arguments given by LLM
+- executing the function and return the result to LLM
+
+PromptTrail handles all of these for you.
+You can define your own Tools to call and use them in your templates.
+Inherit `Tool`, `ToolArgument`, `ToolResult` and add type annotations.
+PromptTrail will automatically generate descriptions for LLM and let the LLM use the tool.
+Execution and validation is also handled by PromptTrail.
+Let's see a simple weather forecast tool as example:
 
 ```python
 class Place(ToolArgument):
@@ -261,6 +276,7 @@ class WeatherForecastTool(Tool):
     result_type = WeatherForecastResult
 
     def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
+        # Implement real API call here
         return WeatherForecastResult(temperature=0, weather="sunny")
 
 template = LinearTemplate(
@@ -310,22 +326,26 @@ See [documentation)](https://prompttrail.readthedocs.org/en/quickstart-agents.ht
 
 - [ ] Provide a way to export / import sessions
 - [ ] Better error messages that help debugging
-- [ ] Vector Search Integration
+- [ ] More default tools
+  - [ ] Vector Search Integration
+  - [ ] Code Execution
 - [ ] toml input/output for templates
 - [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
 - [ ] Local LLMs
 
+File an issue if you have any requests!
+
 ## License
 
 - This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
+  - It's basically you cannot sell a managed service of PromptTrail. Except that, you can use it for free for any purpose.
   - See [LICENCE](LICENCE) for more details.
 
 ## Contributing
 
-- Contributions are welcome!
-- If you build something with PromptTrail, please share it with us via Issues or Discussions!
+- Contributions are more than welcome!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Q&A
@@ -335,3 +355,7 @@ See [documentation)](https://prompttrail.readthedocs.org/en/quickstart-agents.ht
 - PromptTrail is designed to be lightweight and easy to use.
 - Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
 - PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
+
+## Showcase
+
+- If you build something with PromptTrail, please share it with us via Issues or Discussions!
