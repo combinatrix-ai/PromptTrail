@@ -12,13 +12,14 @@ class CacheProvider(metaclass=ABCMeta):
     Abstract base class for cache providers.
 
     Cache providers are responsible for storing and retrieving messages from a cache.
+    Cache providers implement the `add` and `search` methods.
     """
 
     @abstractmethod
     def add(self, session: "Session", message: "Message") -> None:
         # TODO: Cache must see `Parameters` as well!
         """
-        Add a message to the cache.
+        Add a message to the cache based on the session and parameters.
 
         Args:
             session: The session associated with the message.
@@ -69,7 +70,9 @@ class LRUCacheProvider(CacheProvider):
         """
         self.cache[session] = message
 
-    def search(self, parameters: "Parameters", session: "Session") -> "Message":
+    def search(
+        self, parameters: "Parameters", session: "Session"
+    ) -> Optional["Message"]:
         """
         Search for a message in the cache.
 

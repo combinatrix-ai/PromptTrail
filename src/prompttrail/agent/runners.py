@@ -1,5 +1,5 @@
 import logging
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Dict, Optional, Set
 
 from prompttrail.agent import State, StatefulSession
@@ -11,7 +11,7 @@ from prompttrail.core.const import JumpException, ReachedEndTemplateException
 logger = logging.getLogger(__name__)
 
 
-class Runner(object):
+class Runner(metaclass=ABCMeta):
     def __init__(
         self,
         model: Model,
@@ -31,6 +31,7 @@ class Runner(object):
                     f"Template id {next_template.template_id} is duplicated."
                 )
             self.template_dict[next_template.template_id] = next_template  # type: ignore
+        """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
 
     @abstractmethod
     def run(
@@ -40,9 +41,11 @@ class Runner(object):
         max_messages: Optional[int] = None,
         debug_mode: bool = False,
     ) -> State:
+        """All runners should implement this method. This method should run the templates and return the final state."""
         raise NotImplementedError("run method is not implemented")
 
     def search_template(self, template_like: str) -> "Template":
+        """Search template by template id. If template id is not found, raise ValueError."""
         if template_like == EndTemplate.template_id:
             return EndTemplate()
         if template_like not in self.template_dict:
@@ -51,6 +54,7 @@ class Runner(object):
 
 
 def cutify_sender(sender: Optional[str]):
+    """Cutify sender name based on OpenAI's naming convention."""
     if sender == "system":
         return "📝 system"
     if sender == "user":
@@ -72,6 +76,18 @@ class CommandLineRunner(Runner):
         max_messages: Optional[int] = 100,
         debug_mode: bool = False,
     ) -> State:
+        """Command line runner. This runner is for debugging purpose. It prints out the messages to the console.
+
+        Args:
+            start_template_id (Optional[str], optional): If set, start from the template id given. Otherwise, start from the first template. Defaults to None.
+            state (Optional[State], optional): If set, use the state given. Otherwise, create a new state. Defaults to None.
+            max_messages (Optional[int], optional): Maximum number of messages to yield. If number of messages exceeds this number, the conversation is forced to stop. Defaults to 100.
+            debug_mode (bool, optional): If set, print out debug messages. Defaults to False.
+
+        Returns:
+            State: Final state of the conversation.
+        """
+
         # Debug Mode
 
         # set / update state

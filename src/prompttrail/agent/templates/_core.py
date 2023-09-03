@@ -1,5 +1,5 @@
 import logging
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from pprint import pformat
 from typing import Generator, List, Optional, Set
 from uuid import uuid4
@@ -32,8 +32,12 @@ class Stack(BaseModel):
     template_id: str
 
 
-class Template(object):
-    """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow."""
+class Template(object, metaclass=ABCMeta):
+    """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow.
+
+    The user should inherit this class and implement `_render` method, which should yield messages and return the final state.
+    Also, the user should implement `create_stack` method, which should create a stack object that store status of the template on rendering.
+    """
 
     @abstractmethod
     def __init__(
@@ -98,6 +102,13 @@ class Template(object):
 
 
 class MessageTemplate(Template):
+    """A template that create a message when rendered.
+
+    This is the most basic template without user interaction or calling LLM.
+    Rendering is based on `content`, which is a string that will be rendered by jinja2 as a message.
+    Before rendering, `before_transform` hooks are applied. After rendering, `after_transform` hooks are applied.
+    """
+
     def __init__(
         self,
         content: str,
@@ -152,6 +163,8 @@ class MessageTemplate(Template):
 
 
 class GenerateTemplate(MessageTemplate):
+    """A template that create a message by calling LLM."""
+
     def __init__(
         self,
         role: str,

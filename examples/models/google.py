@@ -3,8 +3,8 @@ import os
 from prompttrail.core import Message, Session
 from prompttrail.models.google_cloud import (
     GoogleCloudChatModel,
-    GoogleCloudChatModelParameters,
     GoogleCloudChatModelConfiguration,
+    GoogleCloudChatModelParameters,
 )
 
 api_key = os.environ.get("GOOGLE_CLOUD_API_KEY", "")

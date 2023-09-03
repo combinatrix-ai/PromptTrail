@@ -26,6 +26,14 @@ class TestLRUCacheProvider(unittest.TestCase):
         result = cache_provider.search(Parameters(), session)
         self.assertEqual(result, message_2)
 
+    def search_invalid_session(self):
+        cache_provider = LRUCacheProvider(3)
+        session = Session()
+        message = Message(content="Test message", sender="user")
+        cache_provider.add(session, message)
+        result = cache_provider.search(Parameters(), Session())
+        self.assertIsNone(result)
+
     def test_cache_in_models(self):
         # API key is invalid.
         api_key = ""

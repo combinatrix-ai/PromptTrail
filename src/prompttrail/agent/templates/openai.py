@@ -11,6 +11,8 @@ from prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIrole
 
 
 class OpenAIGenerateTemplate(GenerateTemplate):
+    """GenerateTemplate for OpenAI. `role` is narrowed down to OpenAIrole."""
+
     def __init__(
         self,
         role: OpenAIrole,
@@ -27,6 +29,8 @@ class OpenAIGenerateTemplate(GenerateTemplate):
 
 
 class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
+    """Function calling template for OpenAI. This template handle multiple turns of function calling."""
+
     def __init__(
         self,
         role: OpenAIrole,
@@ -112,6 +116,8 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
 
 
 class OpenAISystemTemplate(MessageTemplate):
+    """MessageTemplate for OpenAI. `role` is set to `system`."""
+
     def __init__(
         self,
         content: str,
@@ -125,6 +131,8 @@ class OpenAISystemTemplate(MessageTemplate):
 
 
 class OpenAIMessageTemplate(MessageTemplate):
+    """MessageTemplate for OpenAI. `role` is narrowed down to OpenAIrole."""
+
     def __init__(
         self,
         content: str,

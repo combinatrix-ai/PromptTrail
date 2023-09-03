@@ -2,7 +2,6 @@
 
 PromptTrail is a lightweight library to interact with LLM.
 
-
 - [PromptTrail](#prompttrail)
   - [Qucikstart](#qucikstart)
   - [Installation](#installation)
@@ -24,7 +23,7 @@ PromptTrail is a lightweight library to interact with LLM.
 
 ## Qucikstart
 
-- See [Documentation](https://github.com/combinatrix-ai/PromptTrail/tree/main/docs) for more details.
+- See [Documentation](https://prompttrail.readthedocs.io/en/latest/) for more details.
 
 ## Installation
 
@@ -76,12 +75,12 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 > model = OpenAIChatCompletionModel(configuration=config)
 > session = Session(
 >   messages=[
->     TextMessage(content="Hey", sender="user"),
+>     Message(content="Hey", sender="user"),
 >   ]
 > )
 > message = model.send(parameters=parameters, session=session)
 
-TextMessage(content="Hello! How can I assist you today?", sender="assistant")
+Message(content="Hello! How can I assist you today?", sender="assistant")
 ```
 
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.

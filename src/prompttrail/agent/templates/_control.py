@@ -1,5 +1,5 @@
 import logging
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Generator, List, Optional, Sequence, Set, TypeAlias
 
 from prompttrail.agent import State
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 TemplateId: TypeAlias = str
 
 
-class ControlTemplate(Template):
+class ControlTemplate(Template, metaclass=ABCMeta):
     """
     Base class for control flow templates.
     """
@@ -41,7 +41,7 @@ class ControlTemplate(Template):
         self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
         """
-        Traverse the template and its child templates in a depth-first manner.
+        Traverse the template and its child templates in a depth-first manner. Control templates should override this method as they usually have child templates.
 
         Args:
             visited_templates: Set of visited templates to avoid infinite recursion.
@@ -103,10 +103,6 @@ class LoopTemplateStack(Stack):
 
 
 class LoopTemplate(ControlTemplate):
-    """
-    Template for a loop control flow.
-    """
-
     def __init__(
         self,
         templates: Sequence[Template],
@@ -116,6 +112,16 @@ class LoopTemplate(ControlTemplate):
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
     ):
+        """A template for a loop control flow. Unlike `LinearTemplate`, this template loops over the child templates until the exit condition is met.
+
+        Args:
+            templates (Sequence[Template]): Templates to be looped. Execution order is the same as the order of the list.
+            exit_condition (Optional[BooleanHook], optional): If set, the loop is broken when the condition is met. Defaults to None (Infinite loop).
+            template_id (Optional[str], optional): Template ID of this template. Defaults to None.
+            exit_loop_count (Optional[int], optional): If set, the loop is broken when the loop count is over this number. Defaults to None (Infinite loop).
+            before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
+            after_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied after rendering. Defaults to None.
+        """
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
@@ -172,10 +178,6 @@ class LoopTemplate(ControlTemplate):
 
 
 class IfTemplate(ControlTemplate):
-    """
-    Template for an if-else control flow.
-    """
-
     def __init__(
         self,
         condition: BooleanHook,
@@ -185,6 +187,17 @@ class IfTemplate(ControlTemplate):
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
     ):
+        """A template for a conditional control flow.
+
+        Args:
+            condition (BooleanHook): Condition to be checked.
+            true_template (Template): Template to be rendered if the condition is met.
+            false_template (Optional[Template], optional): Template to be rendered if the condition is not met. Defaults to None. If None, this template return no message.
+            template_id (Optional[str], optional): Template ID of this template. Defaults to None.
+            before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
+            after_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied after rendering. Defaults to None.
+        """
+
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
@@ -222,17 +235,13 @@ class IfTemplate(ControlTemplate):
 
 class LinearTemplateStack(Stack):
     """
-    Stack for LinearTemplate.
+    Stack for LinearTemplate. It stores the index of child templates currently rendering in `LinearTemplate`.
     """
 
     idx: int
 
 
 class LinearTemplate(ControlTemplate):
-    """
-    Template for a linear control flow.
-    """
-
     def __init__(
         self,
         templates: Sequence[Template],
@@ -240,6 +249,14 @@ class LinearTemplate(ControlTemplate):
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
     ):
+        """A template for a linear control flow. Unlike `LoopTemplate`, this template exits after rendering all the child templates.
+
+        Args:
+            templates (Sequence[Template]): Templates to be rendered. Execution order is the same as the order of the list.
+            template_id (Optional[str], optional): Template ID of this template. Defaults to None.
+            before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
+            after_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied after rendering. Defaults to None.
+        """
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
@@ -281,7 +298,10 @@ class LinearTemplate(ControlTemplate):
 # EndTemplate is a singleton
 class EndTemplate(Template):
     """
-    Template for the end of the conversation.
+    A special template for the end of the conversation.
+
+    When runner reaches this template, the conversation is forced to stop. This template is a singleton.
+    before_transform and after_transform are unavailable for `EndTemplate`.
     """
 
     template_id = END_TEMPLATE_ID
@@ -304,10 +324,6 @@ class EndTemplate(Template):
 
 
 class JumpTemplate(ControlTemplate):
-    """
-    Template for jumping to another template.
-    """
-
     def __init__(
         self,
         jump_to: Template | TemplateId,
@@ -315,6 +331,16 @@ class JumpTemplate(ControlTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[List[TransformHook]] = None,
     ):
+        """A template for jumping to another template.
+
+        after_transform is unavailable for `JumpTemplate` because it may skipped when the jump is executed.
+
+        Args:
+            jump_to (Template | TemplateId): Template or template ID to jump to. When passed a TemplateId and the runner cannot find the template, it raises an error.
+            condition (BooleanHook): Condition to be checked. If the condition is met, the jump is executed. Otherwise, this template exits without jumping.
+            template_id (Optional[str], optional): Template ID of this template. Defaults to None.
+            before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
+        """
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
@@ -345,15 +371,15 @@ class JumpTemplate(ControlTemplate):
 
 
 class BreakTemplate(ControlTemplate):
-    """
-    Template for breaking out of a loop.
-    """
-
     def __init__(
         self,
         template_id: Optional[str] = None,
         before_transform: Optional[List[TransformHook]] = None,
     ):
+        """A template for breaking the loop.
+
+        after_transform is unavailable for `BreakTemplate` because it may skipped when the break is executed.
+        """
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],

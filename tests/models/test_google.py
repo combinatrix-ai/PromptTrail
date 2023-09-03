@@ -5,8 +5,8 @@ from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.models.google_cloud import (
     GoogleCloudChatModel,
-    GoogleCloudChatModelParameters,
     GoogleCloudChatModelConfiguration,
+    GoogleCloudChatModelParameters,
 )
 
 

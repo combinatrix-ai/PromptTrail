@@ -1,6 +1,6 @@
 import enum
 import logging
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeAlias, Union
 
 from pydantic import BaseModel
@@ -11,11 +11,17 @@ from prompttrail.agent import State
 logger = logging.getLogger(__name__)
 
 
-class ToolResult(BaseModel):
-    ...
+class ToolResult(BaseModel, metaclass=ABCMeta):
+    """A class to represent the result of a tool called.
+
+    ToolResult class is responsible for conveying the result of the tool to LLM (`show` method).
+    The user must inherit this class and define `show` as class method.
+    ToolResult compose a Tool with ToolArgument.
+    """
 
     @abstractmethod
     def show(self) -> Dict[str, Any]:
+        """Return a dictionary to show LLM the result of the tool. The dictionary should be JSON serializable."""
         # TODO: It may be possible to automatically encode this with pydantic
         ...
 
@@ -49,34 +55,52 @@ FunctionCallingArgumentValueTypeType: TypeAlias = Union[
 
 
 class ToolArgument(BaseModel):
+    """A class to represent an argument of a tool. User must inherit this class to create a tool.
+
+    ToolArgument class is responsible for conveying the usage of the tool to LLM (`show` method).
+    The user must inherit this class and define `description` and `value` as class variables.
+    Typing information of `value` is used to generate the JSON schema for the function calling.
+    ToolArgument compose a Tool with ToolResult.
+    """
+
     description: str  # This is a little opinionated, but I think it's a good idea to always have a description for each argument.
+    """ The description of the argument. For example, if the argument is "place", the description can be "The name of the place". The description should be set when the user inherits this class. """
     value: FunctionCallingArgumentValueType
+    """ The value of the argument. When user inherits this class, the type of the value should be specified. For example, if the argument is "place", the type can be str. """
 
     @classmethod
     def get_name(cls) -> str:
+        """The name of the argument is determined by the class name automactically. If the user want to change the name, they can override this method."""
         return cls.__name__.lower()
 
     @classmethod
     def is_required(cls) -> bool:
+        """Return True if the argument is required, False otherwise. Determined by the type annotation of value in Tool. Note that the value cannot be Optional. The optionality of the argument should be determined in Tool."""
         return not is_optional_type(cls)
 
     @classmethod
     def get_value_type(cls) -> FunctionCallingArgumentValueTypeType:
+        """Return the type of the value. Determined by the type annotation of value."""
         return cls.model_fields["value"].annotation  # type: ignore
 
     @classmethod
     def get_description(cls) -> str:
+        """Return the description of the argument. Determined by the default value of description."""
         # We need this because ToolArgument is usually accessed as a class, not an instance.
         return cls.model_fields["description"].default  # type: ignore
 
 
 class FunctionCallingPartialProperty(BaseModel):
+    """A internal class to represent a property of a function calling. This class is used to generate the JSON schema for the function calling."""
+
     type: str
     required: bool
     enum: Optional[List[str]] = None
 
 
 class FunctionCallingProperty(FunctionCallingPartialProperty):
+    """A class to represent a property of a function calling. This class is used to generate the JSON schema for the function calling."""
+
     name: str
     description: str
 
@@ -84,6 +108,7 @@ class FunctionCallingProperty(FunctionCallingPartialProperty):
 def function_calling_type_to_partial_property(
     T: Type[FunctionCallingArgumentValueType],
 ) -> FunctionCallingPartialProperty:
+    """Convert a type of a function calling to a partial property. This function is used to generate the JSON schema for the function calling."""
     if T == str:
         return FunctionCallingPartialProperty(type="string", required=True)
     elif T == Optional[str]:
@@ -123,6 +148,7 @@ def function_calling_type_to_partial_property(
 
 
 def convert_property_to_api_call_parts(prop: FunctionCallingProperty):
+    """Convert a partial property to the API call parts. This function is used to generate the JSON schema for the function calling."""
     result = {
         "type": prop.type,
         "description": prop.description,
@@ -154,7 +180,14 @@ def check_arguments(
     return result  # type: ignore
 
 
-class Tool(object):
+class Tool(object, metaclass=ABCMeta):
+    """A class to represent a tool. User must inherit this class to create a tool.
+
+    Tool class is responsible for conveying the usage of the tool to LLM (`show` method) and actually calling the tool (`call` method) and return the result.
+    The user must inherit this class and define `name`, `description`, `argument_types`, and `result_type` as class variables.
+    Typing information of `argument_types` and `result_type` is used to generate the JSON schema for the function calling.
+    """
+
     name: str
     description: str
     argument_types: Sequence[Type[ToolArgument]]
@@ -162,9 +195,28 @@ class Tool(object):
 
     @abstractmethod
     def _call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
+        """This method should be implemented by the user. This method is the actual function of the tool. Return the result of the tool as the user defined class that inherits `ToolResult`.
+
+        Args:
+            args (Sequence[ToolArgument]): The arguments returned by the API.
+            state (State): The current state of the agent.
+
+        Returns:
+            ToolResult: The result of the tool.
+        """
+
         ...
 
     def call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
+        """Call the function and return the result based on the args returned by the API. This method is usually not overriden by the user.
+
+        Args:
+            args (Sequence[ToolArgument]): The arguments returned by the API.
+            state (State): The current state of the agent.
+
+        Returns:
+            ToolResult: The result of the tool.
+        """
         for arg in args:
             if not any([isinstance(arg, x) for x in self.argument_types]):
                 raise ValueError("Given argument type is not supported", arg.__class__)
@@ -183,6 +235,7 @@ class Tool(object):
         return result
 
     def show(self):
+        """Return a dictionary to show LLM how to use the tool. The dictionary should be JSON serializable. This method is usually not overriden by the user."""
         partial_properties = [
             function_calling_type_to_partial_property(x.get_value_type())
             for x in self.argument_types
