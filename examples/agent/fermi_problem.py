@@ -7,26 +7,29 @@
 import logging
 import os
 
-from prompttrail.agent.hook import (
+from prompttrail.agent.hooks import (
     BooleanHook,
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
+    ResetDataHook,
 )
-from prompttrail.agent.hook.core import ResetDataHook
-from prompttrail.agent.template import (
+from prompttrail.agent.templates import (
+    BreakTemplate,
+    IfTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
 )
-from prompttrail.agent.template.control import BreakTemplate, IfTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateTemplate as GenerateTemplate,
+)
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
     UserInteractionTextCLIProvider,
 )
 from prompttrail.core import Message
-from prompttrail.mock import OneTurnConversationMockProvider
-from prompttrail.util import is_in_test_env
+from prompttrail.core.mocks import OneTurnConversationMockProvider
+from prompttrail.core.utils import is_in_test_env
 
 logging.basicConfig(level=logging.INFO)
 
@@ -152,13 +155,12 @@ Calculation:
 # Then, let's run this agent!
 # You can run templates using runner.
 # This runner runs models in cli.
-from prompttrail.agent.runner import CommandLineRunner  # noqa: E402
+from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
-from prompttrail.provider.openai import (  # noqa: E402
+from prompttrail.models.openai import (  # noqa: E402
     OpenAIChatCompletionModel,
-    OpenAIChatCompletionModelMock,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
@@ -192,28 +194,28 @@ else:
     # If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
     runner = CommandLineRunner(
         # Use mock model in CI or DEBUG
-        model=OpenAIChatCompletionModelMock(
+        model=OpenAIChatCompletionModel(
             configuration=OpenAIModelConfiguration(
                 # Of course, same arguments as OpenAIChatCompletionModel can be used
                 api_key=os.environ.get("OPENAI_API_KEY", ""),
-            ),
-            # You can define the behaviour of the mock model using mock_provider
-            mock_provider=OneTurnConversationMockProvider(
-                conversation_table={
-                    "How many cats in Japan?": Message(
-                        content="""Thoughts: ...
-    Calculation:
-    ```python
-    5300000 * 0.49 * 2.1
-    ```
-    """,
-                        sender="assistant",
-                    ),
-                    "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
-                        content="END", sender="assistant"
-                    ),
-                },
-                sender="assistant",
+                # You can define the behaviour of the mock model using mock_provider
+                mock_provider=OneTurnConversationMockProvider(
+                    conversation_table={
+                        "How many cats in Japan?": Message(
+                            content="""Thoughts: ...
+        Calculation:
+        ```python
+        5300000 * 0.49 * 2.1
+        ```
+        """,
+                            sender="assistant",
+                        ),
+                        "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
+                            content="END", sender="assistant"
+                        ),
+                    },
+                    sender="assistant",
+                ),
             ),
         ),
         user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(

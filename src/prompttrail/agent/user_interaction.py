@@ -2,13 +2,13 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent.core import State
-from prompttrail.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.agent import State
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 logger = logging.getLogger(__name__)
 
 
-class UserInteractionProvider(object):
+class UserInteractionProvider:
     @abstractmethod
     def ask(
         self,
@@ -16,6 +16,17 @@ class UserInteractionProvider(object):
         description: Optional[str],
         default: Optional[str] = None,
     ) -> str:
+        """
+        Ask the user for input.
+
+        Args:
+            state: The current state of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            The user's input as a string.
+        """
         raise NotImplementedError("ask method is not implemented")
 
 
@@ -26,6 +37,17 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         description: Optional[str] = "Input>",
         default: Optional[str] = None,
     ) -> str:
+        """
+        Ask the user for input via the command line interface.
+
+        Args:
+            state: The current state of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            The user's input as a string.
+        """
         raw = input(description).strip()
         while 1:
             if (not raw) and default is not None:
@@ -55,6 +77,17 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
+        """
+        Mock the user interaction by providing pre-defined responses based on the conversation history.
+
+        Args:
+            state: The current state of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            The pre-defined response based on the conversation history.
+        """
         valid_messages = [
             x
             for x in state.session_history.messages
@@ -73,4 +106,15 @@ class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
+        """
+        Mock the user interaction by echoing the last message.
+
+        Args:
+            state: The current state of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            The last message as the user's input.
+        """
         return state.get_last_message().content

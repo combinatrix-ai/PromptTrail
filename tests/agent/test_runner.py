@@ -1,22 +1,23 @@
 # simple meta templates
-from prompttrail.agent.core import State
-from prompttrail.agent.hook.core import BooleanHook, TransformHook
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate, MessageTemplate
-from prompttrail.agent.template.control import (
+from prompttrail.agent import State
+from prompttrail.agent.hooks import BooleanHook, TransformHook
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import (
     BreakTemplate,
     EndTemplate,
     IfTemplate,
+    LinearTemplate,
     LoopTemplate,
+    MessageTemplate,
 )
-from prompttrail.agent.template.openai import (
+from prompttrail.agent.templates.openai import (
     OpenAIGenerateTemplate,
     OpenAISystemTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
-from prompttrail.mock import EchoMockProvider
-from prompttrail.provider.openai import (
-    OpenAIChatCompletionModelMock,
+from prompttrail.core.mocks import EchoMockProvider
+from prompttrail.models.openai import (
+    OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
 )
@@ -26,11 +27,10 @@ from prompttrail.provider.openai import (
 # TODO: Add tests for all templates
 
 # Echo mock model
-echo_mock_model = OpenAIChatCompletionModelMock(
+echo_mock_model = OpenAIChatCompletionModel(
     configuration=OpenAIModelConfiguration(
-        api_key="",
+        api_key="", mock_provider=EchoMockProvider(sender="assistant")
     ),
-    mock_provider=EchoMockProvider(sender="assistant"),
 )
 parameters = OpenAIModelParameters(
     model_name="gpt-3.5-turbo",
