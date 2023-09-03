@@ -1,28 +1,29 @@
-# Unified Interface to LLM API (`providers`)
+(models)=
+# `models`: Unified Interface to LLM API
 
-If you want to just use LLM models, you can use `providers` module.
+If you want to just use LLM models, you can use `models` module.
 Let's see how to use it.
 
 ```{Note}
 If you build complex conversation flow, you may want to use `agents` module.
-See [`agents`](#quickstart-agents) section for more details.
+See [agents](#agents) section for more details.
 ```
 
 ## Make an API Call
 
-PromptTrail implement many LLM models under `providers`.
+PromptTrail implement many LLM models under `models`.
 Let's call OpenAI's GPT-3 model. (You need to set `API_KEY` environment variable with your OpenAI API key.)
 
 ```python
 import os
 from src.prompttrail.core import Session, Message
-from src.prompttrail.modelss.openai import (
+from src.prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters
 )
 
-api_key = os.environ["API_KEY"]
+api_key = os.environ["OPENAI_API_KEY"]
 config = OpenAIModelConfiguration(api_key=api_key)
 parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
 model = OpenAIChatCompletionModel(configuration=config)
@@ -31,7 +32,7 @@ session = Session(
     Message(content="Hey", sender="user"),
   ]
 )
-message = model.send(parameters=parameters, session=session)
+model.send(parameters=parameters, session=session)
 ```
 
 You can see the response from the model like this:
@@ -124,7 +125,7 @@ Different from `Configuration`, `Parameters` are passed on every API call.
 Things that can change course of the conversation (e.g. model name, temperature) are passed here.
 For example, you may want to GPT-3.5 for the first message, and if the conversation is not going well, you may want to switch to GPT-4.
 
-## Change Provider
+## Try different Model
 
 If you want to call Google's Palm model, you can do it by changing some lines.
 
@@ -190,4 +191,3 @@ Hello! How can # text is incrementally typed
 ```
 
 `send_async` returns a generator that yields `Message` objects.
-

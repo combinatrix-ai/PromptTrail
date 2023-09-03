@@ -1,4 +1,10 @@
-# Quickstart for `agents`
+(agents)=
+# `agents`: Agent as Code
+
+```{Note}
+If you just want to call LLM API. See [models](#models) section first!
+```
+
 
 ## Make your first agent!
 
@@ -8,6 +14,17 @@ PromptTrail offer a simple and intuitive DSL to build agent with code.
 ```python
 ```
 
-### Core Concepts
+## Core Concepts
 
-aaa
+### Agent
+
+### Template
+
+### Hook
+
+### Runner
+
+### Control Flow
+
+## Tooling
+

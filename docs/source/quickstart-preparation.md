@@ -1,4 +1,6 @@
-# Installation
+# Preparation
+
+## Install
 
 ```{Note}
 PromptTrail is currently in alpha. We are working on the first release on PyPI.

@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.abspath('./../../src/'))
+sys.path.insert(0, os.path.abspath('./src/'))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -46,3 +47,6 @@ source_suffix = {
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['../source/_static']
+html_theme_options = {
+    'collapse_navigation': False,
+}

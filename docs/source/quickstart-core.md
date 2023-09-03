@@ -1,4 +1,4 @@
-# Quickstart for `core`
+# `core`: Developer Tools for LLM
 
 `core` module is unified with other modules.
 Therefore, you should read other quickstart sections first.
@@ -105,3 +105,5 @@ Actually, the role of `MockProvider` is very similar to that of `CacheProvider`.
 ```{Note}
 `MockProvider` and `CacheProvider` cannot be used at the same time.
 ```
+
+<!-- TODO: Add debug and logging section -->
