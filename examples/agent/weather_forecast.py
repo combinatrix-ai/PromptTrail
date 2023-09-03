@@ -4,13 +4,13 @@ import enum
 import os
 from typing import Any, Dict, Optional, Sequence
 
-from prompttrail.agent.core import State
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate, MessageTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateWithFunctionCallingTemplate
-from prompttrail.agent.tool import Tool, ToolArgument, ToolResult
+from prompttrail.agent import State
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import LinearTemplate, MessageTemplate
+from prompttrail.agent.templates.openai import OpenAIGenerateWithFunctionCallingTemplate
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.provider.openai import (
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,

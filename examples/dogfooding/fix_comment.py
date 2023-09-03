@@ -4,13 +4,15 @@ import os
 
 import click
 
-from prompttrail.agent.core import State
-from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.template import LinearTemplate
-from prompttrail.agent.template.openai import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.template.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent import State
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import LinearTemplate
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateTemplate as GenerateTemplate,
+)
+from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.provider.openai import (
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters,
