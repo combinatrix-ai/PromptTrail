@@ -1,21 +1,27 @@
 name: 'Extract Error'
 description: 'extract test error messaget to pull request comment'
 inputs:
-  error_filepath:
-    description: 'error mesasge file path'
-    required: true
   openai_api_key:
     description: 'OpenAI API Key'
+    required: true
+  cmd:
+    description: 'test cmd'
     required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Run Test
+      shell: bash
+      run: |
+        ${{ inputs.cmd }} | tee /tmp/test_output.txt
+
     - name: Generate Test Output Summary
       shell: bash
-      if: github.event_name == 'pull_request'
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
       run: |
-        OPENAI_API_KEY=${{ inputs.openai_api_key }} python .github/actions/extract_error/extract_error.py ${{ inputs.error_filepath }} /tmp/output.txt
+        python .github/actions/extract_error/extract_error.py /tmp/test_output.txt /tmp/output.txt
 
     - name: Get Test Output Summary
       shell: bash

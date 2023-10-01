@@ -29,19 +29,12 @@ jobs:
         run: flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples
       - name: Run black
         run: black --check src examples tests
-      - name: Run pytest
-        run: pytest --cov=src --cov-report=xml tests > /tmp/test_output.txt
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
 
       - name: Extract Error
         uses: ./.github/actions/extract_error
-        if: failure()
         with:
-          error_filepath: /tmp/test_output.txt
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-
+          cmd: OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} GOOGLE_CLOUD_API_KEY=${{ secrets.GOOGLE_CLOUD_API_KEY }} pytest --cov=src --cov-report=xml tests
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         env:
