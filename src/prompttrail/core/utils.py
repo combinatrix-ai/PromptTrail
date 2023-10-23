@@ -3,6 +3,8 @@ import os
 import sys
 from typing import TYPE_CHECKING
 
+import tiktoken
+
 if TYPE_CHECKING:
     from prompttrail.agent import State
     from prompttrail.agent.hooks import Hook
@@ -57,3 +59,9 @@ def is_in_test_env() -> bool:
     if os.environ.get("DEBUG"):
         return True
     return False
+
+
+def count_tokens(text: str, encoding_name: str) -> int:
+    encoding = tiktoken.get_encoding(encoding_name)
+    encoded = encoding.encode(text)
+    return len(encoded)
