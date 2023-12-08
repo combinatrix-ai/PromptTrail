@@ -1,0 +1,53 @@
+name: 'Extract Error'
+description: 'extract test error messaget to pull request comment'
+inputs:
+  openai_api_key:
+    description: 'OpenAI API Key'
+    required: true
+  cmd:
+    description: 'test cmd'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Test
+      shell: bash
+      run: |
+        ${{ inputs.cmd }} | tee /tmp/test_output.txt
+
+    - name: Generate Test Output Summary
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+      run: |
+        python .github/actions/extract_error/extract_error.py /tmp/test_output.txt /tmp/output.txt
+
+    - name: Get Test Output Summary
+      shell: bash
+      id: get-comment-body
+      if: github.event_name == 'pull_request'
+      run: |
+        body="$(cat /tmp/output.txt)"
+        delimiter="$(openssl rand -hex 8)"
+        echo "body<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "${body}" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+
+    - name: Find Comment
+      uses: peter-evans/find-comment@v2
+      id: find-comment
+      if: github.event_name == 'pull_request'
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: Error Summary
+
+    - name: Create or update comment
+      uses: peter-evans/create-or-update-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.get-comment-body.outputs.body }}
+        edit-mode: replace
