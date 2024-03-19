@@ -53,7 +53,9 @@ When we release the first version, we will publish this package to PyPI.
 - PromptTrail offers the following features:
   - [Unified interface to various LLMs](#llm-api-call)
     - OpenAI
-    - Google Cloud
+    - Google Cloud (Palm)
+      - [TODO] Gemini
+    - Anthropic Claude
     - [TODO] Local LLMs
   - [Developer Tools for prompt programming](#developer-tools)
     - Mocking LLMs for testing

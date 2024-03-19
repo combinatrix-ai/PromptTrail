@@ -16,8 +16,8 @@ Let's call OpenAI's GPT-3 model. (You need to set `API_KEY` environment variable
 
 ```python
 import os
-from src.prompttrail.core import Session, Message
-from src.prompttrail.models.openai import (
+from prompttrail.core import Session, Message
+from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
     OpenAIModelParameters
@@ -131,7 +131,7 @@ If you want to call Google's Palm model, you can do it by changing some lines.
 
 ```python
 import os
-from src.prompttrail.core import Session, Message
+from prompttrail.core import Session, Message
 from prompttrail.models.google_cloud import (
     GoogleCloudChatModel, # Change Model
     GoogleCloudChatModelParameters, # Change Parameters
@@ -168,6 +168,35 @@ You will get plenty type hints for every model and parameters. So you may not ne
 PromptTrail is fully typed. Therefore we recommend you to write code with VSCode or PyCharm.
 docstring is also available for almost every class and method.
 We want users to be able to write code without viewing documentation.
+```
+
+Anthropic's Claude is also available:
+
+```python
+import os
+from prompttrail.core import Session, Message
+from prompttrail.models.anthropic import (
+    AnthropicClaudeModel, # Change Model
+    AnthropicClaudeModelParameters, # Change Parameters
+    AnthropicClaudeModelConfiguration, # Change Configuration
+)
+
+api_key = os.environ["ANTHROPIC_API_KEY"]
+config = AnthropicClaudeModelConfiguration(api_key=api_key)
+parameters = AnthropicClaudeModelParameters(model_name="claude-3-haiku-20240307", max_tokens=100, temperature=0)
+model = AnthropicClaudeModel(configuration=config)
+session = Session(
+  messages=[
+    Message(content="Hey", sender="user"),
+  ]
+)
+message = model.send(parameters=parameters, session=session)
+```
+
+You will get the following response:
+
+```python
+Message(content='Hello! How can I assist you today?', sender='assistant', data={})
 ```
 
 ## Stream Output
