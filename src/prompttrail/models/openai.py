@@ -23,7 +23,7 @@ class OpenAIModelConfiguration(Configuration):
 
 class OpenAIModelParameters(Parameters):
     model_name: str
-    temperature: Optional[float] = 0
+    temperature: Optional[float] = 1.0
     max_tokens: int = 1024
     functions: Optional[Dict[str, Tool]] = None
 
@@ -32,7 +32,7 @@ class OpenAIModelParameters(Parameters):
 
 
 class OpenAIChatCompletionModel(Model):
-    configuration: OpenAIModelConfiguration
+    configuration: OpenAIModelConfiguration  # type: ignore
 
     def _authenticate(self) -> None:
         openai.api_key = self.configuration.api_key  # type: ignore

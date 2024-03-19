@@ -39,7 +39,7 @@ class GoogleCloudChatModelParameters(Parameters):
 
     model_name: str = "models/chat-bison-001"
     """ Name of the model to use. use GoogleCloudChatModel.list_models() to get the list of available models. """
-    temperature: Optional[float] = 0
+    temperature: Optional[float] = 1.0
     """ Temperature for sampling. """
     max_tokens: Optional[int] = 1024
     """ Maximum number of tokens to generate. `max_output_tokens` on API. Name is changed to be consistent with other models. """
@@ -56,7 +56,7 @@ class GoogleCloudChatModelParameters(Parameters):
 class GoogleCloudChatModel(Model):
     """Model for Google Cloud Chat API."""
 
-    configuration: GoogleCloudChatModelConfiguration
+    configuration: GoogleCloudChatModelConfiguration  # type: ignore
 
     def _authenticate(self) -> None:
         palm.configure(  # type: ignore
