@@ -5,43 +5,135 @@
 #   pre: false
 #   features: []
 #   all-features: false
+#   with-sources: false
 
 -e file:.
 aiohttp==3.8.4
+    # via openai
 aiosignal==1.3.1
+    # via aiohttp
 annotated-types==0.5.0
+    # via pydantic
+anthropic==0.20.0
+    # via prompttrail
+anyio==4.3.0
+    # via anthropic
+    # via httpx
 async-timeout==4.0.2
+    # via aiohttp
 attrs==23.1.0
+    # via aiohttp
 cachetools==5.3.1
+    # via google-auth
 certifi==2023.5.7
+    # via httpcore
+    # via httpx
+    # via requests
 charset-normalizer==3.2.0
+    # via aiohttp
+    # via requests
 click==8.1.6
+    # via prompttrail
+distro==1.9.0
+    # via anthropic
+filelock==3.13.1
+    # via huggingface-hub
 frozenlist==1.4.0
+    # via aiohttp
+    # via aiosignal
+fsspec==2024.3.1
+    # via huggingface-hub
 google-ai-generativelanguage==0.2.0
+    # via google-generativeai
 google-api-core==2.11.1
+    # via google-ai-generativelanguage
 google-auth==2.17.3
+    # via google-api-core
 google-generativeai==0.1.0
+    # via prompttrail
 googleapis-common-protos==1.59.1
+    # via google-api-core
+    # via grpcio-status
 grpcio==1.56.0
+    # via google-api-core
+    # via grpcio-status
 grpcio-status==1.56.0
+    # via google-api-core
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.4
+    # via httpx
+httpx==0.27.0
+    # via anthropic
+huggingface-hub==0.21.4
+    # via tokenizers
 idna==3.4
+    # via anyio
+    # via httpx
+    # via requests
+    # via yarl
 multidict==6.0.4
+    # via aiohttp
+    # via yarl
 mypy-extensions==1.0.0
+    # via typing-inspect
 openai==0.27.8
+    # via prompttrail
+packaging==24.0
+    # via huggingface-hub
 proto-plus==1.22.3
+    # via google-ai-generativelanguage
 protobuf==4.23.4
+    # via google-ai-generativelanguage
+    # via google-api-core
+    # via googleapis-common-protos
+    # via grpcio-status
+    # via proto-plus
 pyasn1==0.5.0
+    # via pyasn1-modules
+    # via rsa
 pyasn1-modules==0.3.0
+    # via google-auth
 pydantic==2.3.0
+    # via anthropic
+    # via prompttrail
 pydantic-core==2.6.3
+    # via pydantic
+pyyaml==6.0.1
+    # via huggingface-hub
 regex==2023.6.3
+    # via tiktoken
 requests==2.31.0
+    # via google-api-core
+    # via huggingface-hub
+    # via openai
+    # via tiktoken
 rsa==4.9
+    # via google-auth
 six==1.16.0
+    # via google-auth
+sniffio==1.3.1
+    # via anthropic
+    # via anyio
+    # via httpx
 tiktoken==0.5.1
+    # via prompttrail
+tokenizers==0.15.2
+    # via anthropic
 tqdm==4.65.0
+    # via huggingface-hub
+    # via openai
 types-cachetools==5.3.0.6
+    # via prompttrail
 typing-extensions==4.7.1
+    # via anthropic
+    # via huggingface-hub
+    # via pydantic
+    # via pydantic-core
+    # via typing-inspect
 typing-inspect==0.9.0
+    # via prompttrail
 urllib3==2.0.3
+    # via requests
 yarl==1.9.2
+    # via aiohttp
