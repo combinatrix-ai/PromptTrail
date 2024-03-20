@@ -21,6 +21,9 @@ class GoogleCloudChatModelConfiguration(Configuration):
     api_key: str
     """API key for Google Cloud Chat API."""
 
+    # required for autodoc
+    model_config = ConfigDict(protected_namespaces=())
+
 
 class GoogleCloudChatExample(BaseModel):
     """Example for Google Cloud Chat API."""
@@ -29,6 +32,9 @@ class GoogleCloudChatExample(BaseModel):
     """ Prompt for the example. """
     response: str
     """ Response for the example. """
+
+    # required for autodoc
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class GoogleCloudChatModelParameters(Parameters):
@@ -39,7 +45,7 @@ class GoogleCloudChatModelParameters(Parameters):
 
     model_name: str = "models/chat-bison-001"
     """ Name of the model to use. use GoogleCloudChatModel.list_models() to get the list of available models. """
-    temperature: Optional[float] = 0
+    temperature: Optional[float] = 1.0
     """ Temperature for sampling. """
     max_tokens: Optional[int] = 1024
     """ Maximum number of tokens to generate. `max_output_tokens` on API. Name is changed to be consistent with other models. """
@@ -50,13 +56,17 @@ class GoogleCloudChatModelParameters(Parameters):
     context: Optional[str] = None
     examples: Optional[List[GoogleCloudChatExample]] = None
 
+    # required for autodoc
     model_config = ConfigDict(protected_namespaces=())
 
 
 class GoogleCloudChatModel(Model):
     """Model for Google Cloud Chat API."""
 
-    configuration: GoogleCloudChatModelConfiguration
+    configuration: GoogleCloudChatModelConfiguration  # type: ignore
+
+    # required for autodoc
+    model_config = ConfigDict(protected_namespaces=())
 
     def _authenticate(self) -> None:
         palm.configure(  # type: ignore
