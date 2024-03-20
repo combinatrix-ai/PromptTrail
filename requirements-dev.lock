@@ -8,27 +8,22 @@
 #   with-sources: false
 
 -e file:.
-aiohttp==3.9.3
-    # via openai
-aiosignal==1.3.1
-    # via aiohttp
 alabaster==0.7.16
     # via sphinx
 annotated-types==0.6.0
     # via pydantic
-anthropic==0.20.0
+anthropic==0.21.0
     # via prompttrail
 anyio==4.3.0
     # via anthropic
     # via httpx
+    # via openai
 appnope==0.1.4
     # via ipykernel
 astroid==3.1.0
     # via pylint
 asttokens==2.4.1
     # via stack-data
-attrs==23.2.0
-    # via aiohttp
 autodoc-pydantic==2.1.0
 autoflake==2.3.1
     # via pyproject-autoflake
@@ -54,11 +49,13 @@ comm==0.2.2
     # via ipykernel
 coverage==7.4.4
     # via pytest-cov
-databind-core==4.4.0
+databind==4.5.0
+    # via databind-core
     # via databind-json
+databind-core==4.5.0
     # via docspec
     # via pydoc-markdown
-databind-json==4.4.0
+databind-json==4.5.0
     # via docspec
     # via pydoc-markdown
 debugpy==1.8.1
@@ -66,13 +63,14 @@ debugpy==1.8.1
 decorator==5.1.1
     # via ipython
 deprecated==1.2.14
-    # via databind-core
+    # via databind
     # via docspec
     # via nr-util
 dill==0.3.8
     # via pylint
 distro==1.9.0
     # via anthropic
+    # via openai
 docconvert==2.1.0
 docspec==2.2.1
     # via docspec-python
@@ -90,9 +88,6 @@ executing==2.0.1
 filelock==3.13.1
     # via huggingface-hub
 flake8==7.0.0
-frozenlist==1.4.1
-    # via aiohttp
-    # via aiosignal
 fsspec==2024.3.1
     # via huggingface-hub
 ghp-import==2.1.0
@@ -121,13 +116,13 @@ httpcore==1.0.4
     # via httpx
 httpx==0.27.0
     # via anthropic
+    # via openai
 huggingface-hub==0.21.4
     # via tokenizers
 idna==3.6
     # via anyio
     # via httpx
     # via requests
-    # via yarl
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==7.0.2
@@ -183,9 +178,6 @@ mkdocs==1.5.3
 mkdocs-autorefs==1.0.1
     # via mkdocstrings
 mkdocstrings==0.24.1
-multidict==6.0.5
-    # via aiohttp
-    # via yarl
 mypy==1.9.0
 mypy-extensions==1.0.0
     # via black
@@ -195,14 +187,13 @@ myst-parser==2.0.0
 nest-asyncio==1.6.0
     # via ipykernel
 nr-date==2.1.0
-    # via databind-core
-    # via databind-json
+    # via databind
 nr-stream==1.1.5
-    # via databind-core
+    # via databind
 nr-util==0.8.12
     # via docspec-python
     # via pydoc-markdown
-openai==0.27.8
+openai==1.14.2
     # via prompttrail
 packaging==24.0
     # via black
@@ -255,6 +246,7 @@ pydantic==2.6.4
     # via anthropic
     # via autodoc-pydantic
     # via google-generativeai
+    # via openai
     # via prompttrail
     # via pydantic-settings
 pydantic-core==2.16.3
@@ -298,7 +290,6 @@ regex==2023.12.25
 requests==2.31.0
     # via google-api-core
     # via huggingface-hub
-    # via openai
     # via pydoc-markdown
     # via sphinx
     # via tiktoken
@@ -313,6 +304,7 @@ sniffio==1.3.1
     # via anthropic
     # via anyio
     # via httpx
+    # via openai
 snowballstemmer==2.2.0
     # via sphinx
 sphinx==7.2.6
@@ -365,19 +357,18 @@ traitlets==5.14.2
     # via jupyter-core
     # via matplotlib-inline
 typeapi==2.2.1
-    # via databind-core
-    # via databind-json
+    # via databind
 types-cachetools==5.3.0.7
     # via prompttrail
 types-tqdm==4.66.0.20240106
 typing-extensions==4.10.0
     # via anthropic
-    # via databind-core
-    # via databind-json
+    # via databind
     # via google-generativeai
     # via huggingface-hub
     # via mypy
     # via nr-util
+    # via openai
     # via pydantic
     # via pydantic-core
     # via typeapi
@@ -395,7 +386,5 @@ wrapt==1.16.0
     # via deprecated
 yapf==0.40.2
     # via pydoc-markdown
-yarl==1.9.4
-    # via aiohttp
 zipp==3.18.1
     # via importlib-metadata
