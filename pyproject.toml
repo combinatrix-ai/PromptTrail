@@ -6,14 +6,15 @@ authors = [
     { name = "hmirin", email = "hmirin@example.com" }
 ]
 dependencies = [
-    "openai==0.27.8",
-    "pydantic>=2.0.2",
-    "google-generativeai>=0.1.0",
-    "tiktoken>=0.5.1",
-    "click>=8.1.6",
-    "types-cachetools>=5.3.0.6",
+    "openai>=1.14.2",
+    "pydantic>=2.6.4",
+    "google-generativeai>=0.4.1",
+    "tiktoken>=0.6.0",
+    "click>=8.1.7",
+    "types-cachetools>=5.3.0.7",
     "typing_inspect>=0.9.0",
-    "anthropic>=0.20.0",
+    "anthropic>=0.21.0",
+    "typing-inspect>=0.9.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"

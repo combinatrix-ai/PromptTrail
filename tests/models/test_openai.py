@@ -83,6 +83,23 @@ class TestOpenAI(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, Session(messages=[]))
 
+    def test_streaming(self):
+        # One message
+        message = Message(
+            content="This is automated test API call. Please answer the calculation 17*31.",
+            sender="user",
+        )
+        session = Session(messages=[message])
+        response = self.model.send_async(self.parameters, session)
+        messages = list(response)
+        self.assertTrue(
+            all([isinstance(m, Message) for m in messages]) and len(messages) > 0
+        )
+        concat = "".join([m.content for m in messages])
+        sender = messages[0].sender
+        self.assertIn("527", concat)
+        self.assertEqual(sender, "assistant")
+
     def test_function_calling(self):
         # Tools are already tested in test_tool.py
         # Here, we use the example from examples/agent/weather_forecast.py
