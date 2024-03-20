@@ -6,8 +6,8 @@ from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.models.anthropic import (
     AnthropicClaudeModel,
-    AnthropicClaudeModelParameters,
     AnthropicClaudeModelConfiguration,
+    AnthropicClaudeModelParameters,
 )
 
 path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -47,7 +47,9 @@ class TestAnthropic(unittest.TestCase):
         # All message types
         messages = [
             Message(content="You're a helpful assistant.", sender="system"),
-            Message(content="Calculate 14+13", sender="user"), # Haiku won't answer difficult questions if the system message is present?
+            Message(
+                content="Calculate 14+13", sender="user"
+            ),  # Haiku won't answer difficult questions if the system message is present?
         ]
         session = Session(messages=messages)
         response = self.model.send(self.parameters, session)

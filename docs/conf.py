@@ -1,7 +1,12 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.abspath('./../../src/'))
 sys.path.insert(0, os.path.abspath('./src/'))
+
+# # Load modules that may conflict with autodoc
+# # https://github.com/pydantic/pydantic/discussions/7763
+# from prompttrail.models import google_cloud # noqa: E402 # type: ignore
 
 # Configuration file for the Sphinx documentation builder.
 #
