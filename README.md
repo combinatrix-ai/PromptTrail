@@ -41,6 +41,9 @@ And various "Developer Tools" to help you build LLM applications.
 ## Installation
 
 ```bash
+pip install prompttrail
+
+```bash
 git clone https://github.com/combinatrix-ai/PromptTrail.git
 cd PromptTrail
 pip install -e .
@@ -341,9 +344,7 @@ File an issue if you have any requests!
 
 ## License
 
-- This project is licensed under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license).
-  - It's basically you cannot sell a managed service of PromptTrail. Except that, you can use it for free for any purpose.
-  - See [LICENCE](LICENCE) for more details.
+- PromptTrail is licensed under the MIT License.
 
 ## Contributing
 

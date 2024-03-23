@@ -2,10 +2,9 @@
 
 ## Install
 
-```{Note}
-PromptTrail is currently in alpha. We are working on the first release on PyPI.
-Please use the latest version from GitHub for now.
-```
+``pip install prompttrail``
+
+or install the latest version from the repository:
 
 ``pip install git+https://github.com/combinatrix-ai/PromptTrail.git``
 
