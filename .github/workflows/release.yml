@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    branches:
+        - main
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Release to PyPI
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test and Release
+        run: bash package-release.sh
+        env:
+          PYPI_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}
+          PYPI_URL: ${{ vars.PYPI_URL }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
