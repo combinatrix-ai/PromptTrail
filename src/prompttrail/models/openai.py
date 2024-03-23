@@ -55,31 +55,31 @@ class OpenAIChatCompletionModel(Model):
             )
         # TODO: Add retry logic for http error and max_tokens_exceeded
         if parameters.functions is None:
-            response = openai.ChatCompletion.create(  # type: ignore
+            response = openai.chat.completions.create(  # type: ignore
                 model=parameters.model_name,
                 temperature=parameters.temperature,
                 max_tokens=parameters.max_tokens,
-                messages=self._session_to_openai_messages(session),
+                messages=self._session_to_openai_messages(session),  # type: ignore # TODO: Use Iterable[ChatCompletionParam]
             )
         else:
             # TODO: Somwhow, function argument cannnot be passed with [] or None if you want not to invoke the function.
-            response = openai.ChatCompletion.create(  # type: ignore
+            response = openai.chat.completions.create(  # type: ignore
                 model=parameters.model_name,
                 temperature=parameters.temperature,
                 max_tokens=parameters.max_tokens,
-                messages=self._session_to_openai_messages(session),
-                functions=[val.show() for _, val in parameters.functions.items()],
+                messages=self._session_to_openai_messages(session),  # type: ignore # TODO: Use Iterable[ChatCompletionParam]
+                functions=[val.show() for _, val in parameters.functions.items()],  # type: ignore
             )
-        message = response.choices[0]["message"]  # type: ignore #TODO: More robust error handling
-        content = message["content"]  # type: ignore
+        message = response.choices[0].message  # TODO: More robust error handling
+        content = message.content
         if content is None:
             # This implies that the model responded with function calling
             content = ""  # TODO: Should allow null message? (It may be more clear that non textual response is returned)
-        result = Message(content=content, sender=message["role"])  # type: ignore #TODO: More robust error handling
+        result = Message(content=content, sender=message.role)  # type: ignore #TODO: More robust error handling
         # TODO: handle for _send_async
-        if message.get("function_call"):  # type: ignore
-            function_name = message["function_call"]["name"]  # type: ignore
-            arguments = json.loads(message["function_call"]["arguments"])  # type: ignore
+        if message.function_call is not None:
+            function_name = message.function_call.name
+            arguments = json.loads(message.function_call.arguments)
             result.data["function_call"] = {
                 "name": function_name,
                 "arguments": arguments,
@@ -96,22 +96,27 @@ class OpenAIChatCompletionModel(Model):
             raise ParameterValidationError(
                 f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
-        response: Generator[Dict[str, str], None, None] = openai.ChatCompletion.create(  # type: ignore
+        response: openai.Stream = openai.chat.completions.create(  # type: ignore
             model=parameters.model_name,
             temperature=parameters.temperature,
             max_tokens=parameters.max_tokens,
-            messages=self._session_to_openai_messages(session),
+            messages=self._session_to_openai_messages(session),  # type: ignore # TODO: Use Iterable[ChatCompletionParam]
             stream=True,
         )
         # response is a generator, and we want response[i]['choices'][0]['delta'].get('content', '')
         all_text: str = ""
-        for message in response:
-            new_text: str = message.choices[0]["delta"].get("content", "")  # type: ignore #TODO: More robust error handling
+        role = None
+        for message in response:  # type: ignore
+            logger.debug(f"Received message: {message}")
+            if role is None:
+                # role is written in the first message
+                role = message.choices[0].delta.role  # type: ignore
+            new_text: str = message.choices[0].delta.content or ""  # type: ignore #TODO: More robust error handling
             if yiled_type == "new":
-                yield Message(content=new_text, sender=None)  # type: ignore
+                yield Message(content=new_text, sender=role)  # type: ignore
             elif yiled_type == "all":
                 all_text: str = all_text + new_text  # type: ignore
-                yield Message(content=all_text, sender=None)  # type: ignore
+                yield Message(content=all_text, sender=role)  # type: ignore
             else:
                 raise ParameterValidationError(
                     f"{self.__class__.__name__}: yiled_type should be 'all' or 'new'."
@@ -167,7 +172,7 @@ class OpenAIChatCompletionModel(Model):
 
     def list_models(self) -> List[str]:
         self._authenticate()
-        response = openai.Model.list()  # type: ignore
+        response = openai.models.list()
         return [model.id for model in response.data]  # type: ignore
 
 
