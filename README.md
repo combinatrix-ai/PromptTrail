@@ -42,14 +42,15 @@ And various "Developer Tools" to help you build LLM applications.
 
 ```bash
 pip install prompttrail
+```
+
+or
 
 ```bash
 git clone https://github.com/combinatrix-ai/PromptTrail.git
 cd PromptTrail
 pip install -e .
 ```
-
-When we release the first version, we will publish this package to PyPI.
 
 ## What PromptTrail can do?
 
