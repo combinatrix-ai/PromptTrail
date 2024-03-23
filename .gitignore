@@ -26,3 +26,7 @@ docs/build/
 .vscode
 tmp
 lib
+
+# Tests
+
+package-test
