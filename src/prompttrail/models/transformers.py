@@ -56,7 +56,10 @@ class TransformersModel(Model):
     ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
         return (None, None, None)
 
-    def _send(self, parameters: Parameters, session: Session) -> Message:
+    def _validate_and_prepare(
+        self, parameters: Parameters
+    ) -> tuple[TransformersModelParameters, "AutoModelForCausalLM", "AutoTokenizer"]:
+        """Validate parameters and prepare model for generation."""
         if not isinstance(parameters, TransformersModelParameters):
             raise ParameterValidationError(
                 f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
@@ -67,10 +70,29 @@ class TransformersModel(Model):
                 "Model and tokenizer must be initialized before sending messages"
             )
 
-        input_text = self._session_to_text(session)
-        inputs = self.tokenizer(input_text, return_tensors="pt").to(self.model.device)
+        # After the check above, we can assert these are not None
+        assert self.model is not None  # for type checker
+        assert self.tokenizer is not None  # for type checker
 
-        generate_kwargs = {
+        return parameters, self.model, self.tokenizer
+
+    def _prepare_inputs(
+        self,
+        session: Session,
+        model: "AutoModelForCausalLM",
+        tokenizer: "AutoTokenizer",
+    ):
+        """Prepare inputs for the model."""
+        input_text = self._session_to_text(session)
+        return tokenizer(input_text, return_tensors="pt").to(model.device)
+
+    def _create_generate_kwargs(
+        self,
+        parameters: TransformersModelParameters,
+        streamer: Optional["TextStreamer"] = None,
+    ) -> dict:
+        """Create generation kwargs for the model."""
+        kwargs = {
             "max_new_tokens": parameters.max_tokens,
             "temperature": parameters.temperature,
             "top_p": parameters.top_p,
@@ -78,9 +100,17 @@ class TransformersModel(Model):
             "repetition_penalty": parameters.repetition_penalty,
             "do_sample": True,
         }
+        if streamer is not None:
+            kwargs["streamer"] = streamer
+        return kwargs
 
-        outputs = self.model.generate(**inputs, **generate_kwargs)
-        generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+    def _send(self, parameters: Parameters, session: Session) -> Message:
+        params, model, tokenizer = self._validate_and_prepare(parameters)
+        inputs = self._prepare_inputs(session, model, tokenizer)
+        generate_kwargs = self._create_generate_kwargs(params)
+
+        outputs = model.generate(**inputs, **generate_kwargs)
+        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         return Message(content=generated_text, sender="assistant")
 
@@ -90,30 +120,14 @@ class TransformersModel(Model):
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        if not isinstance(parameters, TransformersModelParameters):
-            raise ParameterValidationError(
-                f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
-            )
+        params, model, tokenizer = self._validate_and_prepare(parameters)
+        inputs = self._prepare_inputs(session, model, tokenizer)
+        streamer = self._create_streamer(yield_type)
+        generate_kwargs = self._create_generate_kwargs(params, streamer)
 
-        if self.model is None or self.tokenizer is None:
-            raise RuntimeError(
-                "Model and tokenizer must be initialized before sending messages"
-            )
-
-        input_text = self._session_to_text(session)
-        inputs = self.tokenizer(input_text, return_tensors="pt").to(self.model.device)
-
-        generate_kwargs = {
-            "max_new_tokens": parameters.max_tokens,
-            "temperature": parameters.temperature,
-            "top_p": parameters.top_p,
-            "top_k": parameters.top_k,
-            "repetition_penalty": parameters.repetition_penalty,
-            "do_sample": True,
-            "streamer": self._create_streamer(yield_type),
-        }
-
-        self.model.generate(**inputs, **generate_kwargs)
+        model.generate(
+            **inputs, **generate_kwargs
+        )  # use validated model from _validate_and_prepare
         yield from self._streamer_messages
 
     def _create_streamer(self, yield_type: Literal["all", "new"]) -> "TextStreamer":
