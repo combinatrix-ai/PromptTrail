@@ -1,10 +1,11 @@
 import logging
-from typing import Dict, Generator, List, Literal, Optional, Tuple, TYPE_CHECKING
+from typing import Generator, List, Literal, Optional, Tuple, TYPE_CHECKING
+
+from typing import Dict
 
 from pydantic import ConfigDict
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer  # type: ignore
 
-from prompttrail.agent.tools import Tool
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
@@ -28,21 +29,18 @@ class TransformersModelParameters(Parameters):
 
 
 class TransformersModel(Model):
-    configuration: Optional[TransformersModelConfiguration] = None  # type: ignore
     model: Optional[AutoModelForCausalLM] = None
     tokenizer: Optional[AutoTokenizer] = None
 
-    # Pydantic config
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(
         self,
         configuration: TransformersModelConfiguration,
         model: "AutoModelForCausalLM",
-        tokenizer: "AutoTokenizer"
+        tokenizer: "AutoTokenizer",
     ):
-        super().__init__()
-        self.configuration = configuration
+        super().__init__(configuration=configuration)
         self.model = model
         self.tokenizer = tokenizer
 
@@ -55,6 +53,11 @@ class TransformersModel(Model):
         if not isinstance(parameters, TransformersModelParameters):
             raise ParameterValidationError(
                 f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+            )
+
+        if self.model is None or self.tokenizer is None:
+            raise RuntimeError(
+                "Model and tokenizer must be initialized before sending messages"
             )
 
         input_text = self._session_to_text(session)
@@ -85,6 +88,11 @@ class TransformersModel(Model):
                 f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
+        if self.model is None or self.tokenizer is None:
+            raise RuntimeError(
+                "Model and tokenizer must be initialized before sending messages"
+            )
+
         input_text = self._session_to_text(session)
         inputs = self.tokenizer(input_text, return_tensors="pt").to(self.model.device)
 
@@ -104,7 +112,7 @@ class TransformersModel(Model):
     def _create_streamer(self, yield_type: Literal["all", "new"]) -> "TextStreamer":
         from transformers import TextStreamer
 
-        self._streamer_messages = []
+        self._streamer_messages: List[Message] = []
         self._all_text = ""
 
         class TransformersStreamer(TextStreamer):
@@ -146,6 +154,4 @@ class TransformersModel(Model):
             for message in session.messages
             if message.sender != CONTROL_TEMPLATE_ROLE
         ]
-        return "\n".join(
-            f"{message.sender}: {message.content}" for message in messages
-        )
+        return "\n".join(f"{message.sender}: {message.content}" for message in messages)
