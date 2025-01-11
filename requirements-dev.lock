@@ -10,6 +10,7 @@
 #   universal: false
 
 -e file:.
+accelerate==1.2.1
 alabaster==1.0.0
     # via sphinx
 annotated-types==0.7.0
@@ -87,7 +88,14 @@ docutils==0.21.2
     # via sphinx-rtd-theme
 executing==2.1.0
     # via stack-data
+filelock==3.16.1
+    # via huggingface-hub
+    # via torch
+    # via transformers
 flake8==7.1.1
+fsspec==2024.12.0
+    # via huggingface-hub
+    # via torch
 ghp-import==2.1.0
     # via mkdocs
 google-ai-generativelanguage==0.6.10
@@ -126,6 +134,10 @@ httplib2==0.22.0
 httpx==0.28.1
     # via anthropic
     # via openai
+huggingface-hub==0.27.1
+    # via accelerate
+    # via tokenizers
+    # via transformers
 idna==3.10
     # via anyio
     # via httpx
@@ -148,6 +160,7 @@ jinja2==3.1.5
     # via prompttrail
     # via pydoc-markdown
     # via sphinx
+    # via torch
 jiter==0.8.2
     # via anthropic
     # via openai
@@ -190,6 +203,8 @@ mkdocs-autorefs==1.2.0
 mkdocs-get-deps==0.2.0
     # via mkdocs
 mkdocstrings==0.27.0
+mpmath==1.3.0
+    # via sympy
 mypy==1.14.1
 mypy-extensions==1.0.0
     # via black
@@ -198,6 +213,8 @@ mypy-extensions==1.0.0
 myst-parser==4.0.0
 nest-asyncio==1.6.0
     # via ipykernel
+networkx==3.4.2
+    # via torch
 nr-date==2.1.0
     # via databind
 nr-stream==1.1.5
@@ -205,14 +222,20 @@ nr-stream==1.1.5
 nr-util==0.8.12
     # via docspec-python
     # via pydoc-markdown
+numpy==2.2.1
+    # via accelerate
+    # via transformers
 openai==1.59.6
     # via prompttrail
 packaging==24.2
+    # via accelerate
     # via black
+    # via huggingface-hub
     # via ipykernel
     # via mkdocs
     # via pytest
     # via sphinx
+    # via transformers
 parso==0.8.4
     # via jedi
 pathspec==0.12.1
@@ -242,6 +265,7 @@ protobuf==5.29.3
     # via grpcio-status
     # via proto-plus
 psutil==6.1.1
+    # via accelerate
     # via ipykernel
 ptyprocess==0.7.0
     # via pexpect
@@ -288,12 +312,15 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
     # via pydantic-settings
 pyyaml==6.0.2
+    # via accelerate
+    # via huggingface-hub
     # via mkdocs
     # via mkdocs-get-deps
     # via myst-parser
     # via pydoc-markdown
     # via pymdown-extensions
     # via pyyaml-env-tag
+    # via transformers
 pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==26.2.0
@@ -301,13 +328,19 @@ pyzmq==26.2.0
     # via jupyter-client
 regex==2024.11.6
     # via tiktoken
+    # via transformers
 requests==2.32.3
     # via google-api-core
+    # via huggingface-hub
     # via pydoc-markdown
     # via sphinx
     # via tiktoken
+    # via transformers
 rsa==4.9
     # via google-auth
+safetensors==0.5.2
+    # via accelerate
+    # via transformers
 setuptools==75.8.0
 six==1.17.0
     # via docconvert
@@ -340,8 +373,12 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stack-data==0.6.3
     # via ipython
+sympy==1.13.1
+    # via torch
 tiktoken==0.8.0
     # via prompttrail
+tokenizers==0.21.0
+    # via transformers
 toml==0.10.2
     # via pyproject-autoflake
 tomli==2.2.1
@@ -350,12 +387,16 @@ tomli-w==1.1.0
     # via pydoc-markdown
 tomlkit==0.13.2
     # via pylint
+torch==2.5.1
+    # via accelerate
 tornado==6.4.2
     # via ipykernel
     # via jupyter-client
 tqdm==4.67.1
     # via google-generativeai
+    # via huggingface-hub
     # via openai
+    # via transformers
 traitlets==5.14.3
     # via comm
     # via ipykernel
@@ -363,6 +404,7 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
+transformers==4.48.0
 typeapi==2.2.3
     # via databind
 types-cachetools==5.5.0.20240820
@@ -375,12 +417,14 @@ typing-extensions==4.12.2
     # via anyio
     # via databind
     # via google-generativeai
+    # via huggingface-hub
     # via ipython
     # via mypy
     # via nr-util
     # via openai
     # via pydantic
     # via pydantic-core
+    # via torch
     # via typeapi
     # via typing-inspect
 typing-inspect==0.9.0

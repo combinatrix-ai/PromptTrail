@@ -15,6 +15,7 @@ from typing import (
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from prompttrail.core.cache import CacheProvider
+from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.mocks import MockProvider
 from prompttrail.core.utils import logger_multiline
 
@@ -201,8 +202,27 @@ class Model(BaseModel):
         ...
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        """validate_session method define the concrete procedure to validate session. You can override this method to add validation logic."""
-        ...
+        """validate_session method defines the basic validation procedure for sessions.
+
+        Validates:
+        - Session must have at least one message
+        - All messages must have string content
+        - All messages must have a sender
+
+        You can override this method to add model-specific validation logic.
+        """
+        if len(session.messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
+            )
+        if any([not isinstance(message.content, str) for message in session.messages]):
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: All message in a session should be string."
+            )
+        if any([message.sender is None for message in session.messages]):
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: All message in a session should have sender."
+            )
 
     def vaidate_other(
         self, parameters: Parameters, session: Session, is_async: bool

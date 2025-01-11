@@ -60,7 +60,7 @@ pip install -e .
     - Google Cloud (Palm)
       - [TODO] Gemini
     - Anthropic Claude
-    - [TODO] Local LLMs
+    - Local LLMs (via Transformers)
   - [Developer Tools for prompt programming](#developer-tools)
     - Mocking LLMs for testing
     - [TODO] Logging
@@ -339,8 +339,6 @@ See [documentation)](https://prompttrail.readthedocs.org/en/quickstart-agents.ht
 - [ ] repository for templates
 - [ ] job queue and server
 - [ ] asynchronous execution (more complex runner)
-- [ ] Local LLMs
-
 File an issue if you have any requests!
 
 ## License
