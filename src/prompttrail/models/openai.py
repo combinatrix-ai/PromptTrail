@@ -22,12 +22,16 @@ class OpenAIModelConfiguration(Configuration):
 
 
 class OpenAIModelParameters(Parameters):
+    """Parameters for OpenAI models.
+
+    Inherits common parameters from Parameters base class and adds OpenAI-specific parameters.
+    """
+
     model_name: str
     temperature: Optional[float] = 1.0
     max_tokens: int = 1024
     functions: Optional[Dict[str, Tool]] = None
 
-    # pydantic
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
 
@@ -123,26 +127,15 @@ class OpenAIChatCompletionModel(Model):
                 )
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if len(session.messages) == 0:
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
-            )
-        if any([not isinstance(message.content, str) for message in session.messages]):  # type: ignore
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-        if any([message.sender is None for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
-            )
+        """Validate session for OpenAI models.
+
+        Extends the base validation with OpenAI-specific role validation.
+        """
+        super().validate_session(session, is_async)
+
+        # OpenAI-specific validation for allowed roles
         allowed_senders = list(typing.get_args(OpenAIrole)) + [CONTROL_TEMPLATE_ROLE]
-        if any(
-            [
-                message.sender not in allowed_senders
-                # TODO: decide what to do with MetaTemplate (role=prompttrail)
-                for message in session.messages
-            ]
-        ):
+        if any([message.sender not in allowed_senders for message in session.messages]):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Sender should be one of {allowed_senders} in a session."
             )

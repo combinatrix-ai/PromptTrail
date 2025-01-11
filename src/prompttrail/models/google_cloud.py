@@ -35,8 +35,9 @@ class GoogleCloudChatExample(BaseModel):
 
 
 class GoogleCloudChatModelParameters(Parameters):
-    """Parameter for GoogleCloudChatModel.
+    """Parameters for Google Cloud Chat models.
 
+    Inherits common parameters from Parameters base class and adds Google Cloud-specific parameters.
     For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
     """
 
@@ -49,11 +50,14 @@ class GoogleCloudChatModelParameters(Parameters):
     top_p: Optional[float] = None
     """ Top-p value for sampling. """
     top_k: Optional[int] = None
+    """ Top-k value for sampling. """
     candidate_count: Optional[int] = None
+    """ Number of candidate responses to generate. """
     context: Optional[str] = None
+    """ Optional context to provide to the model. """
     examples: Optional[List[GoogleCloudChatExample]] = None
+    """ Optional examples to provide to the model for few-shot learning. """
 
-    # required for autodoc
     model_config = ConfigDict(protected_namespaces=())
 
 
@@ -116,22 +120,17 @@ class GoogleCloudChatModel(Model):
         return Message(content=response.text, sender="assistant")
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if len(session.messages) == 0:
+        """Validate session for Google Cloud Chat models.
+
+        Extends the base validation with Google Cloud-specific validation:
+        - No empty messages allowed (unlike OpenAI which allows them)
+        """
+        super().validate_session(session, is_async)
+
+        # Google Cloud-specific validation for empty messages
+        if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
-            )
-        if any([not isinstance(message.content, str) for message in session.messages]):  # type: ignore
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-        # TODO: OpenAI allow empty string, but Google Cloud does not. In principle, we should not allow empty string. Should we impose this restriction on OpenAI as well?
-        if any([message.content == "" for message in session.messages]):  # type: ignore
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string."
-            )
-        if any([message.sender is None for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
+                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google Cloud API restriction)"
             )
 
     def list_models(self) -> List[str]:

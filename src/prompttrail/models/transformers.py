@@ -20,13 +20,18 @@ class TransformersModelConfiguration(Configuration):
 
 
 class TransformersModelParameters(Parameters):
+    """Parameters for TransformersModel.
+
+    Inherits common parameters from Parameters base class and adds specific parameters
+    for transformer models.
+    """
+
     temperature: Optional[float] = 1.0
     max_tokens: int = 1024
     top_p: Optional[float] = 1.0
     top_k: Optional[int] = None
     repetition_penalty: Optional[float] = 1.0
 
-    # pydantic
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
 
@@ -136,18 +141,8 @@ class TransformersModel(Model):
         return TransformersStreamer(self.tokenizer)
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if len(session.messages) == 0:
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
-            )
-        if any([not isinstance(message.content, str) for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-        if any([message.sender is None for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
-            )
+        """Validate session for transformer models."""
+        super().validate_session(session, is_async)
 
     @staticmethod
     def _session_to_text(session: Session) -> str:
