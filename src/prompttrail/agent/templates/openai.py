@@ -1,5 +1,5 @@
 import json
-from typing import Generator, List, Optional, Sequence
+from typing import Generator, List, Optional, Sequence, cast
 
 from prompttrail.agent import State, StatefulMessage
 from prompttrail.agent.hooks import TransformHook
@@ -7,7 +7,11 @@ from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
 from prompttrail.agent.tools import Tool, check_arguments
 from prompttrail.core import Message
 from prompttrail.core.const import OPENAI_SYSTEM_ROLE
-from prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIrole
+from prompttrail.models.openai import (
+    OpenAIChatCompletionModel,
+    OpenAIModelParameters,
+    OpenAIrole,
+)
 
 
 class OpenAIGenerateTemplate(GenerateTemplate):
@@ -62,8 +66,10 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
 
-        temporary_parameters = runner.parameters.model_copy()
-        temporary_parameters.functions = self.functions
+        temporary_parameters = cast(
+            OpenAIModelParameters, runner.parameters.model_copy()
+        )
+        temporary_parameters.functions = self.functions  # type: ignore
 
         # 1st message: pass functions and let the model use it
         rendered_message = runner.models.send(
