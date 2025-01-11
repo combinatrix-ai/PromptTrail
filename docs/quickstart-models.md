@@ -125,7 +125,9 @@ Different from `Configuration`, `Parameters` are passed on every API call.
 Things that can change course of the conversation (e.g. model name, temperature) are passed here.
 For example, you may want to GPT-3.5 for the first message, and if the conversation is not going well, you may want to switch to GPT-4.
 
-## Try different Model
+## Try different API
+
+### Google Cloud
 
 If you want to call Google's Palm model, you can do it by changing some lines.
 
@@ -170,6 +172,8 @@ docstring is also available for almost every class and method.
 We want users to be able to write code without viewing documentation.
 ```
 
+### Anthropic
+
 Anthropic's Claude is also available:
 
 ```python
@@ -199,12 +203,67 @@ You will get the following response:
 Message(content='Hello! How can I assist you today?', sender='assistant', data={})
 ```
 
-## Stream Output
+## Try local LLMs
 
-```{Caution}
-Streaming output is currently only supported for OpenAI's API.
+One of the key features of PromptTrail is the ability to run LLMs locally using the Transformers library.
+This allows you to use any model from the HuggingFace Hub without relying on external APIs.
+
+First, install the transformers library. Please refer to the [Transformers installation guide](https://huggingface.co/docs/transformers/installation) for detailed instructions.
+
+Then you can use it like this:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from prompttrail.models.transformers import (
+    TransformersModel,
+    TransformersModelConfiguration,
+    TransformersModelParameters
+)
+from prompttrail.core import Session, Message
+
+# Load model and tokenizer from HuggingFace Hub
+model_name = "facebook/opt-125m"  # You can use any model from HuggingFace Hub
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# Create TransformersModel instance
+llm = TransformersModel(
+    configuration=TransformersModelConfiguration(
+        device="cuda"  # Use "cpu" if you don't have GPU
+    ),
+    model=model,
+    tokenizer=tokenizer
+)
+
+session = Session(
+    messages=[
+        Message(content="What is machine learning?", sender="user")
+    ]
+)
+
+# Generate response with custom parameters
+response = llm.send(
+    session=session,
+    parameters=TransformersModelParameters(
+        temperature=0.7,
+        max_tokens=100,
+        top_p=0.9,
+        top_k=50,
+        repetition_penalty=1.2
+    )
+)
 ```
 
+The TransformersModel supports various generation parameters:
+- `temperature`: Controls randomness in generation (default: 1.0)
+- `max_tokens`: Maximum number of tokens to generate (default: 1024)
+- `top_p`: Nucleus sampling parameter (default: 1.0)
+- `top_k`: Top-k sampling parameter (optional)
+- `repetition_penalty`: Penalizes repeated tokens (default: 1.0)
+
+## Stream Output
+
+Streaming output is supported for OpenAI's API and local Transformers models.
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.
 
 ```python
@@ -220,3 +279,12 @@ Hello! How can # text is incrementally typed
 ```
 
 `send_async` returns a generator that yields `Message` objects.
+
+For Transformers models, you can use streaming in the same way:
+
+```python
+for partial_response in llm.send_async(
+    session=session,
+    parameters=TransformersModelParameters(temperature=0.7)
+):
+    print(partial_response.content, end="", flush=True)
