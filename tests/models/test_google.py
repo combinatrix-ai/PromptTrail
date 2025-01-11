@@ -16,7 +16,7 @@ class TestGoogleCloud(unittest.TestCase):
         self.configuration = GoogleCloudChatModelConfiguration(
             api_key=self.api_key,
         )
-        self.use_model = "models/chat-bison-001"
+        self.use_model = "models/gemini-1.5-flash"
         self.parameters = GoogleCloudChatModelParameters(
             model_name=self.use_model,
             max_tokens=100,
@@ -44,7 +44,10 @@ class TestGoogleCloud(unittest.TestCase):
 
         # All message types
         messages = [
-            Message(content="You're a helpful assistant.", sender="system"),
+            Message(
+                content="You're a helpful assistant. When you see a response starting with 'bc:', it means it's a calculation result from a basic calculator tool. Please acknowledge and use that result.",
+                sender="system",
+            ),
             Message(content="Calculate 129183712*1271606", sender="user"),
             Message(content="bc: The answer is 12696595579352", sender="system"),
         ]
