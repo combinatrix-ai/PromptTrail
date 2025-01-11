@@ -1,10 +1,12 @@
 import logging
-from typing import Generator, List, Literal, Optional, Tuple, TYPE_CHECKING
-
-from typing import Dict
+from typing import Generator, List, Literal, Optional, Tuple
 
 from pydantic import ConfigDict
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer  # type: ignore
+from transformers import (  # type: ignore
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TextStreamer,
+)
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE

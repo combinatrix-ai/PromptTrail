@@ -11,21 +11,21 @@
 
 -e file:.
 accelerate==1.2.1
-alabaster==0.7.16
+alabaster==1.0.0
     # via sphinx
 annotated-types==0.7.0
     # via pydantic
-anthropic==0.34.0
+anthropic==0.42.0
     # via prompttrail
-anyio==4.4.0
+anyio==4.8.0
     # via anthropic
     # via httpx
     # via openai
 appnope==0.1.4
     # via ipykernel
-astroid==3.2.4
+astroid==3.3.8
     # via pylint
-asttokens==2.4.1
+asttokens==3.0.0
     # via stack-data
 autodoc-pydantic==2.2.0
 autoflake==2.3.1
@@ -36,13 +36,13 @@ black==23.12.1
     # via docspec-python
 cachetools==5.5.0
     # via google-auth
-certifi==2024.7.4
+certifi==2024.12.14
     # via httpcore
     # via httpx
     # via requests
-charset-normalizer==3.3.2
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via black
     # via mkdocs
     # via mkdocstrings
@@ -50,7 +50,7 @@ click==8.1.7
     # via pydoc-markdown
 comm==0.2.2
     # via ipykernel
-coverage==7.6.1
+coverage==7.6.10
     # via pytest-cov
 databind==4.5.2
     # via databind-core
@@ -61,20 +61,20 @@ databind-core==4.5.2
 databind-json==4.5.2
     # via docspec
     # via pydoc-markdown
-debugpy==1.8.5
+debugpy==1.8.11
     # via ipykernel
 decorator==5.1.1
     # via ipython
-deprecated==1.2.14
+deprecated==1.2.15
     # via databind
     # via docspec
     # via nr-util
-dill==0.3.8
+dill==0.3.9
     # via pylint
 distro==1.9.0
     # via anthropic
     # via openai
-docconvert==2.1.0
+docconvert==2.2.0
 docspec==2.2.1
     # via docspec-python
     # via pydoc-markdown
@@ -82,31 +82,31 @@ docspec-python==2.2.1
     # via pydoc-markdown
 docstring-parser==0.11
     # via pydoc-markdown
-docutils==0.20.1
+docutils==0.21.2
     # via myst-parser
     # via sphinx
     # via sphinx-rtd-theme
-executing==2.0.1
+executing==2.1.0
     # via stack-data
-filelock==3.15.4
+filelock==3.16.1
     # via huggingface-hub
     # via torch
     # via transformers
 flake8==7.1.1
-fsspec==2024.6.1
+fsspec==2024.12.0
     # via huggingface-hub
     # via torch
 ghp-import==2.1.0
     # via mkdocs
-google-ai-generativelanguage==0.6.6
+google-ai-generativelanguage==0.6.10
     # via google-generativeai
-google-api-core==2.19.1
+google-api-core==2.24.0
     # via google-ai-generativelanguage
     # via google-api-python-client
     # via google-generativeai
-google-api-python-client==2.141.0
+google-api-python-client==2.158.0
     # via google-generativeai
-google-auth==2.34.0
+google-auth==2.37.0
     # via google-ai-generativelanguage
     # via google-api-core
     # via google-api-python-client
@@ -114,48 +114,46 @@ google-auth==2.34.0
     # via google-generativeai
 google-auth-httplib2==0.2.0
     # via google-api-python-client
-google-generativeai==0.7.2
+google-generativeai==0.8.3
     # via prompttrail
-googleapis-common-protos==1.63.2
+googleapis-common-protos==1.66.0
     # via google-api-core
     # via grpcio-status
-grpcio==1.65.5
+grpcio==1.69.0
     # via google-api-core
     # via grpcio-status
-grpcio-status==1.62.3
+grpcio-status==1.69.0
     # via google-api-core
 h11==0.14.0
     # via httpcore
-httpcore==1.0.5
+httpcore==1.0.7
     # via httpx
 httplib2==0.22.0
     # via google-api-python-client
     # via google-auth-httplib2
-httpx==0.27.0
+httpx==0.28.1
     # via anthropic
     # via openai
-huggingface-hub==0.24.5
+huggingface-hub==0.27.1
     # via accelerate
     # via tokenizers
     # via transformers
-idna==3.7
+idna==3.10
     # via anyio
     # via httpx
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.2.0
-    # via yapf
 iniconfig==2.0.0
     # via pytest
 ipykernel==6.29.5
-ipython==8.26.0
+ipython==8.31.0
     # via ipykernel
 isort==5.13.2
     # via pylint
-jedi==0.19.1
+jedi==0.19.2
     # via ipython
-jinja2==3.1.4
+jinja2==3.1.5
     # via mkdocs
     # via mkdocstrings
     # via myst-parser
@@ -163,10 +161,10 @@ jinja2==3.1.4
     # via pydoc-markdown
     # via sphinx
     # via torch
-jiter==0.5.0
+jiter==0.8.2
     # via anthropic
     # via openai
-jupyter-client==8.6.2
+jupyter-client==8.6.3
     # via ipykernel
 jupyter-core==5.7.2
     # via ipykernel
@@ -179,7 +177,7 @@ markdown==3.7
 markdown-it-py==3.0.0
     # via mdit-py-plugins
     # via myst-parser
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via jinja2
     # via mkdocs
     # via mkdocs-autorefs
@@ -190,24 +188,24 @@ matplotlib-inline==0.1.7
 mccabe==0.7.0
     # via flake8
     # via pylint
-mdit-py-plugins==0.4.1
+mdit-py-plugins==0.4.2
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
 mergedeep==1.3.4
     # via mkdocs
     # via mkdocs-get-deps
-mkdocs==1.6.0
+mkdocs==1.6.1
     # via mkdocs-autorefs
     # via mkdocstrings
-mkdocs-autorefs==1.0.1
+mkdocs-autorefs==1.2.0
     # via mkdocstrings
 mkdocs-get-deps==0.2.0
     # via mkdocs
-mkdocstrings==0.25.2
+mkdocstrings==0.27.0
 mpmath==1.3.0
     # via sympy
-mypy==1.11.1
+mypy==1.14.1
 mypy-extensions==1.0.0
     # via black
     # via mypy
@@ -224,12 +222,12 @@ nr-stream==1.1.5
 nr-util==0.8.12
     # via docspec-python
     # via pydoc-markdown
-numpy==1.26.4
+numpy==2.2.1
     # via accelerate
     # via transformers
-openai==1.41.0
+openai==1.59.6
     # via prompttrail
-packaging==24.1
+packaging==24.2
     # via accelerate
     # via black
     # via huggingface-hub
@@ -245,7 +243,7 @@ pathspec==0.12.1
     # via mkdocs
 pexpect==4.9.0
     # via ipython
-platformdirs==4.2.2
+platformdirs==4.3.6
     # via black
     # via jupyter-core
     # via mkdocs-get-deps
@@ -254,60 +252,60 @@ platformdirs==4.2.2
     # via yapf
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via ipython
-proto-plus==1.24.0
+proto-plus==1.25.0
     # via google-ai-generativelanguage
     # via google-api-core
-protobuf==4.25.4
+protobuf==5.29.3
     # via google-ai-generativelanguage
     # via google-api-core
     # via google-generativeai
     # via googleapis-common-protos
     # via grpcio-status
     # via proto-plus
-psutil==6.0.0
+psutil==6.1.1
     # via accelerate
     # via ipykernel
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
-pyasn1==0.6.0
+pyasn1==0.6.1
     # via pyasn1-modules
     # via rsa
-pyasn1-modules==0.4.0
+pyasn1-modules==0.4.1
     # via google-auth
 pycodestyle==2.12.1
     # via flake8
-pydantic==2.8.2
+pydantic==2.10.5
     # via anthropic
     # via autodoc-pydantic
     # via google-generativeai
     # via openai
     # via prompttrail
     # via pydantic-settings
-pydantic-core==2.20.1
+pydantic-core==2.27.2
     # via pydantic
-pydantic-settings==2.4.0
+pydantic-settings==2.7.1
     # via autodoc-pydantic
 pydoc-markdown==4.8.2
 pyflakes==3.2.0
     # via autoflake
     # via flake8
-pygments==2.18.0
+pygments==2.19.1
     # via ipython
     # via sphinx
-pylint==3.2.6
-pymdown-extensions==10.9
+pylint==3.3.3
+pymdown-extensions==10.14
     # via mkdocstrings
 pyment==0.3.3
-pyparsing==3.1.2
+pyparsing==3.2.1
     # via httplib2
 pyproject-autoflake==1.0.2
-pytest==8.3.2
+pytest==8.3.4
     # via pytest-cov
-pytest-cov==5.0.0
+pytest-cov==6.0.0
 python-dateutil==2.9.0.post0
     # via ghp-import
     # via jupyter-client
@@ -325,10 +323,10 @@ pyyaml==6.0.2
     # via transformers
 pyyaml-env-tag==0.1
     # via mkdocs
-pyzmq==26.1.0
+pyzmq==26.2.0
     # via ipykernel
     # via jupyter-client
-regex==2024.7.24
+regex==2024.11.6
     # via tiktoken
     # via transformers
 requests==2.32.3
@@ -340,27 +338,25 @@ requests==2.32.3
     # via transformers
 rsa==4.9
     # via google-auth
-safetensors==0.4.4
+safetensors==0.5.2
     # via accelerate
     # via transformers
-setuptools==72.2.0
-six==1.16.0
-    # via asttokens
+setuptools==75.8.0
+six==1.17.0
     # via docconvert
     # via python-dateutil
 sniffio==1.3.1
     # via anthropic
     # via anyio
-    # via httpx
     # via openai
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.4.7
+sphinx==8.1.3
     # via autodoc-pydantic
     # via myst-parser
     # via sphinx-rtd-theme
     # via sphinxcontrib-jquery
-sphinx-rtd-theme==2.0.0
+sphinx-rtd-theme==3.0.2
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -379,26 +375,24 @@ stack-data==0.6.3
     # via ipython
 sympy==1.13.1
     # via torch
-tiktoken==0.7.0
+tiktoken==0.8.0
     # via prompttrail
-tokenizers==0.19.1
-    # via anthropic
+tokenizers==0.21.0
     # via transformers
 toml==0.10.2
     # via pyproject-autoflake
-tomli==2.0.1
+tomli==2.2.1
     # via pydoc-markdown
-    # via yapf
-tomli-w==1.0.0
+tomli-w==1.1.0
     # via pydoc-markdown
 tomlkit==0.13.2
     # via pylint
 torch==2.5.1
     # via accelerate
-tornado==6.4.1
+tornado==6.4.2
     # via ipykernel
     # via jupyter-client
-tqdm==4.66.5
+tqdm==4.67.1
     # via google-generativeai
     # via huggingface-hub
     # via openai
@@ -410,14 +404,17 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
-transformers==4.44.2
+transformers==4.48.0
 typeapi==2.2.3
     # via databind
-types-cachetools==5.4.0.20240717
+types-cachetools==5.5.0.20240820
     # via prompttrail
-types-tqdm==4.66.0.20240417
+types-requests==2.32.0.20241016
+    # via types-tqdm
+types-tqdm==4.67.0.20241221
 typing-extensions==4.12.2
     # via anthropic
+    # via anyio
     # via databind
     # via google-generativeai
     # via huggingface-hub
@@ -434,16 +431,15 @@ typing-inspect==0.9.0
     # via prompttrail
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==2.2.2
+urllib3==2.3.0
     # via requests
-watchdog==4.0.2
+    # via types-requests
+watchdog==6.0.0
     # via mkdocs
     # via pydoc-markdown
 wcwidth==0.2.13
     # via prompt-toolkit
-wrapt==1.16.0
+wrapt==1.17.1
     # via deprecated
-yapf==0.40.2
+yapf==0.43.0
     # via pydoc-markdown
-zipp==3.20.0
-    # via importlib-metadata

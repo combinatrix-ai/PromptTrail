@@ -1,5 +1,5 @@
 import json
-from typing import Generator, List, Optional, Sequence
+from typing import Generator, List, Optional, Sequence, cast
 
 from prompttrail.agent import State, StatefulMessage
 from prompttrail.agent.hooks import TransformHook
@@ -66,10 +66,9 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
 
-        if not isinstance(runner.parameters, OpenAIModelParameters):
-            raise ValueError("Parameters must be an instance of OpenAIModelParameters")
-
-        temporary_parameters = runner.parameters.model_copy()
+        temporary_parameters = cast(
+            OpenAIModelParameters, runner.parameters.model_copy()
+        )
         temporary_parameters.functions = self.functions  # type: ignore
 
         # 1st message: pass functions and let the model use it

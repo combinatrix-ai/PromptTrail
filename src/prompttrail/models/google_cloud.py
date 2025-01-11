@@ -3,10 +3,7 @@ from pprint import pformat
 from typing import List, Optional
 
 import google.generativeai as palm  # type: ignore
-from google.generativeai.types.discuss_types import (  # type: ignore
-    ChatResponse,
-    MessageDict,
-)
+import google.generativeai.types as gai_types  # type: ignore
 from pydantic import BaseModel, ConfigDict  # type: ignore
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
@@ -43,8 +40,8 @@ class GoogleCloudChatModelParameters(Parameters):
     For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
     """
 
-    model_name: str = "models/chat-bison-001"
-    """ Name of the model to use. use GoogleCloudChatModel.list_models() to get the list of available models. """
+    model_name: str = "models/gemini-1.5-flash"
+    """ Name of the model to use. Use GoogleCloudChatModel.list_models() to get the list of available models. Default is set to a lightweight model for faster responses. """
     temperature: Optional[float] = 1.0
     """ Temperature for sampling. """
     max_tokens: Optional[int] = 1024
@@ -80,29 +77,43 @@ class GoogleCloudChatModel(Model):
                 f"{GoogleCloudChatModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
-        response: ChatResponse = palm.chat(  # type: ignore
-            model=parameters.model_name,
-            context=parameters.context,
-            examples=[
-                (example.prompt, example.response) for example in parameters.examples
-            ]
-            if parameters.examples is not None and len(parameters.examples) > 0
-            else None,
-            messages=[MessageDict(content=message.content, author=message.sender) for message in session.messages],  # type: ignore #TODO: More robust error handling
-            temperature=parameters.temperature,
-            candidate_count=parameters.candidate_count,
-            top_p=parameters.top_p,
-            top_k=parameters.top_k,
-            prompt=None,  # TODO: Figure out this is the best way to handle this
-        )
-        logger.debug(pformat(object=response))  # type: ignore
-        if len(response.candidates) == 0:  # type: ignore
-            if hasattr(response, "filters") and len(response.filters) > 0:  # type: ignore
-                raise ProviderResponseError(f"Blocked: {response.filters}", response=response)  # type: ignore
-            raise ProviderResponseError("No candidates returned.", response=response)  # type: ignore
+        model = palm.GenerativeModel(parameters.model_name)
+        chat = model.start_chat()
 
-        message = response.candidates[0]  # type: ignore #TODO: More robust error handling
-        return Message(content=message["content"], sender=message["author"])  # type: ignore #TODO: More robust error handling
+        # Set context if provided
+        if parameters.context:
+            chat.send_message(parameters.context)
+
+        # Set examples if provided
+        if parameters.examples is not None and len(parameters.examples) > 0:
+            for example in parameters.examples:
+                chat.send_message(example.prompt)
+                chat.send_message(example.response)
+
+        # Send all messages in the session
+        for message in session.messages[:-1]:  # Send all but the last message
+            chat.send_message(message.content)
+
+        # Send the last message with generation config
+        response = chat.send_message(
+            session.messages[-1].content,
+            generation_config=palm.types.GenerationConfig(
+                temperature=parameters.temperature,
+                candidate_count=parameters.candidate_count,
+                top_p=parameters.top_p,
+                top_k=parameters.top_k,
+                max_output_tokens=parameters.max_tokens,
+            ),
+        )
+        logger.debug(pformat(object=response))
+        if response.prompt_feedback.block_reason:
+            raise ProviderResponseError(
+                f"Blocked: {response.prompt_feedback.block_reason}", response=response
+            )
+        if not response.text:
+            raise ProviderResponseError("No response text returned.", response=response)
+
+        return Message(content=response.text, sender="assistant")
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         if len(session.messages) == 0:
@@ -125,5 +136,5 @@ class GoogleCloudChatModel(Model):
 
     def list_models(self) -> List[str]:
         self._authenticate()
-        response: List[palm.models] = palm.list_models()  # type: ignore
-        return [model.name for model in response]  # type: ignore
+        models = palm.list_models()
+        return [model.name for model in models]

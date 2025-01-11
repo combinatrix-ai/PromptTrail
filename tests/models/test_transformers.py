@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
@@ -84,7 +85,7 @@ def test_validate_session(mock_model):
 
 def test_small_llm_on_cpu():
     """Test using a small LLM (sshleifer/tiny-gpt2) running on CPU"""
-    from transformers import AutoTokenizer, AutoModelForCausalLM  # type: ignore
+    from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 
     # Load model and tokenizer (low memory settings)
     model_name = "sshleifer/tiny-gpt2"

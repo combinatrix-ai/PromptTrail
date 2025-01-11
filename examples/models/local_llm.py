@@ -1,4 +1,5 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM  # type: ignore
+from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
+
 from prompttrail.core import Message, Session
 from prompttrail.models.transformers import (
     TransformersModel,
