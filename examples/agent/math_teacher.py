@@ -69,7 +69,7 @@ runner = CommandLineRunner(
             api_key=os.environ.get("OPENAI_API_KEY", "")
         )
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-4"),
+    parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
     template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )

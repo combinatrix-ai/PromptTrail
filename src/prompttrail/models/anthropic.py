@@ -142,12 +142,8 @@ class AnthropicClaudeModel(Model):
             return ([{"role": message.sender, "content": message.content} for message in messages], None)  # type: ignore
 
     def list_models(self) -> List[str]:
-        # see https://github.com/anthropics/anthropic-sdk-python/blob/main/src/anthropic/types/message_create_params.py#L115C1-L122C15
-        return [
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307",
-            "claude-2.1'",
-            "claude-2.0",
-            "claude-instant-1.2",
-        ]
+        self._authenticate()
+        if self.client is None:
+            raise RuntimeError("Failed to initialize Anthropic client")
+        models = self.client.models.list()
+        return [model.id for model in models.data]

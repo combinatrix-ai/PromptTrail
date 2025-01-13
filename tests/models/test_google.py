@@ -55,7 +55,9 @@ class TestGoogleCloud(unittest.TestCase):
         response = self.models.send(self.parameters, session)
         self.assertIsInstance(response, Message)
         self.assertIsInstance(response.content, str)
-        self.assertIn("12696595579352", response.content)
+        # TODO: Change problem. Sometimes the response has a comma, sometimes not.
+        response_without_comma = response.content.replace(",", "")
+        self.assertIn("12696595579352", response_without_comma)
 
         # malformed session
         with self.assertRaises(ParameterValidationError):
