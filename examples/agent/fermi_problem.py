@@ -180,7 +180,7 @@ if not is_in_test_env():
                 api_key=os.environ.get("OPENAI_API_KEY", "")
             )
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4"),
+        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
         template=agent_template,
         user_interaction_provider=UserInteractionTextCLIProvider(),
     )
@@ -225,7 +225,7 @@ else:
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4"),
+        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
         template=agent_template,
     )
     if __name__ == "__main__":
