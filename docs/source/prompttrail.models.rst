@@ -28,6 +28,14 @@ prompttrail.models.openai module
    :undoc-members:
    :show-inheritance:
 
+prompttrail.models.transformers module
+--------------------------------------
+
+.. automodule:: prompttrail.models.transformers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
