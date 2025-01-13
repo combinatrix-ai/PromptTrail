@@ -81,6 +81,10 @@ class AnthropicClaudeModel(Model):
 
         # TODO: should handle non-text response in future
         content = "".join([block.text for block in response.content])
+        # TODO: Change to error that can be retriable
+        if content == "":
+            raise ValueError("Response is empty.")
+
         return Message(content=content, sender=response.role)
 
     def validate_session(self, session: Session, is_async: bool) -> None:
@@ -93,13 +97,32 @@ class AnthropicClaudeModel(Model):
         """
         super().validate_session(session, is_async)
 
+        # Anthropic-specific validation for checking at least one non-system message
+
+        # Filter out control template messages
+        messages = [
+            message
+            for message in session.messages
+            if message.sender != CONTROL_TEMPLATE_ROLE
+        ]
+
+        non_system_messages = [
+            message for message in messages if message.sender != "system"
+        ]
+        if len(non_system_messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session must contain at least one non-system message."
+            )
+
+        # Anthropic API allow zero or one system message at the beginning
+
         # Anthropic-specific validation for system message
         if (
-            session.messages[0].sender == "system"
-            and len(
-                [message for message in session.messages if message.sender == "system"]
-            )
-            > 1
+            messages[0].sender == "system"
+            and len([message for message in messages if message.sender == "system"]) > 1
+        ) or (
+            messages[0].sender != "system"
+            and len([message for message in messages if message.sender == "system"]) > 0
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
@@ -109,17 +132,21 @@ class AnthropicClaudeModel(Model):
         if any(
             [
                 message.sender not in ["user", "assistant", "system"]
-                for message in session.messages
+                for message in messages
             ]
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should have sender of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
             )
+        if any([not isinstance(message.content, str) for message in messages]):  # type: ignore
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: All message in a session should be string."
+            )
 
         # Anthropic-specific validation for empty messages
         if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google Cloud API restriction)"
+                f"{self.__class__.__name__}: All message in a session should not be empty string. (Anthoropic API restriction)"
             )
 
     @staticmethod
@@ -136,19 +163,24 @@ class AnthropicClaudeModel(Model):
         # if system message
         if messages[0].sender == "system":
             return (
-                [{"role": message.sender, "content": message.content} for message in messages[1:]],  # type: ignore
+                [
+                    {"role": message.sender, "content": message.content}  # type: ignore
+                    for message in messages[1:]
+                ],  # type: ignore
                 messages[0].content,
             )
         else:
-            return ([{"role": message.sender, "content": message.content} for message in messages], None)  # type: ignore
+            return (
+                [
+                    {"role": message.sender, "content": message.content}  # type: ignore
+                    for message in messages
+                ],
+                None,
+            )  # type: ignore
 
     def list_models(self) -> List[str]:
-        # see https://github.com/anthropics/anthropic-sdk-python/blob/main/src/anthropic/types/message_create_params.py#L115C1-L122C15
-        return [
-            "claude-3-opus-20240229",
-            "claude-3-sonnet-20240229",
-            "claude-3-haiku-20240307",
-            "claude-2.1'",
-            "claude-2.0",
-            "claude-instant-1.2",
-        ]
+        self._authenticate()
+        if self.client is None:
+            raise RuntimeError("Failed to initialize Anthropic client")
+        models = self.client.models.list()
+        return [model.id for model in models.data]

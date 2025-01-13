@@ -77,8 +77,8 @@ lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples"
 test = "pytest --log-cli-level=DEBUG --cov=src --cov-report=xml tests"
 doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
-"doc:prep" = "sphinx-apidoc --implicit-namespaces -F -o docs/source src/prompttrail"
-"doc:rm" = "rm -rf docs/build"
+"doc:prep" = "sphinx-apidoc --implicit-namespaces -f -o docs/source src/prompttrail"
+"doc:rm" = "rm -rf docs/build docs/source/modules.rst"
 "doc:build" = "sphinx-build -b html docs/source docs/build"
 pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"

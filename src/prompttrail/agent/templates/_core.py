@@ -55,6 +55,7 @@ class Template(object, metaclass=ABCMeta):
         return logging.getLogger(__name__ + "." + str(self.template_id))
 
     def render(self, state: "State") -> Generator[Message, None, State]:
+        logging.debug(f"Rendering {self.template_id}")
         state.stack.append(self.create_stack(state))  # type: ignore
         try:
             for hook in self.before_transform:
@@ -74,6 +75,7 @@ class Template(object, metaclass=ABCMeta):
             raise e
         finally:
             state.stack.pop()  # type: ignore
+        logging.debug(f"Rendered {self.template_id}")
         return res
 
     @abstractmethod
