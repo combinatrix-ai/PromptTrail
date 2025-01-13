@@ -150,7 +150,7 @@ class AnthropicClaudeModel(Model):
         if messages[0].sender == "system":
             return (
                 [
-                    {"role": message.sender, "content": message.content} # type: ignore
+                    {"role": message.sender, "content": message.content}  # type: ignore
                     for message in messages[1:]
                 ],  # type: ignore
                 messages[0].content,
@@ -158,7 +158,7 @@ class AnthropicClaudeModel(Model):
         else:
             return (
                 [
-                    {"role": message.sender, "content": message.content} # type: ignore
+                    {"role": message.sender, "content": message.content}  # type: ignore
                     for message in messages
                 ],
                 None,

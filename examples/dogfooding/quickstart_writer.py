@@ -76,3 +76,5 @@ initial_state = State(
 )
 state = runner.run(state=initial_state)
 last_message = state.get_last_message().content
+
+print(last_message)
