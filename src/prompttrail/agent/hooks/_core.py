@@ -31,7 +31,7 @@ class TransformHook(Hook):
     A hook that transforms the state of the conversation.
     """
 
-    def __init__(self, function: Callable[[State], State]):
+    def __init__(self, function: Optional[Callable[[State], State]] = None):
         self.function = function
 
     def hook(self, state: State) -> State:
@@ -44,6 +44,10 @@ class TransformHook(Hook):
         Returns:
             The modified state.
         """
+        if self.function is None:
+            raise ValueError(
+                "function is not set. TransformHook can be used two ways. 1. Set function in the constructor. 2. Inherit TransformHook and override hook method."
+            )
         return self.function(state)
 
 

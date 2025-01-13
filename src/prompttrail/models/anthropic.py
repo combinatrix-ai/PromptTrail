@@ -79,6 +79,10 @@ class AnthropicClaudeModel(Model):
 
         # TODO: should handle non-text response in future
         content = "".join([block.text for block in response.content])
+        # TODO: Change to error that can be retriable
+        if content == "":
+            raise ValueError("Response is empty.")
+
         return Message(content=content, sender=response.role)
 
     def validate_session(self, session: Session, is_async: bool) -> None:
@@ -128,7 +132,7 @@ class AnthropicClaudeModel(Model):
         # TODO: OpenAI allow empty string, but Google Cloud does not. In principle, we should not allow empty string. Should we impose this restriction on OpenAI as well?
         if any([message.content == "" for message in messages]):  # type: ignore
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google Cloud API restriction)"
+                f"{self.__class__.__name__}: All message in a session should not be empty string. (Anthoropic API restriction)"
             )
         if any([message.sender is None for message in messages]):
             raise ParameterValidationError(
