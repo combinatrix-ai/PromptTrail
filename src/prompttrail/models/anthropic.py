@@ -20,8 +20,9 @@ class AnthropicClaudeModelConfiguration(Configuration):
 
 
 class AnthropicClaudeModelParameters(Parameters):
-    """Parameter for AnthoropicClaudeModel.
+    """Parameters for Anthropic Claude models.
 
+    Inherits common parameters from Parameters base class and adds Anthropic-specific parameters.
     For detailed description of each parameter, see https://github.com/anthropics/anthropic-sdk-python/blob/main/api.md
     """
 
@@ -34,6 +35,7 @@ class AnthropicClaudeModelParameters(Parameters):
     top_p: Optional[float] = None
     """ Top-p value for sampling. """
     top_k: Optional[int] = None
+    """ Top-k value for sampling. """
 
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
@@ -86,10 +88,16 @@ class AnthropicClaudeModel(Model):
         return Message(content=content, sender=response.role)
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        if len(session.messages) == 0:
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
-            )
+        """Validate session for Anthropic Claude models.
+
+        Extends the base validation with Anthropic-specific validations:
+        - At most one system message at the beginning
+        - Only specific roles allowed
+        - No empty messages
+        """
+        super().validate_session(session, is_async)
+
+        # Anthropic-specific validation for checking at least one non-system message
 
         # Filter out control template messages
         messages = [
@@ -98,7 +106,6 @@ class AnthropicClaudeModel(Model):
             if message.sender != CONTROL_TEMPLATE_ROLE
         ]
 
-        # Check if there's at least one non-system message
         non_system_messages = [
             message for message in messages if message.sender != "system"
         ]
@@ -108,14 +115,20 @@ class AnthropicClaudeModel(Model):
             )
 
         # Anthropic API allow zero or one system message at the beginning
+
+        # Anthropic-specific validation for system message
         if (
             messages[0].sender == "system"
             and len([message for message in messages if message.sender == "system"]) > 1
+        ) or (
+            messages[0].sender != "system"
+            and len([message for message in messages if message.sender == "system"]) > 0
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
             )
-        # Anthropic API allow only "user", "assistant", and "system" as sender
+
+        # Anthropic-specific validation for allowed roles
         if any(
             [
                 message.sender not in ["user", "assistant", "system"]
@@ -129,14 +142,11 @@ class AnthropicClaudeModel(Model):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
-        # TODO: OpenAI allow empty string, but Google Cloud does not. In principle, we should not allow empty string. Should we impose this restriction on OpenAI as well?
-        if any([message.content == "" for message in messages]):  # type: ignore
+
+        # Anthropic-specific validation for empty messages
+        if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should not be empty string. (Anthoropic API restriction)"
-            )
-        if any([message.sender is None for message in messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
             )
 
     @staticmethod
