@@ -86,6 +86,28 @@ class TestAnthropic(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, Session(messages=[]))
 
+        # Test system message only (should raise error)
+        with self.assertRaises(ParameterValidationError):
+            self.model.send(
+                self.parameters,
+                Session(
+                    messages=[
+                        Message(content="You're a helpful assistant.", sender="system")
+                    ]
+                ),
+            )
+
+        # Test valid system message with user message
+        messages = [
+            Message(content="You're a helpful assistant.", sender="system"),
+            Message(content="What is 2+2?", sender="user"),
+        ]
+        session = Session(messages=messages)
+        response = self.model.send(self.parameters, session)
+        self.assertIsInstance(response, Message)
+        self.assertIsInstance(response.content, str)
+        self.assertIn("4", response.content)
+
 
 if __name__ == "__main__":
     unittest.main()

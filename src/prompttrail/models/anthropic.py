@@ -86,13 +86,27 @@ class AnthropicClaudeModel(Model):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
             )
+
+        # Filter out control template messages
+        messages = [
+            message
+            for message in session.messages
+            if message.sender != CONTROL_TEMPLATE_ROLE
+        ]
+
+        # Check if there's at least one non-system message
+        non_system_messages = [
+            message for message in messages if message.sender != "system"
+        ]
+        if len(non_system_messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session must contain at least one non-system message."
+            )
+
         # Anthropic API allow zero or one system message at the beginning
         if (
-            session.messages[0].sender == "system"
-            and len(
-                [message for message in session.messages if message.sender == "system"]
-            )
-            > 1
+            messages[0].sender == "system"
+            and len([message for message in messages if message.sender == "system"]) > 1
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
@@ -101,22 +115,22 @@ class AnthropicClaudeModel(Model):
         if any(
             [
                 message.sender not in ["user", "assistant", "system"]
-                for message in session.messages
+                for message in messages
             ]
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should have sender of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
             )
-        if any([not isinstance(message.content, str) for message in session.messages]):  # type: ignore
+        if any([not isinstance(message.content, str) for message in messages]):  # type: ignore
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
         # TODO: OpenAI allow empty string, but Google Cloud does not. In principle, we should not allow empty string. Should we impose this restriction on OpenAI as well?
-        if any([message.content == "" for message in session.messages]):  # type: ignore
+        if any([message.content == "" for message in messages]):  # type: ignore
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should not be empty string. (Google Cloud API restriction)"
             )
-        if any([message.sender is None for message in session.messages]):
+        if any([message.sender is None for message in messages]):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should have sender."
             )
@@ -135,11 +149,20 @@ class AnthropicClaudeModel(Model):
         # if system message
         if messages[0].sender == "system":
             return (
-                [{"role": message.sender, "content": message.content} for message in messages[1:]],  # type: ignore
+                [
+                    {"role": message.sender, "content": message.content} # type: ignore
+                    for message in messages[1:]
+                ],  # type: ignore
                 messages[0].content,
             )
         else:
-            return ([{"role": message.sender, "content": message.content} for message in messages], None)  # type: ignore
+            return (
+                [
+                    {"role": message.sender, "content": message.content} # type: ignore
+                    for message in messages
+                ],
+                None,
+            )  # type: ignore
 
     def list_models(self) -> List[str]:
         self._authenticate()
