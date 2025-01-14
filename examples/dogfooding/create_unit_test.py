@@ -7,7 +7,7 @@ from typing import List, Optional
 
 import click
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate
 from prompttrail.agent.templates.openai import (
@@ -15,6 +15,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -120,15 +121,20 @@ def main(
 
     load_file_content = open(load_file, "r")
     context_file_contents = {x: open(x, mode="r").read() for x in context_files}
-    initial_state = State(
-        data={
-            "code": load_file_content.read(),
-            "context_files": context_file_contents,
-            "description": description,
-        }
+    initial_session = Session()
+    initial_session.append(
+        Message(
+            content="",
+            sender="system",
+            metadata={
+                "code": load_file_content.read(),
+                "context_files": context_file_contents,
+                "description": description,
+            },
+        )
     )
-    state = runner.run(state=initial_state)
-    last_message = state.get_last_message()
+    session = runner.run(session=initial_session)
+    last_message = session.get_last()
     print(last_message.content)
     if len(sys.argv) > 2:
         save_file_io = open(save_file, "w")

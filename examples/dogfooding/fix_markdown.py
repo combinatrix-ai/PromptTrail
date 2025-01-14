@@ -3,7 +3,6 @@
 
 import os
 
-from prompttrail.agent import State
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate
 from prompttrail.agent.templates.openai import (
@@ -11,6 +10,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message, Session
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -77,9 +77,10 @@ def main(
     corrected_splits: list[str] = []
     for split in splits:
         content = "\n".join(split)
-        initial_state = State(data={"content": content})
-        state = runner.run(state=initial_state)
-        last_message = state.get_last_message()
+        initial_session = Session()
+        initial_session.append(Message(content="", metadata={"content": content}))
+        session = runner.run(session=initial_session)
+        last_message = session.get_last_message()
         content = last_message.content
         print(content)
         corrected_splits.append(content)

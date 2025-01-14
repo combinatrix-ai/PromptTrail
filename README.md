@@ -178,7 +178,7 @@ template = LinearTemplate(
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda state: ("END" == state.get_last_message().content.strip())
+                condition=lambda session: ("END" == session.get_last_message().content.strip())
             ),
         ),
     ],
@@ -281,7 +281,7 @@ class WeatherForecastTool(Tool):
     argument_types = [Place, TemperatureUnit]
     result_type = WeatherForecastResult
 
-    def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
         # Implement real API call here
         return WeatherForecastResult(temperature=0, weather="sunny")
 
