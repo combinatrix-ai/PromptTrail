@@ -1,7 +1,7 @@
 import logging
 import re
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.agent.hooks._core import TransformHook
 from prompttrail.core.utils import hook_logger
 
@@ -18,24 +18,25 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
         self.key = key
         self.lang = lang
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Extract the code block from the last message in the state.
+        Extract the code block from the last message in the session.
 
         Args:
-            state (State): The current state.
+            session (Session): The current session.
 
         Returns:
-            State: The updated state.
+            Session: The updated session.
         """
-        markdown = state.get_last_message().content
+        markdown = session.get_last().content
         match = re.search(r"```" + self.lang + r"\n(.+?)```", markdown, re.DOTALL)
         if match:
             code_block = match.group(1)
         else:
             code_block = None
-        state.data[self.key] = code_block
-        return state
+        metadata = session.get_latest_metadata()
+        metadata[self.key] = code_block
+        return session
 
 
 class EvaluatePythonCodeHook(TransformHook):
@@ -50,25 +51,20 @@ class EvaluatePythonCodeHook(TransformHook):
         self.key = key
         self.code_key = code
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Evaluate the Python code block and store the result in the state.
+        Evaluate the Python code block and store the result in the session.
 
         Args:
-            state (State): The current state.
+            session (Session): The current session.
 
         Returns:
-            State: The updated state.
+            Session: The updated session.
         """
-        python_segment = state.data[self.code_key]
-        if python_segment is None:
-            hook_logger(
-                self,
-                state,
-                f"No code block found for key {self.key}",
-                level=logging.WARNING,
-            )
-            return state
+        metadata = session.get_latest_metadata()
+        if self.code_key not in metadata:
+            raise KeyError(f"Code key {self.code_key} not found in metadata")
+        python_segment = metadata[self.code_key]
         lines = python_segment.splitlines()
         if len(lines) > 0:
             leading_spaces = [len(line) - len(line.lstrip()) for line in lines]
@@ -81,10 +77,10 @@ class EvaluatePythonCodeHook(TransformHook):
         except Exception as e:
             hook_logger(
                 self,
-                state,
+                session,
                 f"Failed to evaluate python code: {python_segment}",
                 level=logging.WARNING,
             )
             raise e
-        state.data[self.key] = answer
-        return state
+        metadata[self.key] = answer
+        return session

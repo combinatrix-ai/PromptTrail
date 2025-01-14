@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Sequence, Type, TypeAlias, Union
 from pydantic import BaseModel
 from typing_inspect import get_args, is_optional_type  # type: ignore
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 
 logger = logging.getLogger(__name__)
 
@@ -194,12 +194,12 @@ class Tool(object, metaclass=ABCMeta):
     result_type: Type[ToolResult]
 
     @abstractmethod
-    def _call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], session: "Session") -> ToolResult:
         """This method should be implemented by the user. This method is the actual function of the tool. Return the result of the tool as the user defined class that inherits `ToolResult`.
 
         Args:
             args (Sequence[ToolArgument]): The arguments returned by the API.
-            state (State): The current state of the agent.
+            session (Session): The current session of the conversation.
 
         Returns:
             ToolResult: The result of the tool.
@@ -207,12 +207,12 @@ class Tool(object, metaclass=ABCMeta):
 
         ...
 
-    def call(self, args: Sequence[ToolArgument], state: "State") -> ToolResult:
+    def call(self, args: Sequence[ToolArgument], session: "Session") -> ToolResult:
         """Call the function and return the result based on the args returned by the API. This method is usually not overriden by the user.
 
         Args:
             args (Sequence[ToolArgument]): The arguments returned by the API.
-            state (State): The current state of the agent.
+            session (Session): The current session of the conversation.
 
         Returns:
             ToolResult: The result of the tool.
@@ -229,7 +229,7 @@ class Tool(object, metaclass=ABCMeta):
                     missing_predefs.append(arg_predef)  # type: ignore
             if flag:
                 raise ValueError("Missing required arguments", missing_predefs)
-        result = self._call(args, state)
+        result = self._call(args, session)
         if not isinstance(result, self.result_type):
             raise ValueError("Invalid result type")
         return result

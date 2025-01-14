@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from typing import Any, Callable, Optional
 
-from prompttrail.agent import State
+from prompttrail.core import Session
 
 logger = logging.getLogger(__name__)
 
@@ -13,42 +13,42 @@ class Hook(object):
     """
 
     @abstractmethod
-    def hook(self, state: State) -> Any:
+    def hook(self, session: Session) -> Any:
         """
         The hook method that is called during the execution of the template.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state or any other value depending on the hook implementation.
+            The modified session or any other value depending on the hook implementation.
         """
         raise NotImplementedError("hook method is not implemented")
 
 
 class TransformHook(Hook):
     """
-    A hook that transforms the state of the conversation.
+    A hook that transforms the session of the conversation.
     """
 
-    def __init__(self, function: Optional[Callable[[State], State]] = None):
+    def __init__(self, function: Optional[Callable[[Session], Session]] = None):
         self.function = function
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Transforms the state of the conversation using the provided function.
+        Transforms the session of the conversation using the provided function.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
         if self.function is None:
             raise ValueError(
                 "function is not set. TransformHook can be used two ways. 1. Set function in the constructor. 2. Inherit TransformHook and override hook method."
             )
-        return self.function(state)
+        return self.function(session)
 
 
 class BooleanHook(Hook):
@@ -56,20 +56,20 @@ class BooleanHook(Hook):
     A hook that evaluates a boolean condition.
     """
 
-    def __init__(self, condition: Callable[[State], bool]):
+    def __init__(self, condition: Callable[[Session], bool]):
         self.condition = condition
 
-    def hook(self, state: State) -> bool:
+    def hook(self, session: Session) -> bool:
         """
-        Evaluates the boolean condition using the current state of the conversation.
+        Evaluates the boolean condition using the current session of the conversation.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
             The result of the boolean condition evaluation.
         """
-        return self.condition(state)
+        return self.condition(session)
 
 
 class AskUserHook(TransformHook):
@@ -87,27 +87,28 @@ class AskUserHook(TransformHook):
         self.description = description
         self.default = default
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Asks the user for input and stores the result in the state.
+        Asks the user for input and stores the result in the session metadata.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
         # show user a prompt on console
         raw = input(self.description).strip()
         if raw == "" and self.default is not None:
             raw = self.default
-        state.data[self.key] = raw
-        return state
+        metadata = session.get_latest_metadata()
+        metadata[self.key] = raw
+        return session
 
 
 class GenerateChatHook(TransformHook):
     """
-    A hook that generates a chat message using the LLM model and stores the result in the state.
+    A hook that generates a chat message using the LLM model and stores the result in the session metadata.
     """
 
     def __init__(
@@ -116,53 +117,53 @@ class GenerateChatHook(TransformHook):
     ):
         self.key = key
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Generates a chat message using the LLM model and stores the result in the state.
+        Generates a chat message using the LLM model and stores the result in the session metadata.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
-        if state.runner is None:
+        if session.runner is None:
             raise ValueError(
-                "Runner must be given to use GenerateChatHook. Please set runner to the state."
+                "Runner must be given to use GenerateChatHook. Please set runner to the session."
             )
-        message = state.runner.models.send(
-            state.runner.parameters, state.session_history
-        )
-        state.data[self.key] = message.content
-        return state
+        message = session.runner.models.send(session.runner.parameters, session)
+        metadata = session.get_latest_metadata()
+        metadata[self.key] = message.content
+        return session
 
 
 class CountUpHook(TransformHook):
     """
-    A hook that counts up a value in the state.
+    A hook that counts up a value in the session metadata.
     """
 
     def __init__(self):
         pass  # No configuration is needed here.
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Counts up a value in the state.
+        Counts up a value in the session metadata.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
-        template_id = state.get_current_template_id()
+        template_id = session.get_current_template_id()
         if template_id is None:
             raise ValueError("template_id is not set")
-        if template_id not in state.data:
-            state.data[template_id] = 0
+        metadata = session.get_latest_metadata()
+        if template_id not in metadata:
+            metadata[template_id] = 0
         else:
-            state.data[template_id] += 1
-        return state
+            metadata[template_id] += 1
+        return session
 
 
 class DebugHook(TransformHook):
@@ -173,38 +174,39 @@ class DebugHook(TransformHook):
     def __init__(self, message_shown_when_called: str):
         self.message = message_shown_when_called
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
         Prints debug information during the execution of the template.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
-        print(self.message + " template_id: " + str(state.get_current_template_id()))
-        print(self.message + " data: " + str(state.data))
-        return state
+        print(self.message + " template_id: " + str(session.get_current_template_id()))
+        print(self.message + " metadata: " + str(session.get_latest_metadata()))
+        return session
 
 
 class ResetDataHook(TransformHook):
     """
-    A hook that resets the data in the state.
+    A hook that resets the metadata in the session.
     """
 
     def __init__(self):
         pass  # No configuration is needed here.
 
-    def hook(self, state: State) -> State:
+    def hook(self, session: Session) -> Session:
         """
-        Resets the data in the state.
+        Resets the metadata in the session.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
-            The modified state.
+            The modified session.
         """
-        state.data = {}
-        return state
+        metadata = session.get_latest_metadata()
+        metadata.clear()
+        return session

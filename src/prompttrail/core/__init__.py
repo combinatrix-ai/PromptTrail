@@ -1,6 +1,7 @@
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generator,
@@ -12,7 +13,14 @@ from typing import (
     TypeAlias,
 )
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+if TYPE_CHECKING:
+    from prompttrail.agent.runners import Runner
+    from prompttrail.agent.templates import Stack
+else:
+    Runner = Any  # type: ignore
+    Stack = Any  # type: ignore
 
 from prompttrail.core.cache import CacheProvider
 from prompttrail.core.errors import ParameterValidationError
@@ -29,9 +37,8 @@ class Message(BaseModel):
     content: str
     sender: Optional[str] = None
 
-    # Store extra information in dict
-    # TODO: Update __str__ to include this
-    data: Dict[str, Any] = {}
+    # Store metadata in dict
+    metadata: Dict[str, Any] = {}
 
     def __hash__(self) -> int:
         return hash((self.content, self.sender))
@@ -44,17 +51,6 @@ class Message(BaseModel):
         if self.sender is None:
             return "Message(" + content_part + '")'
         return "Message(" + content_part + ', sender="' + self.sender + '")'
-
-
-class Session(BaseModel):
-    """A session represents a conversation between a user and a model, or API etc..."""
-
-    # Session is a list of messages with some metadata
-    # Sequence is used to ensure that the session is covariant with the message type.
-    messages: Sequence[Message] = []
-
-    def __hash__(self) -> int:
-        return hash(tuple(self.messages))
 
 
 class Configuration(BaseModel):
@@ -86,14 +82,99 @@ class Parameters(BaseModel):
     ...
 
 
+class Session(BaseModel):
+    """A session represents a conversation between a user and a model, or API etc..."""
+
+    model_config = ConfigDict(
+        extra="allow", arbitrary_types_allowed=True, validate_assignment=True
+    )
+
+    # Session is a list of messages with some metadata
+    messages: List[Message] = Field(default_factory=list)
+    initial_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    # Runner and template related fields
+    runner: Optional["Runner"] = Field(default=None, exclude=True)
+    debug_mode: bool = Field(default=False)
+    stack: List["Stack"] = Field(default_factory=list)
+    jump_to_id: Optional[str] = Field(default=None)
+
+    def __hash__(self) -> int:
+        return hash(tuple(self.messages))
+
+    def append(self, message: Message) -> None:
+        """Append a message to the session."""
+        messages_list = list(self.messages)
+        messages_list.append(message)
+        self.messages = messages_list
+
+    def get_last(self) -> Message:
+        """Get the last message in the session."""
+        if not self.messages:
+            raise IndexError("Session has no messages")
+        return self.messages[-1]
+
+    def get_latest_metadata(self) -> Dict[str, Any]:
+        """Get metadata from the last message or initial metadata if no messages exist."""
+        if not self.messages:
+            return self.initial_metadata.copy()
+        return self.messages[-1].metadata
+
+    def get_last_message(self) -> Message:
+        """Alias for get_last()."""
+        return self.get_last()
+
+    def get_current_template_id(self) -> Optional[str]:
+        """Get the ID of the current template."""
+        if not self.stack:
+            return None
+        return self.stack[-1].template_id
+
+    def push_stack(self, stack: "Stack") -> None:
+        """Push a stack frame."""
+        self.stack.append(stack)
+
+    def pop_stack(self) -> "Stack":
+        """Pop a stack frame."""
+        if not self.stack:
+            raise IndexError("Stack is empty")
+        return self.stack.pop()
+
+    def head_stack(self) -> "Stack":
+        """Get the top stack frame."""
+        if not self.stack:
+            raise IndexError("Stack is empty")
+        return self.stack[-1]
+
+    def get_jump(self) -> Optional[str]:
+        """Get the jump target template ID."""
+        return self.jump_to_id
+
+    def set_jump(self, jump_to_id: Optional[str]) -> None:
+        """Set the jump target template ID."""
+        self.jump_to_id = jump_to_id
+
+    def __str__(self) -> str:
+        """Return a string representation of the session."""
+        messages_str = "\n".join(f"    {msg}" for msg in self.messages)
+        template_id = self.get_current_template_id()
+        return f"""Session(
+    messages=[
+{messages_str}
+    ],
+    current_template={template_id},
+    jump={self.jump_to_id},
+    debug_mode={self.debug_mode}
+)"""
+
+
 # TypeAlias to let users know that they return updated parameters and session.
 UpdatedConfiguration: TypeAlias = Configuration
 UpdatedParameters: TypeAlias = Parameters
-UpdatedSession: TypeAlias = Session
 UpdatedMessage: TypeAlias = Message
 
 
-class Model(BaseModel):
+class Model(BaseModel, ABC):
     """A model define an interface to interact with LLM models."""
 
     configuration: Configuration
@@ -113,7 +194,7 @@ class Model(BaseModel):
 
     def prepare(
         self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[UpdatedParameters, UpdatedSession]:
+    ) -> Tuple[UpdatedParameters, Session]:
         """prepare method defines the standard procedure to pre/post-process parameters and session. You dont need to override this method usually."""
         if session is None:
             session = Session()
@@ -146,10 +227,7 @@ class Model(BaseModel):
         parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
         logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)
-        message_ = self.after_send(parameters, session, message, False)
-        if message_ is not None:
-            message = message_
-        return message
+        return self.after_send(parameters, session, message, False)
 
     def _send_async(
         self,
@@ -186,10 +264,7 @@ class Model(BaseModel):
         parameters, session = self.prepare(parameters, session, True)
         messages = self._send_async(parameters, session, yield_type)
         for message in messages:
-            message_ = self.after_send(parameters, session, message, True)
-            if message_ is not None:
-                message = message_
-            yield message
+            yield self.after_send(parameters, session, message, True)
 
     def validate_configuration(
         self, configuration: Configuration, is_async: bool
@@ -235,7 +310,7 @@ class Model(BaseModel):
     ) -> Tuple[
         Optional[UpdatedConfiguration],
         Optional[UpdatedParameters],
-        Optional[UpdatedSession],
+        Optional[Session],
     ]:
         """before_send method define the concrete procedure to pre-process parameters and session. You can override this method to add pre-processing logic."""
         return (None, None, None)
@@ -246,9 +321,9 @@ class Model(BaseModel):
         session: Optional[Session],
         message: Message,
         is_async: bool,
-    ) -> Optional[UpdatedMessage]:
+    ) -> UpdatedMessage:
         """after_send method define the concrete procedure to post-process parameters, session, and message. You can override this method to add post-processing logic."""
-        return None
+        return message
 
     def list_models(self) -> List[str]:
         """list_models method define the concrete procedure to list models. You can override this method to add list_models logic."""

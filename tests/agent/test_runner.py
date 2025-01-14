@@ -1,5 +1,5 @@
 # simple meta templates
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
@@ -56,18 +56,12 @@ def test_linear_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    state = runner.run(max_messages=10)
+    session = runner.run(max_messages=10)
 
-    assert len(state.session_history.messages) == 3
-    assert state.session_history.messages[0].content == "Repeat what the user said."
-    assert (
-        state.session_history.messages[1].content
-        == "Lazy fox jumps over the brown dog."
-    )
-    assert (
-        state.session_history.messages[2].content
-        == "Lazy fox jumps over the brown dog."
-    )
+    assert len(session.messages) == 3
+    assert session.messages[0].content == "Repeat what the user said."
+    assert session.messages[1].content == "Lazy fox jumps over the brown dog."
+    assert session.messages[2].content == "Lazy fox jumps over the brown dog."
 
 
 def test_if_template():
@@ -87,7 +81,7 @@ def test_if_template():
                     role="assistant",
                 ),
                 condition=BooleanHook(
-                    lambda state: state.session_history.messages[-1].content == "TRUE"
+                    lambda session: session.messages[-1].content == "TRUE"
                 ),
             ),
         ]
@@ -98,31 +92,32 @@ def test_if_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    state = runner.run(state=State(data={"content": "TRUE"}), max_messages=10)
+    session = Session(initial_metadata={"content": "TRUE"})
+    session = runner.run(session=session, max_messages=10)
 
-    assert len(state.session_history.messages) == 2
-    assert state.session_history.messages[0].content == "TRUE"
-    assert state.session_history.messages[1].content == "True"
+    assert len(session.messages) == 2  # system message + True/False message
+    assert session.messages[0].content == "TRUE"
+    assert session.messages[1].content == "True"
 
-    state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
-    print(state.session_history.messages)
-    assert len(state.session_history.messages) == 2
-    assert state.session_history.messages[0].content == "FALSE"
-    assert state.session_history.messages[1].content == "False"
+    session = Session(initial_metadata={"content": "FALSE"})
+    session = runner.run(session=session, max_messages=10)
+    print(session.messages)
+    assert len(session.messages) == 2
+    assert session.messages[0].content == "FALSE"
+    assert session.messages[1].content == "False"
 
 
 def test_loop_template():
     loop_count = 0
 
-    def update_loop_count(state: State) -> State:
+    def update_loop_count(session: Session) -> Session:
         nonlocal loop_count
         loop_count += 1
-        state.data["loop_count"] = (
-            state.data["loop_count"] + 1 if "loop_count" in state.data else 1
-        )
-        return state
+        for message in session.messages:
+            message.metadata["loop_count"] = loop_count
+        return session
 
-    def mock_exit_condition(state: State) -> bool:
+    def mock_exit_condition(session: Session) -> bool:
         # For the purpose of the test, let's exit after 3 iterations
         # This is evaluated after the child templates are evaluated
         return loop_count >= 3
@@ -145,13 +140,14 @@ def test_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    state = runner.run(max_messages=10)
+    session = Session(initial_metadata={"loop_count": 1})
+    session = runner.run(session=session, max_messages=10)
 
     # Check if it looped 3 times
-    assert len(state.session_history.messages) == 3
+    assert len(session.messages) == 3  # 3 loop iterations
 
     # Check if the generated messages are as expected
-    for idx, message in enumerate(state.session_history.messages, start=1):
+    for idx, message in enumerate(session.messages, start=1):
         assert message.content == f"This is loop iteration {idx}."
 
 
@@ -160,34 +156,28 @@ def test_nested_loop_template():
     outer_loop_count = 0
     inner_loop_count = 0
 
-    def update_outer_loop_count(state: State) -> State:
+    def update_outer_loop_count(session: Session) -> Session:
         nonlocal inner_loop_count
         nonlocal outer_loop_count
         inner_loop_count = 0
-        state.data["inner_loop_count"] = 0
         outer_loop_count += 1
-        state.data["outer_loop_count"] = (
-            state.data["outer_loop_count"] + 1
-            if "outer_loop_count" in state.data
-            else 1
-        )
-        return state
+        for message in session.messages:
+            message.metadata["inner_loop_count"] = 0
+            message.metadata["outer_loop_count"] = outer_loop_count
+        return session
 
-    def update_inner_loop_count(state: State) -> State:
+    def update_inner_loop_count(session: Session) -> Session:
         nonlocal inner_loop_count
         inner_loop_count += 1
-        state.data["inner_loop_count"] = (
-            state.data["inner_loop_count"] + 1
-            if "inner_loop_count" in state.data
-            else 1
-        )
-        return state
+        for message in session.messages:
+            message.metadata["inner_loop_count"] = inner_loop_count
+        return session
 
-    def mock_outer_exit_condition(state: State) -> bool:
+    def mock_outer_exit_condition(session: Session) -> bool:
         nonlocal outer_loop_count
         return outer_loop_count >= 3
 
-    def mock_inner_exit_condition(state: State) -> bool:
+    def mock_inner_exit_condition(session: Session) -> bool:
         nonlocal inner_loop_count
         return inner_loop_count >= 2
 
@@ -218,7 +208,8 @@ def test_nested_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    state = runner.run(max_messages=10)
+    session = Session(initial_metadata={"outer_loop_count": 1, "inner_loop_count": 1})
+    session = runner.run(session=session, max_messages=10)
 
     # Validate the generated messages
     expected_messages = [
@@ -234,7 +225,7 @@ def test_nested_loop_template():
         # "  Inner Loop: 1",
         # "  Inner Loop: 2",
     ]
-    for idx, message in enumerate(state.session_history.messages):
+    for idx, message in enumerate(session.messages):
         assert message.content == expected_messages[idx]
 
 
@@ -252,7 +243,7 @@ def test_end_template():
                 ),
                 false_template=EndTemplate(),
                 condition=BooleanHook(
-                    lambda state: state.session_history.messages[-1].content == "TRUE"
+                    lambda session: session.messages[-1].content == "TRUE"
                 ),
             ),
             MessageTemplate(
@@ -267,19 +258,21 @@ def test_end_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    state = runner.run(state=State(data={"content": "TRUE"}), max_messages=10)
+    session = Session(initial_metadata={"content": "TRUE"})
+    session = runner.run(session=session, max_messages=10)
 
-    assert len(state.session_history.messages) == 3
-    assert state.session_history.messages[0].content == "TRUE"
-    assert state.session_history.messages[1].content == "True"
+    assert len(session.messages) == 3  # system message + True message + final message
+    assert session.messages[0].content == "TRUE"
+    assert session.messages[1].content == "True"
     assert (
-        state.session_history.messages[2].content
+        session.messages[2].content
         == "This is rendered if the previous message was TRUE"
     )
 
-    state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
-    assert len(state.session_history.messages) == 1
-    assert state.session_history.messages[0].content == "FALSE"
+    session = Session(initial_metadata={"content": "FALSE"})
+    session = runner.run(session=session, max_messages=10)
+    assert len(session.messages) == 1
+    assert session.messages[0].content == "FALSE"
 
 
 def test_break_template():
@@ -296,7 +289,7 @@ def test_break_template():
                 ),
                 false_template=BreakTemplate(),
                 condition=BooleanHook(
-                    lambda state: state.session_history.messages[-1].content == "TRUE"
+                    lambda session: session.messages[-1].content == "TRUE"
                 ),
             ),
             MessageTemplate(
@@ -311,39 +304,44 @@ def test_break_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    state = runner.run(state=State(data={"content": "TRUE"}), max_messages=10)
+    session = Session(initial_metadata={"content": "TRUE"})
+    session = runner.run(session=session, max_messages=10)
 
-    assert len(state.session_history.messages) == 3
-    assert state.session_history.messages[0].content == "TRUE"
-    assert state.session_history.messages[1].content == "True"
+    assert len(session.messages) == 3  # system message + True message + final message
+    assert session.messages[0].content == "TRUE"
+    assert session.messages[1].content == "True"
     assert (
-        state.session_history.messages[2].content
+        session.messages[2].content
         == "This is rendered if the previous message was TRUE"
     )
 
-    state = runner.run(state=State(data={"content": "FALSE"}), max_messages=10)
-    assert len(state.session_history.messages) == 1
-    assert state.session_history.messages[0].content == "FALSE"
+    session = Session(initial_metadata={"content": "FALSE"})
+    session = runner.run(session=session, max_messages=10)
+    assert len(session.messages) == 1
+    assert session.messages[0].content == "FALSE"
 
 
 def test_nested_loop_with_break_template():
     outer_loop_counter = 0
     inner_loop_counter = 0
 
-    def update_outer_loop_counter(state: State) -> State:
+    def update_outer_loop_counter(session: Session) -> Session:
         nonlocal outer_loop_counter
         outer_loop_counter += 1
-        state.data["outer_loop_counter"] = outer_loop_counter
+        metadata = session.get_latest_metadata()
+        metadata["outer_loop_counter"] = outer_loop_counter
+        metadata["inner_loop_counter"] = 0  # Reset inner loop counter
         # reset inner loop counter
         nonlocal inner_loop_counter
         inner_loop_counter = 0
-        return state
+        return session
 
-    def update_inner_loop_counter(state: State) -> State:
+    def update_inner_loop_counter(session: Session) -> Session:
         nonlocal inner_loop_counter
         inner_loop_counter = (inner_loop_counter + 1) % 5  # Reset after 5 iterations
-        state.data["inner_loop_counter"] = inner_loop_counter
-        return state
+        metadata = session.get_latest_metadata()
+        metadata["inner_loop_counter"] = inner_loop_counter
+        return session
 
     inner_loop_template = LoopTemplate(
         templates=[
@@ -355,7 +353,8 @@ def test_nested_loop_with_break_template():
                     content="Inner loop iteration {{ inner_loop_counter }} of outer iteration {{ outer_loop_counter }}",
                 ),
                 condition=BooleanHook(
-                    lambda state: state.data["inner_loop_counter"] > 2
+                    lambda session: session.get_latest_metadata()["inner_loop_counter"]
+                    > 2
                 ),
             ),
         ],
@@ -371,7 +370,10 @@ def test_nested_loop_with_break_template():
             inner_loop_template,
         ],
         exit_condition=BooleanHook(
-            condition=lambda state: state.data["outer_loop_counter"] >= 3
+            condition=lambda session: session.get_latest_metadata()[
+                "outer_loop_counter"
+            ]
+            >= 3
         ),
     )
 
@@ -383,8 +385,11 @@ def test_nested_loop_with_break_template():
     )
 
     # We'll break the inner loop on the 3rd iteration
-    state = runner.run(
-        state=State(data={"outer_loop_counter": 0, "inner_loop_counter": 0}),
+    session = Session(
+        initial_metadata={"outer_loop_counter": 1, "inner_loop_counter": 1}
+    )
+    session = runner.run(
+        session=session,
         max_messages=10,
         debug_mode=True,
     )
@@ -400,5 +405,5 @@ def test_nested_loop_with_break_template():
         "Inner loop iteration 1 of outer iteration 3",
         "Inner loop iteration 2 of outer iteration 3",
     ]
-    for idx, message in enumerate(state.session_history.messages):
+    for idx, message in enumerate(session.messages):
         assert message.content == expected_messages[idx]

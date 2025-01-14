@@ -1,12 +1,13 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, cast
 
-from prompttrail.agent import State, StatefulSession
 from prompttrail.agent.templates import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.core import Model, Parameters
+from prompttrail.core import Model, Parameters, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException
+
+# Session is already imported from prompttrail.core
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +38,11 @@ class Runner(metaclass=ABCMeta):
     def run(
         self,
         start_template_id: Optional[str] = None,
-        state: Optional[State] = None,
+        session: Optional["Session"] = None,
         max_messages: Optional[int] = None,
         debug_mode: bool = False,
-    ) -> State:
-        """All runners should implement this method. This method should run the templates and return the final state."""
+    ) -> "Session":
+        """All runners should implement this method. This method should run the templates and return the final session."""
         raise NotImplementedError("run method is not implemented")
 
     def search_template(self, template_like: str) -> "Template":
@@ -72,52 +73,48 @@ class CommandLineRunner(Runner):
     def run(
         self,
         start_template_id: Optional[str] = None,
-        state: Optional[State] = None,
+        session: Optional["Session"] = None,
         max_messages: Optional[int] = 100,
         debug_mode: bool = False,
-    ) -> State:
+    ) -> "Session":
         """Command line runner. This runner is for debugging purpose. It prints out the messages to the console.
 
         Args:
             start_template_id (Optional[str], optional): If set, start from the template id given. Otherwise, start from the first template. Defaults to None.
-            state (Optional[State], optional): If set, use the state given. Otherwise, create a new state. Defaults to None.
+            session (Optional[Session], optional): If set, use the session given. Otherwise, create a new session. Defaults to None.
             max_messages (Optional[int], optional): Maximum number of messages to yield. If number of messages exceeds this number, the conversation is forced to stop. Defaults to 100.
             debug_mode (bool, optional): If set, print out debug messages. Defaults to False.
 
         Returns:
-            State: Final state of the conversation.
+            Session: Final session of the conversation.
         """
 
-        # Debug Mode
-
-        # set / update state
-        if state is None:
-            state = State(
+        # set / update session
+        if session is None:
+            session = Session(
                 runner=self,
-                data={},
-                session_history=StatefulSession(),
                 debug_mode=debug_mode,
             )
         else:
-            if state.runner is None or state.runner != self:
+            if session.runner is None or session.runner != self:
                 logger.warning(
-                    f"Given flow state has different runner {state.runner} from the runner {self}. Overriding the flow state.",
+                    f"Given session has different runner {session.runner} from the runner {self}. Overriding the session.",
                 )
-                state.runner = self
-            state.debug_mode = debug_mode or state.debug_mode
+                session.runner = self
+            session.debug_mode = debug_mode or session.debug_mode
 
         current_template_id = (
             start_template_id if start_template_id else self.template.template_id
         )
 
-        # not to override state for type checking
-        state_ = state
+        # not to override session for type checking
+        session_ = session
         # not to reuse it
-        del state
+        del session
 
         n_messages = 0
         template = self.search_template(current_template_id)
-        gen = template.render(state_)
+        gen = template.render(session_)
         print("===== Start =====")
         while 1:
             # render template until exhausted
@@ -133,21 +130,21 @@ class CommandLineRunner(Runner):
                 current_template_id = e.jump_to
                 template = self.search_template(current_template_id)
                 # reset stack
-                assert len(state_.stack) == 0  # type: ignore
-                state_.stack = []
-                gen = template.render(state_)
+                assert len(session_.stack) == 0
+                session_.stack = []
+                gen = template.render(session_)
                 continue
             except StopIteration as e:
                 # For generator, type support for return value is not so good.
-                state_ = e.value
+                session_ = cast(Session, e.value)
                 break
             if message:
                 print("From: " + cutify_sender(message.sender))
                 if message.content:
                     print("message: ", message.content)
-                elif message.data:
-                    print("data: ", end=" ")
-                    print(message.data)
+                elif message.metadata:
+                    print("metadata: ", end=" ")
+                    print(message.metadata)
                 else:
                     print("Empty message!")
                 n_messages += 1
@@ -158,4 +155,4 @@ class CommandLineRunner(Runner):
                 break
             print("=================")
         print("====== End ======")
-        return state_
+        return session_

@@ -2,10 +2,9 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Generator, List, Optional, Sequence, Set, TypeAlias
 
-from prompttrail.agent import State
 from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.templates._core import Stack, Template
-from prompttrail.core import Message
+from prompttrail.core import Message, Session
 from prompttrail.core.const import (
     END_TEMPLATE_ID,
     BreakException,
@@ -54,12 +53,12 @@ class ControlTemplate(Template, metaclass=ABCMeta):
         )
 
     @abstractmethod
-    def create_stack(self, state: "State") -> "Stack":
+    def create_stack(self, session: "Session") -> "Stack":
         """
         Create a stack for the control template.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
 
         Returns:
             The created stack.
@@ -131,20 +130,20 @@ class LoopTemplate(ControlTemplate):
         self.exit_condition = exit_condition
         self.exit_loop_count = exit_loop_count
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        stack = state.stack[-1]
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        stack = session.stack[-1]
         if not isinstance(stack, LoopTemplateStack):
             raise RuntimeError("LoopTemplateStack is not the last stack")
         while True:
             idx = stack.get_idx()
             template = self.templates[idx]
-            gen = template.render(state)
+            gen = template.render(session)
             try:
-                state = yield from gen
+                session = yield from gen
             except BreakException:
                 # Break the loop if a BreakException is raised.
                 break
-            if self.exit_condition and self.exit_condition.hook(state):
+            if self.exit_condition and self.exit_condition.hook(session):
                 # Break the loop if the exit condition is met.
                 break
             stack.next()
@@ -156,7 +155,7 @@ class LoopTemplate(ControlTemplate):
                     msg=f"Loop count is over {self.exit_loop_count}. Breaking the loop."
                 )
                 break
-        return state
+        return session
 
     def walk(
         self, visited_templates: Optional[Set["Template"]] = None
@@ -169,7 +168,7 @@ class LoopTemplate(ControlTemplate):
         for template in self.templates:
             yield from template.walk(visited_templates)
 
-    def create_stack(self, state: "State") -> "Stack":
+    def create_stack(self, session: "Session") -> "Stack":
         return LoopTemplateStack(
             template_id=self.template_id,
             n_children=len(self.templates),
@@ -207,15 +206,15 @@ class IfTemplate(ControlTemplate):
         self.false_template = false_template
         self.condition = condition
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        if self.condition.hook(state):
-            state = yield from self.true_template.render(state)
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        if self.condition.hook(session):
+            session = yield from self.true_template.render(session)
         else:
             if self.false_template is None:
                 pass  # Just skip to the next template
             else:
-                state = yield from self.false_template.render(state)
-        return state
+                session = yield from self.false_template.render(session)
+        return session
 
     def walk(
         self, visited_templates: Optional[Set["Template"]] = None
@@ -229,7 +228,7 @@ class IfTemplate(ControlTemplate):
         if self.false_template is not None:
             yield from self.false_template.walk(visited_templates)
 
-    def create_stack(self, state: "State") -> "Stack":
+    def create_stack(self, session: "Session") -> "Stack":
         return Stack(template_id=self.template_id)
 
 
@@ -264,21 +263,21 @@ class LinearTemplate(ControlTemplate):
         )
         self.templates = templates
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        stack = state.stack[-1]
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        stack = session.stack[-1]
         if not isinstance(stack, LinearTemplateStack):
             raise RuntimeError("LinearTemplateStack is not the last stack")
 
         while 1:
             try:
-                state = yield from self.templates[stack.idx].render(state)
+                session = yield from self.templates[stack.idx].render(session)
             except BreakException:
                 break
             stack.idx += 1
             # Break the loop when the last template is rendered
             if stack.idx >= len(self.templates):
                 break
-        return state
+        return session
 
     def walk(
         self, visited_templates: Optional[Set["Template"]] = None
@@ -291,7 +290,7 @@ class LinearTemplate(ControlTemplate):
         for template in self.templates:
             yield from template.walk(visited_templates)
 
-    def create_stack(self, state: "State") -> LinearTemplateStack:
+    def create_stack(self, session: "Session") -> LinearTemplateStack:
         return LinearTemplateStack(template_id=self.template_id, idx=0)
 
 
@@ -316,11 +315,11 @@ class EndTemplate(Template):
             cls._instance = super(EndTemplate, cls).__new__(cls)
         return cls._instance
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         raise ReachedEndTemplateException()
 
-    def create_stack(self, state: State) -> Stack:
-        return super().create_stack(state)
+    def create_stack(self, session: "Session") -> Stack:
+        return super().create_stack(session)
 
 
 class JumpTemplate(ControlTemplate):
@@ -351,7 +350,7 @@ class JumpTemplate(ControlTemplate):
         self.jump_to = jump_to
         self.condition = condition
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         logger.warning(
             msg=f"Jumping to {self.jump_to} from {self.template_id}. This resets the stack, and the dialogue will not come back to this template."
         )
@@ -366,7 +365,7 @@ class JumpTemplate(ControlTemplate):
         visited_templates.add(self)
         yield self
 
-    def create_stack(self, state: "State") -> LinearTemplateStack:
+    def create_stack(self, session: "Session") -> LinearTemplateStack:
         return LinearTemplateStack(template_id=self.template_id, idx=0)
 
 
@@ -386,7 +385,7 @@ class BreakTemplate(ControlTemplate):
             # after_transform is unavailable for the templates that raise errors
         )
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         logger.info(msg=f"Breaking the loop from {self.template_id}.")
         raise BreakException()
 
@@ -396,5 +395,5 @@ class BreakTemplate(ControlTemplate):
         visited_templates = visited_templates or set()
         yield self
 
-    def create_stack(self, state: "State") -> Stack:
+    def create_stack(self, session: "Session") -> Stack:
         return Stack(template_id=self.template_id)

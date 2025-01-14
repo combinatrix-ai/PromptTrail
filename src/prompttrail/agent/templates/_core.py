@@ -7,9 +7,8 @@ from uuid import uuid4
 import jinja2
 from pydantic import BaseModel
 
-from prompttrail.agent import State, StatefulMessage
 from prompttrail.agent.hooks import TransformHook
-from prompttrail.core import Message
+from prompttrail.core import Message, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
@@ -32,7 +31,7 @@ class Stack(BaseModel):
     template_id: str
 
 
-class Template(object, metaclass=ABCMeta):
+class Template(metaclass=ABCMeta):
     """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow.
 
     The user should inherit this class and implement `_render` method, which should yield messages and return the final state.
@@ -46,7 +45,9 @@ class Template(object, metaclass=ABCMeta):
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
     ):
-        self.template_id: str = template_id if template_id is not None else self._name()
+        self.template_id: str = (
+            template_id if template_id is not None else self._generate_name()
+        )
         check_template_id(self.template_id)
         self.before_transform = before_transform if before_transform is not None else []
         self.after_transform = after_transform if after_transform is not None else []
@@ -54,16 +55,16 @@ class Template(object, metaclass=ABCMeta):
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
 
-    def render(self, state: "State") -> Generator[Message, None, State]:
+    def render(self, session: "Session") -> Generator[Message, None, "Session"]:
         logging.debug(f"Rendering {self.template_id}")
-        state.stack.append(self.create_stack(state))  # type: ignore
+        session.push_stack(self.create_stack(session))
         try:
             for hook in self.before_transform:
-                state = hook.hook(state)
-            res = yield from self._render(state)
+                session = hook.hook(session)
+            res = yield from self._render(session)
             # TODO: After transform is skipped if BreakTemplate, JumpTemplate, or EndTemplate is used. This is natural?
             for hook in self.after_transform:
-                state = hook.hook(state)
+                session = hook.hook(session)
         except BreakException as e:
             raise e
         except ReachedEndTemplateException as e:
@@ -74,16 +75,17 @@ class Template(object, metaclass=ABCMeta):
             self.get_logger().error(f"RenderingTemplateError@{self.template_id}")
             raise e
         finally:
-            state.stack.pop()  # type: ignore
+            session.pop_stack()
         logging.debug(f"Rendered {self.template_id}")
         return res
 
-    @abstractmethod
-    def create_stack(self, state: "State") -> "Stack":
+    def create_stack(self, session: "Session") -> "Stack":
+        """Create a stack frame for this template."""
         return Stack(template_id=self.template_id)
 
     @abstractmethod
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        """Render the template and return a generator of messages."""
         raise NotImplementedError("render method is not implemented")
 
     def walk(
@@ -99,8 +101,10 @@ class Template(object, metaclass=ABCMeta):
     def __str__(self) -> str:
         return f"Template(id={self.template_id})"
 
-    def _name(self) -> str:
-        return "Unnamed_" + self.__class__.__name__ + "_" + str(uuid4())
+    @classmethod
+    def _generate_name(cls) -> str:
+        """Generate a unique name for an unnamed template."""
+        return f"Unnamed_{cls.__name__}_{str(uuid4())}"
 
 
 class MessageTemplate(Template):
@@ -128,18 +132,26 @@ class MessageTemplate(Template):
         self.jinja_template = jinja2.Template(self.content)
         self.role = role
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
-        state.jump_to_id = None
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        session.set_jump(None)
         # no jump, then render
-        if not state.jump_to_id:
+        if not session.get_jump():
             # render
-            rendered_content = self.jinja_template.render(**state.data)
-            message = StatefulMessage(
-                content=rendered_content, sender=self.role, template_id=self.template_id
+            rendered_content = self.jinja_template.render(
+                **session.get_latest_metadata()
             )
-            state.session_history.messages.append(message)  # type: ignore
+            # Get metadata from the last message or initial metadata
+            metadata = session.get_latest_metadata().copy()
+            # Add template_id to metadata
+            metadata["template_id"] = self.template_id
+            message = Message(
+                content=rendered_content,
+                sender=self.role,
+                metadata=metadata,
+            )
+            session.append(message)
             yield message
-        return state
+        return session
 
     def __str__(self) -> str:
         if "\n" in self.content:
@@ -160,7 +172,7 @@ class MessageTemplate(Template):
 
         return f"MessageTemplate(id={self.template_id}, {content_part}{before_transform_part}{after_transform_part})"
 
-    def create_stack(self, state: "State") -> "Stack":
+    def create_stack(self, session: "Session") -> "Stack":
         return Stack(template_id=self.template_id)
 
 
@@ -182,24 +194,28 @@ class GenerateTemplate(MessageTemplate):
             after_transform=after_transform if after_transform is not None else [],
         )
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         # render
-        if state.runner is None:
+        if session.runner is None:
             raise ValueError("runner is not set")
         logger.info(
-            f"Generating content with {state.runner.models.__class__.__name__}..."
+            f"Generating content with {session.runner.models.__class__.__name__}..."
         )
-        rendered_content = state.runner.models.send(
-            state.runner.parameters, state.session_history
+        rendered_content = session.runner.models.send(
+            session.runner.parameters, session
         ).content
-        message = StatefulMessage(
+        # Get metadata from the last message or initial metadata
+        metadata = session.get_latest_metadata().copy()
+        # Add template_id to metadata
+        metadata["template_id"] = self.template_id
+        message = Message(
             content=rendered_content,
             sender=self.role,
-            template_id=self.template_id,
+            metadata=metadata,
         )
-        state.session_history.messages.append(message)  # type: ignore
+        session.append(message)
         yield message
-        return state
+        return session
 
 
 class UserInputTextTemplate(MessageTemplate):
@@ -223,22 +239,25 @@ class UserInputTextTemplate(MessageTemplate):
         self.description = description
         self.default = default
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         # render
-        if state.runner is None:
+        if session.runner is None:
             raise ValueError(
-                "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via State."
+                "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via Session."
             )
 
-        rendered_content = state.runner.user_interaction_provider.ask(
-            state, self.description, self.default
+        rendered_content = session.runner.user_interaction_provider.ask(
+            session, self.description, self.default
         )
-        message = StatefulMessage(
+        # Get metadata from the last message or initial metadata
+        metadata = session.get_latest_metadata().copy()
+        # Add template_id to metadata
+        metadata["template_id"] = self.template_id
+        message = Message(
             content=rendered_content,
             sender=self.role,
-            template_id=self.template_id,
+            metadata=metadata,
         )
-        # TODO: Sequence cannot have append method, this causd a bug already. Need to be fixed
-        state.session_history.messages.append(message)  # type: ignore
+        session.append(message)
         yield message
-        return state
+        return session
