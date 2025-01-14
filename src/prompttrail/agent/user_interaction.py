@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ class UserInteractionProvider:
     @abstractmethod
     def ask(
         self,
-        state: State,
+        session: Session,
         description: Optional[str],
         default: Optional[str] = None,
     ) -> str:
@@ -20,7 +20,7 @@ class UserInteractionProvider:
         Ask the user for input.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
             description: The description of the input prompt.
             default: The default value for the input prompt.
 
@@ -33,7 +33,7 @@ class UserInteractionProvider:
 class UserInteractionTextCLIProvider(UserInteractionProvider):
     def ask(
         self,
-        state: State,
+        session: Session,
         description: Optional[str] = "Input>",
         default: Optional[str] = None,
     ) -> str:
@@ -41,7 +41,7 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         Ask the user for input via the command line interface.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
             description: The description of the input prompt.
             default: The default value for the input prompt.
 
@@ -73,7 +73,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
 
     def ask(
         self,
-        state: State,
+        session: Session,
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
@@ -81,7 +81,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
         Mock the user interaction by providing pre-defined responses based on the conversation history.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
             description: The description of the input prompt.
             default: The default value for the input prompt.
 
@@ -89,9 +89,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
             The pre-defined response based on the conversation history.
         """
         valid_messages = [
-            x
-            for x in state.session_history.messages
-            if x.sender != CONTROL_TEMPLATE_ROLE
+            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
         ]
         last_message = valid_messages[-1].content
         if last_message not in self.conversation_table:
@@ -102,7 +100,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
 class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
     def ask(
         self,
-        state: State,
+        session: Session,
         description: Optional[str] = None,
         default: Optional[str] = None,
     ) -> str:
@@ -110,11 +108,11 @@ class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
         Mock the user interaction by echoing the last message.
 
         Args:
-            state: The current state of the conversation.
+            session: The current session of the conversation.
             description: The description of the input prompt.
             default: The default value for the input prompt.
 
         Returns:
             The last message as the user's input.
         """
-        return state.get_last_message().content
+        return session.get_last().content

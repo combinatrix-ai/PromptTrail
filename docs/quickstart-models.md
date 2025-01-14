@@ -51,7 +51,7 @@ You can skip the following sections if you're already familiar with other LLM li
 ### Message
 
 ```python
-Message(content="Hello! How can I assist you today?", sender="assistant", data={})
+Message(content="Hello! How can I assist you today?", sender="assistant", metadata={})
 ```
 
 Message represents a single message in a conversation.
@@ -61,7 +61,7 @@ It has the following attributes:
 - `sender: str`: the sender of the message
   - OpenAI's API expect one of `system`, `user`, `assistant` as the sender.
   - Other providers have different rules.
-- `data`: additional data for the message (used for advanced features)
+- `metadata`: additional metadata for the message (used for templates, hooks, and other features)
 
 ### Session
 
@@ -156,7 +156,7 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hey there! How can I help you today?', sender='1', data={})
+Message(content='Hey there! How can I help you today?', sender='1', metadata={})
 ```
 
 You may notice the sender system is different from OpenAI's!
@@ -200,7 +200,7 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hello! How can I assist you today?', sender='assistant', data={})
+Message(content='Hello! How can I assist you today?', sender='assistant', metadata={})
 ```
 
 ## Try local LLMs

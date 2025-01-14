@@ -3,7 +3,6 @@ import os
 
 from tqdm import tqdm
 
-from prompttrail.agent import State
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate
 from prompttrail.agent.templates.openai import (
@@ -11,6 +10,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message, Session
 from prompttrail.models.anthropic import (
     AnthropicClaudeModel,
     AnthropicClaudeModelConfiguration,
@@ -69,12 +69,9 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_state = State(
-    data={
-        "code": text,
-    }
-)
-state = runner.run(state=initial_state)
-last_message = state.get_last_message().content
+initial_session = Session()
+initial_session.append(Message(content="", metadata={"code": text}))
+session = runner.run(session=initial_session)
+last_message = session.get_last_message().content
 
 print(last_message)

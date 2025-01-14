@@ -54,9 +54,7 @@ template = LinearTemplate(
                 ),
             ],
             exit_condition=BooleanHook(
-                condition=lambda state: (
-                    "END" == state.get_last_message().content.strip()
-                )
+                condition=lambda session: ("END" == session.get_last().content.strip())
             ),
         ),
     ],

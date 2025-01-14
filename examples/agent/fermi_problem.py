@@ -111,7 +111,9 @@ Calculation:
                         content="LLM seems to unable to estimate. Try different question! Starting over...",
                     ),
                     false_template=BreakTemplate(),
-                    condition=BooleanHook(lambda state: "answer" not in state.data),
+                    condition=BooleanHook(
+                        lambda session: "answer" not in session.get_latest_metadata()
+                    ),
                 ),
             ],
             before_transform=[ResetDataHook()],
@@ -149,7 +151,7 @@ Calculation:
     # Then, we can decide to end the conversation or retry.
     # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
     # Check if the loop is finished, see exit_condition below.
-    exit_condition=BooleanHook(lambda state: state.get_last_message().content == "END"),
+    exit_condition=BooleanHook(lambda session: session.get_last().content == "END"),
 )
 
 # Then, let's run this agent!

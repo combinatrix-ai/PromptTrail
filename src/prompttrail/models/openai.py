@@ -84,7 +84,7 @@ class OpenAIChatCompletionModel(Model):
         if message.function_call is not None:
             function_name = message.function_call.name
             arguments = json.loads(message.function_call.arguments)
-            result.data["function_call"] = {
+            result.metadata["function_call"] = {
                 "name": function_name,
                 "arguments": arguments,
             }
@@ -153,12 +153,12 @@ class OpenAIChatCompletionModel(Model):
                 "content": message.content,
                 "role": message.sender,  # type: ignore
             }
-            if "function_call" not in message.data
+            if "function_call" not in message.metadata
             # In this mode, we send the function name and content is the result of the function.
             else {
                 "content": message.content,
                 "role": message.sender,  # type: ignore
-                "name": message.data["function_call"]["name"],
+                "name": message.metadata["function_call"]["name"],
             }  # type: ignore
             for message in messages
         ]

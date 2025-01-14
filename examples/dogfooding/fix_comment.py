@@ -4,7 +4,6 @@ import os
 
 import click
 
-from prompttrail.agent import State
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate
 from prompttrail.agent.templates.openai import (
@@ -12,6 +11,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message, Session
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -62,13 +62,17 @@ def main(
     logging.basicConfig(level=logging.INFO)
 
     load_file_content = open(load_file, "r")
-    initial_state = State(
-        data={
-            "content": load_file_content.read(),
-        }
+    initial_session = Session()
+    initial_session.append(
+        Message(
+            content="",
+            metadata={
+                "content": load_file_content.read(),
+            },
+        )
     )
-    state = runner.run(state=initial_state)
-    last_message = state.get_last_message()
+    session = runner.run(session=initial_session)
+    last_message = session.get_last_message()
     message = last_message.content
     print(message)
     # add EOF if not exists

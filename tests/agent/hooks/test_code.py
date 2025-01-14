@@ -1,40 +1,47 @@
 import unittest
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.agent.hooks import EvaluatePythonCodeHook, ExtractMarkdownCodeBlockHook
 from prompttrail.core import Message
 
 
 class TestExtractMarkdownCodeBlockHook(unittest.TestCase):
     def test_hook(self):
-        state = State()
-        state.session_history.messages.append(Message(content="```python\nprint('Hello, World!')```", sender="assistant"))  # type: ignore
+        session = Session()
+        session.append(
+            Message(content="```python\nprint('Hello, World!')```", sender="assistant")
+        )
         hook = ExtractMarkdownCodeBlockHook("code", "python")
-        state = hook.hook(state)
-        self.assertEqual(state.data["code"], "print('Hello, World!')")
+        session = hook.hook(session)
+        self.assertEqual(
+            session.get_latest_metadata()["code"], "print('Hello, World!')"
+        )
 
     def test_hook_no_code_block(self):
-        state = State()
-        state.session_history.messages.append(Message(content="This  is a regular message", sender="assistant"))  # type: ignore
+        session = Session()
+        session.append(
+            Message(content="This  is a regular message", sender="assistant")
+        )
         hook = ExtractMarkdownCodeBlockHook("code", "python")
-        state = hook.hook(state)
-        self.assertIsNone(state.data["code"])
+        session = hook.hook(session)
+        self.assertIsNone(session.get_latest_metadata()["code"])
 
 
 class TestEvaluatePythonCodeHook(unittest.TestCase):
     def test_hook(self):
-        state = State()
-        state.data["code"] = "print('Hello, World!')"
+        session = Session()
+        session.append(Message(content="", metadata={"code": "print('Hello, World!')"}))
         hook = EvaluatePythonCodeHook("answer", "code")
-        state = hook.hook(state)
-        self.assertEqual(state.data["answer"], None)
+        session = hook.hook(session)
+        self.assertEqual(session.get_latest_metadata()["answer"], None)
 
     def test_hook_no_code_block(self):
-        state = State()
+        session = Session()
+        session.append(Message(content="", metadata={}))
         hook = EvaluatePythonCodeHook("answer", "code")
         with self.assertRaises(KeyError):
             # TODO: Hook should raise error?
-            state = hook.hook(state)
+            session = hook.hook(session)
 
 
 if __name__ == "__main__":
