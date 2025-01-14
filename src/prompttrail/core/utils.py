@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import tiktoken
 
 if TYPE_CHECKING:
-    from prompttrail.agent import State
     from prompttrail.agent.hooks import Hook
+    from prompttrail.core import Session
 
 
 def logger_multiline(logger: logging.Logger, message: str, level: int = logging.DEBUG):
@@ -25,20 +25,20 @@ def logger_multiline(logger: logging.Logger, message: str, level: int = logging.
 
 def hook_logger(
     hook: "Hook",
-    state: "State",
+    session: "Session",
     message: str,
     level: int = logging.DEBUG,
 ):
     """
-    Log a message with the specified hook and state.
+    Log a message with the specified hook and session.
 
     Args:
         hook (Hook): The hook to use.
-        state (State): The state to use.
+        session (Session): The session to use.
         message (str): The message to log.
         level (int, optional): The log level. Defaults to logging.DEBUG.
     """
-    template_id = state.get_current_template_id()
+    template_id = session.get_current_template_id()
     logger = logging.getLogger(hook.__class__.__name__ + "@" + str(template_id))
     logger_multiline(logger, message, level)
 

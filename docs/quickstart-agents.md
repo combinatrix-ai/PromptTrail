@@ -88,7 +88,7 @@ Let's run the agent above on CLI. Use OpenAI's GPT-3.5-turbo with 16k context. T
 
 ```python
 import os
-from prompttrail.agent import State
+from prompttrail.core import Session
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.models.openai import (
@@ -128,18 +128,18 @@ PromptTrail is a library to build a text generation agent with LLMs.
 
 Then, we need to pass the markdown to the agent.
 
-The point here is `state`. `state` is a state that is passed to the templates. In this example, we pass the markdown to the template.
+The point here is `session`. `session` is a state that is passed to the templates. In this example, we pass the markdown to the template.
 
-`state.data` is passed to the Jinja2 processor and impute the template.
+`session.initial_metadata` is passed to the Jinja2 processor and impute the template. Each message also has its own metadata that can be accessed via `message.metadata`.
 
-You can also update the data itself with LLM outputs, function results, etc. See [examples/agent/fermi_problem.py] for an example.
+You can also update the metadata with LLM outputs, function results, etc. See [examples/agent/fermi_problem.py] for an example.
 
 Finally, run the agent!
 
 ```python
 result = runner.run(
-    state=State(
-        data={"content": markdown},
+    session=Session(
+        initial_metadata={"content": markdown},
     ),
 )
 ```
@@ -170,13 +170,13 @@ Now we saved the output of the runner in `result`, which is the final `state`.
 We can extract the conversation as follows:
 
 ```python
-result.session_history.messages
+result.messages
 ```
 
 We just need the last message:
 
 ```python
-corrected_markdown = result.session_history.messages[-1].content
+corrected_markdown = result.messages[-1].content
 print(corrected_markdown)
 ```
 
@@ -218,11 +218,11 @@ This template orders the LLM to generate text, extract a Python code block from 
 
 Let's see what they do.
 
-`ExtractMarkdownCodeBlockHook` extracts a code block of the language specified by `lang` from the generated text and stores it in `state.data["python_segment"]`.
+`ExtractMarkdownCodeBlockHook` extracts a code block of the language specified by `lang` from the generated text and stores it in the message's metadata under the key `"python_segment"`.
 
-`EvaluatePythonCodeHook` evaluates the code stored in `state.data["python_segment"]` and stores the result in `state.data["answer"]`.
+`EvaluatePythonCodeHook` evaluates the code stored in the message's metadata under the key `"python_segment"` and stores the result under the key `"answer"`.
 
-As a convention, `key` is used to represent the key of `state.data` to store the result of the hook.
+As a convention, `key` is used to represent the key in the message's metadata to store the result of the hook.
 
 `gather_feedback` and `first.template_id` are template ids, the unique identifier of the template passed to the runner. `template_id` can be set at instantiation like:
 
@@ -252,7 +252,7 @@ The order of hooks is:
 
 Every template has a `render` method.
 
-For `MessageTemplate`, it simply renders the template with `state.data` via Jinja2 and returns the result as a message.
+For `MessageTemplate`, it simply renders the template with the message's metadata via Jinja2 and returns the result as a message.
 
 For `GenerateTemplate`, it calls the LLM and returns the result as a message.
 
@@ -260,49 +260,47 @@ For `InputTemplate`, it asks for user input using `user_interaction_provider` an
 
 You can also add your own template. See [template.py] for more details.
 
-## State
+## Session
 
-`State` is a state that is passed to the templates and holds the state of the conversation.
+`Session` is a state that is passed to the templates and holds the state of the conversation.
 
 If you're going to build an application with `prompttrail.agent`, you just need the following:
 
-- `State.data`
-  - This is a Python dictionary you can use to pass data to the templates.
-  - Handling `data` is the responsibility of the templates (and hooks, which we will see later).
-  - If the specified key is not found in `data`, an error will be raised unless you specify a `default` in the template or hooks.
+- `Session.initial_metadata`
+  - This is a Python dictionary you can use to pass initial data to the templates.
+  - Each message also has its own metadata that can be accessed via `message.metadata`.
+  - If a key is not found in the metadata, an error will be raised unless you specify a `default` in the template or hooks.
 
-- `State.current_template_id`
-  - You can know which template is currently running by accessing this.
-  - For example, this is used by `IfJumpHook` to jump to another template.
+- `Session.messages`
+  - This is a list of messages in the conversation.
+  - Each message has `content`, `sender`, and `metadata`.
+  - You can access the latest metadata using `get_latest_metadata()`.
 
 ```python
-class State(object):
-    """State holds all the state of the conversation."""
+class Session(BaseModel):
+    """A session represents a conversation between a user and a model, or API etc..."""
 
-    def __init__(
-        self,
-        runner: Optional["Runner"] = None,
-        model: Optional[Model] = None,
-        parameters: Optional[Parameters] = None,
-        data: Dict[str, Any] = {},
-        session_history: StatefulSession = StatefulSession(),
-        current_template_id: Optional["TemplateId"] = None,
-    ):
-        self.runner = runner
-        self.models = model
-        self.parameters = parameters
-        self.data = data
-        self.session_history = session_history
-        self.current_template_id = current_template_id
+    messages: List[Message] = Field(default_factory=list)
+    initial_metadata: Dict[str, Any] = Field(default_factory=dict)
+    runner: Optional["Runner"] = Field(default=None, exclude=True)
+    debug_mode: bool = Field(default=False)
+    stack: List["Stack"] = Field(default_factory=list)
+    jump_to_id: Optional[str] = Field(default=None)
+
+    def get_latest_metadata(self) -> Dict[str, Any]:
+        """Get metadata from the last message or initial metadata if no messages exist."""
+        if not self.messages:
+            return self.initial_metadata.copy()
+        return self.messages[-1].metadata
 ```
 
 Other attributes can also be accessed:
 
-- `runner`: You can access the runner itself. If you want to search templates passed to the runner, you can use `State.runner.search_template`.
+- `runner`: You can access the runner itself. If you want to search templates passed to the runner, you can use `session.runner.search_template`.
 
-- `model` and `parameters`: You can access the model itself. You can make your own call to the model if you want.
+- `stack`: You can access the template stack. This is used for template control flow.
 
-- `session_history`: You can access the session history. You can review the history of the conversation.
+- `jump_to_id`: You can set this to jump to another template. For example, this is used by `IfJumpHook` to jump to another template.
 
 ## Tool (Function Calling)
 
@@ -369,7 +367,7 @@ class WeatherForecastTool(Tool):
     argument_types = [Place, TemperatureUnit]
     result_type = WeatherForecastResult
 
-    def _call(self, args: Sequence[ToolArgument]) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
         return WeatherForecastResult(temperature=0, weather="sunny")
 ```
 

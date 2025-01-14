@@ -6,7 +6,6 @@ from typing import List
 
 from tqdm import tqdm
 
-from prompttrail.agent import State
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate
 from prompttrail.agent.templates.openai import (
@@ -14,6 +13,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message, Session
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
     OpenAIModelConfiguration,
@@ -70,14 +70,18 @@ def main(
     readme_file_content = ""
     for readme_file in readme_files:
         readme_file_content += open(readme_file, "r").read() + "\n"
-    initial_state = State(
-        data={
-            "code": load_file_content.read(),
-            "readme": readme_file_content,
-        }
+    initial_session = Session()
+    initial_session.append(
+        Message(
+            content="",
+            metadata={
+                "code": load_file_content.read(),
+                "readme": readme_file_content,
+            },
+        )
     )
-    state = runner.run(state=initial_state)
-    last_message = state.get_last_message().content
+    session = runner.run(session=initial_session)
+    last_message = session.get_last_message().content
     last_message = last_message.strip()
     if last_message.startswith("```"):
         last_message = "\n".join(last_message.split("\n")[1:-1])

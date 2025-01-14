@@ -4,7 +4,7 @@ import enum
 import os
 from typing import Any, Dict, Optional, Sequence
 
-from prompttrail.agent import State
+from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate, MessageTemplate
 from prompttrail.agent.templates.openai import OpenAIGenerateWithFunctionCallingTemplate
@@ -70,7 +70,7 @@ class WeatherForecastTool(Tool):
     argument_types = [Place, TemperatureUnit]
     result_type = WeatherForecastResult
 
-    def _call(self, args: Sequence[ToolArgument], state: State) -> ToolResult:
+    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
         return WeatherForecastResult(temperature=0, weather="sunny")
 
 

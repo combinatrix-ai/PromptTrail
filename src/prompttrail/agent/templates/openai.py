@@ -1,11 +1,10 @@
 import json
 from typing import Generator, List, Optional, Sequence, cast
 
-from prompttrail.agent import State, StatefulMessage
 from prompttrail.agent.hooks import TransformHook
 from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
 from prompttrail.agent.tools import Tool, check_arguments
-from prompttrail.core import Message
+from prompttrail.core import Message, Session
 from prompttrail.core.const import OPENAI_SYSTEM_ROLE
 from prompttrail.models.openai import (
     OpenAIChatCompletionModel,
@@ -51,15 +50,15 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         )
         self.functions = {func.name: func for func in functions}
 
-    def _render(self, state: "State") -> Generator[Message, None, State]:
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         # before_transform
         for before_transform_hook in self.before_transform:
-            state = before_transform_hook.hook(state)
+            session = before_transform_hook.hook(session)
         # render
-        runner = state.runner
+        runner = session.runner
         if runner is None:
             raise ValueError(
-                "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via State."
+                "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via Session."
             )
         if not isinstance(runner.models, OpenAIChatCompletionModel):
             raise ValueError(
@@ -72,53 +71,50 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         temporary_parameters.functions = self.functions  # type: ignore
 
         # 1st message: pass functions and let the model use it
-        rendered_message = runner.models.send(
-            temporary_parameters, state.session_history
-        )
-        message = StatefulMessage(
+        rendered_message = runner.models.send(temporary_parameters, session)
+        message = Message(
             content=rendered_message.content,
             sender=self.role,
-            template_id=self.template_id,
-            data=rendered_message.data,
+            metadata={"template_id": self.template_id, **rendered_message.metadata},
         )
-        state.session_history.messages.append(message)  # type: ignore
+        session.append(message)
         yield message
 
-        if rendered_message.data.get("function_call"):
+        if rendered_message.metadata.get("function_call"):
             # 2nd message: call function if the model asks for it
-            if rendered_message.data["function_call"]["name"] not in self.functions:
+            if rendered_message.metadata["function_call"]["name"] not in self.functions:
                 raise ValueError(
-                    f"Function {rendered_message.data['function_call']['name']} is not defined in the template."
+                    f"Function {rendered_message.metadata['function_call']['name']} is not defined in the template."
                 )
-            function_ = self.functions[rendered_message.data["function_call"]["name"]]
+            function_ = self.functions[
+                rendered_message.metadata["function_call"]["name"]
+            ]
             arguments = check_arguments(
-                rendered_message.data["function_call"]["arguments"],
+                rendered_message.metadata["function_call"]["arguments"],
                 function_.argument_types,
             )
-            result = function_.call(arguments, state)  # type: ignore
+            result = function_.call(arguments, session)
             # Send result
             function_message = Message(
                 sender="function",
-                data={"function_call": {"name": function_.name}},
+                metadata={"function_call": {"name": function_.name}},
                 content=json.dumps(result.show()),
             )
-            state.session_history.messages.append(function_message)  # type: ignore
+            session.append(function_message)
             yield function_message
-            second_response = runner.models.send(
-                runner.parameters, state.session_history
-            )
-            message = StatefulMessage(
+            second_response = runner.models.send(runner.parameters, session)
+            message = Message(
                 content=second_response.content,
                 sender=second_response.sender,
-                template_id=self.template_id,
+                metadata={"template_id": self.template_id},
             )
-            state.session_history.messages.append(message)  # type: ignore
+            session.append(message)
             yield message
 
         # after_transform
         for after_transform_hook in self.after_transform:
-            state = after_transform_hook.hook(state=state)
-        return state
+            session = after_transform_hook.hook(session)
+        return session
 
 
 class OpenAISystemTemplate(MessageTemplate):

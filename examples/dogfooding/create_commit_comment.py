@@ -3,7 +3,6 @@ import subprocess
 import tempfile
 from typing import Optional
 
-from prompttrail.agent import State
 from prompttrail.agent.hooks import BooleanHook, ResetDataHook
 from prompttrail.agent.hooks._core import TransformHook
 from prompttrail.agent.runners import CommandLineRunner
@@ -19,6 +18,7 @@ from prompttrail.agent.templates.openai import (
     OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Message, Session
 from prompttrail.models.anthropic import (
     AnthropicClaudeModel,
     AnthropicClaudeModelConfiguration,
@@ -102,10 +102,10 @@ def execute_git_commit(message: str) -> bool:
 class SaveCommitMessageHook(TransformHook):
     """Hook to save the generated commit message in the state data."""
 
-    def hook(self, state: State) -> State:
-        commit_message = state.get_last_message().content
-        state.data["commit_message"] = commit_message
-        return state
+    def hook(self, session: Session) -> Session:
+        commit_message = session.get_last_message().content
+        session.get_latest_metadata()["commit_message"] = commit_message
+        return session
 
 
 templates = LinearTemplate(
@@ -187,14 +187,16 @@ Examples:
                         content="Generating a new message based on your feedback...",
                     ),
                     condition=BooleanHook(
-                        lambda state: state.get_last_message()
+                        lambda session: session.get_last_message()
                         .content.strip()
                         .startswith("END")
                     ),
                 ),
             ],
             exit_condition=BooleanHook(
-                lambda state: state.get_last_message().content.strip().startswith("END")
+                lambda session: session.get_last_message()
+                .content.strip()
+                .startswith("END")
             ),
             before_transform=[ResetDataHook()],
         ),
@@ -246,17 +248,21 @@ def main(
         print("Warning: No Git information found. Are you in a Git repository?")
         return ""
 
-    initial_state = State(
-        data={
-            "branch": git_info["branch"],
-            "diff": git_info["diff"],
-            "log": git_info["log"],
-        }
+    initial_session = Session()
+    initial_session.append(
+        Message(
+            content="",
+            metadata={
+                "branch": git_info["branch"],
+                "diff": git_info["diff"],
+                "log": git_info["log"],
+            },
+        )
     )
 
-    state = runner.run(state=initial_state)
+    session = runner.run(session=initial_session)
 
-    return state.data["commit_message"]
+    return session.get_latest_metadata()["commit_message"]
 
 
 if __name__ == "__main__":
