@@ -9,7 +9,7 @@ class TestExtractMarkdownCodeBlockHook(unittest.TestCase):
     def test_hook(self):
         session = Session()
         session.append(
-            Message(content="```python\nprint('Hello, World!')```", sender="assistant")
+            Message(content="```python\nprint('Hello, World!')```", role="assistant")
         )
         hook = ExtractMarkdownCodeBlockHook("code", "python")
         session = hook.hook(session)
@@ -19,9 +19,7 @@ class TestExtractMarkdownCodeBlockHook(unittest.TestCase):
 
     def test_hook_no_code_block(self):
         session = Session()
-        session.append(
-            Message(content="This  is a regular message", sender="assistant")
-        )
+        session.append(Message(content="This  is a regular message", role="assistant"))
         hook = ExtractMarkdownCodeBlockHook("code", "python")
         session = hook.hook(session)
         self.assertIsNone(session.get_latest_metadata()["code"])

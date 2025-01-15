@@ -79,7 +79,7 @@ class OpenAIChatCompletionModel(Model):
         if content is None:
             # This implies that the model responded with function calling
             content = ""  # TODO: Should allow null message? (It may be more clear that non textual response is returned)
-        result = Message(content=content, sender=message.role)  # type: ignore #TODO: More robust error handling
+        result = Message(content=content, role=message.role)  # type: ignore #TODO: More robust error handling
         # TODO: handle for _send_async
         if message.function_call is not None:
             function_name = message.function_call.name
@@ -117,10 +117,10 @@ class OpenAIChatCompletionModel(Model):
                 role = message.choices[0].delta.role  # type: ignore
             new_text: str = message.choices[0].delta.content or ""  # type: ignore #TODO: More robust error handling
             if yiled_type == "new":
-                yield Message(content=new_text, sender=role)  # type: ignore
+                yield Message(content=new_text, role=role)  # type: ignore
             elif yiled_type == "all":
                 all_text: str = all_text + new_text  # type: ignore
-                yield Message(content=all_text, sender=role)  # type: ignore
+                yield Message(content=all_text, role=role)  # type: ignore
             else:
                 raise ParameterValidationError(
                     f"{self.__class__.__name__}: yiled_type should be 'all' or 'new'."
@@ -134,10 +134,10 @@ class OpenAIChatCompletionModel(Model):
         super().validate_session(session, is_async)
 
         # OpenAI-specific validation for allowed roles
-        allowed_senders = list(typing.get_args(OpenAIrole)) + [CONTROL_TEMPLATE_ROLE]
-        if any([message.sender not in allowed_senders for message in session.messages]):
+        allowed_roles = list(typing.get_args(OpenAIrole)) + [CONTROL_TEMPLATE_ROLE]
+        if any([message.role not in allowed_roles for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: Sender should be one of {allowed_senders} in a session."
+                f"{self.__class__.__name__}: role should be one of {allowed_roles} in a session."
             )
 
     @staticmethod
@@ -146,18 +146,18 @@ class OpenAIChatCompletionModel(Model):
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
         return [
             {
                 "content": message.content,
-                "role": message.sender,  # type: ignore
+                "role": message.role,  # type: ignore
             }
             if "function_call" not in message.metadata
             # In this mode, we send the function name and content is the result of the function.
             else {
                 "content": message.content,
-                "role": message.sender,  # type: ignore
+                "role": message.role,  # type: ignore
                 "name": message.metadata["function_call"]["name"],
             }  # type: ignore
             for message in messages

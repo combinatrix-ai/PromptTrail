@@ -18,7 +18,7 @@ model = OpenAIChatCompletionModel(configuration=config)
 
 session = Session(
     messages=[
-        Message(content="Hey", sender="user"),
+        Message(content="Hey", role="user"),
     ]
 )
 

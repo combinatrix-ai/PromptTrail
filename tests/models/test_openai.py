@@ -44,7 +44,7 @@ class TestOpenAI(unittest.TestCase):
         # One message
         message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
-            sender="user",
+            role="user",
         )
         session = Session(messages=[message])
         response = self.model.send(self.parameters, session)
@@ -54,9 +54,9 @@ class TestOpenAI(unittest.TestCase):
 
         # All message types
         messages = [
-            Message(content="You're a helpful assistant.", sender="system"),
-            Message(content="Calculate 129183712*1271606", sender="user"),
-            Message(content="bc: The answer is 12696595579352", sender="system"),
+            Message(content="You're a helpful assistant.", role="system"),
+            Message(content="Calculate 129183712*1271606", role="user"),
+            Message(content="bc: The answer is 12696595579352", role="system"),
         ]
         session = Session(messages=messages)
         response = self.model.send(self.parameters, session)
@@ -68,21 +68,17 @@ class TestOpenAI(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(messages=[Message(content="", sender="User")]),  # empty content
+                Session(messages=[Message(content="", role="User")]),  # empty content
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(
-                    messages=[Message(content="Hello", sender="User")]
-                ),  # wrong sender
+                Session(messages=[Message(content="Hello", role="User")]),  # wrong role
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(
-                    messages=[Message(content="Hello", sender=None)]
-                ),  # empty sender
+                Session(messages=[Message(content="Hello", role=None)]),  # empty role
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, Session(messages=[]))
@@ -91,7 +87,7 @@ class TestOpenAI(unittest.TestCase):
         # One message
         message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
-            sender="user",
+            role="user",
         )
         session = Session(messages=[message])
         response = self.model.send_async(self.parameters, session)
@@ -100,9 +96,9 @@ class TestOpenAI(unittest.TestCase):
             all([isinstance(m, Message) for m in messages]) and len(messages) > 0
         )
         concat = "".join([m.content for m in messages])
-        sender = messages[0].sender
+        role = messages[0].role
         self.assertIn("527", concat)
-        self.assertEqual(sender, "assistant")
+        self.assertEqual(role, "assistant")
 
     def test_function_calling(self):
         # Tools are already tested in test_tool.py
@@ -110,11 +106,11 @@ class TestOpenAI(unittest.TestCase):
 
         session = weather_forecast.runner.run(max_messages=10)
         messages = session.messages
-        messages = [m for m in messages if m.sender != CONTROL_TEMPLATE_ROLE]
-        senders = [m.sender for m in messages]
+        messages = [m for m in messages if m.role != CONTROL_TEMPLATE_ROLE]
+        roles = [m.role for m in messages]
         # system, user, function call by assistant, function result by function, assistant
         self.assertEqual(
-            senders, ["system", "user", "assistant", "function", "assistant"]
+            roles, ["system", "user", "assistant", "function", "assistant"]
         )
         self.assertIn("Tokyo", messages[-1].content)
 
@@ -122,7 +118,7 @@ class TestOpenAI(unittest.TestCase):
         with self.assertRaises(ValidationError):
             OpenAIModelConfiguration(
                 api_key="sk-xxx",
-                mock_provider=EchoMockProvider(sender="assistant"),
+                mock_provider=EchoMockProvider(role="assistant"),
                 cache_provider=LRUCacheProvider(),
             )
 

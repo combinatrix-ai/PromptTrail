@@ -210,13 +210,13 @@ else:
         5300000 * 0.49 * 2.1
         ```
         """,
-                            sender="assistant",
+                            role="assistant",
                         ),
                         "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
-                            content="END", sender="assistant"
+                            content="END", role="assistant"
                         ),
                     },
-                    sender="assistant",
+                    role="assistant",
                 ),
             ),
         ),

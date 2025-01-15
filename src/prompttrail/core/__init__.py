@@ -35,22 +35,22 @@ class Message(BaseModel):
 
     # We may soon get non-textual messages maybe, so we should prepare for that.
     content: str
-    sender: Optional[str] = None
+    role: Optional[str] = None
 
     # Store metadata in dict
     metadata: Dict[str, Any] = {}
 
     def __hash__(self) -> int:
-        return hash((self.content, self.sender))
+        return hash((self.content, self.role))
 
     def __str__(self) -> str:
         if "\n" in self.content:
             content_part = 'content="""\n' + self.content + '\n"""'
         else:
             content_part = 'content="' + self.content + '"'
-        if self.sender is None:
+        if self.role is None:
             return "Message(" + content_part + '")'
-        return "Message(" + content_part + ', sender="' + self.sender + '")'
+        return "Message(" + content_part + ', role="' + self.role + '")'
 
 
 class Configuration(BaseModel):
@@ -256,10 +256,10 @@ class Model(BaseModel, ABC):
                 seq = ""
                 for char in message.content:
                     seq = seq + char
-                    yield Message(content=seq, sender=message.sender)
+                    yield Message(content=seq, role=message.role)
             else:
                 for char in message.content:
-                    yield Message(content=char, sender=message.sender)
+                    yield Message(content=char, role=message.role)
             return
         parameters, session = self.prepare(parameters, session, True)
         messages = self._send_async(parameters, session, yield_type)
@@ -282,7 +282,7 @@ class Model(BaseModel, ABC):
         Validates:
         - Session must have at least one message
         - All messages must have string content
-        - All messages must have a sender
+        - All messages must have a role
 
         You can override this method to add model-specific validation logic.
         """
@@ -294,9 +294,9 @@ class Model(BaseModel, ABC):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
-        if any([message.sender is None for message in session.messages]):
+        if any([message.role is None for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
+                f"{self.__class__.__name__}: All message in a session should have role."
             )
 
     def vaidate_other(

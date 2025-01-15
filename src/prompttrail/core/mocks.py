@@ -21,12 +21,12 @@ class MockProvider(ABC):
 class OneTurnConversationMockProvider(MockProvider):
     """A mock provider that returns a predefined response based on the last message."""
 
-    def __init__(self, conversation_table: Dict[str, "Message"], sender: str):
+    def __init__(self, conversation_table: Dict[str, "Message"], role: str):
         self.conversation_table = conversation_table
 
     def call(self, session: "Session") -> "Message":
         valid_messages = [
-            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
+            x for x in session.messages if x.role != CONTROL_TEMPLATE_ROLE
         ]
         if len(valid_messages) == 0:
             raise ValueError("No valid messages are passed to mock provider.")
@@ -48,12 +48,12 @@ class FunctionalMockProvider(MockProvider):
 
 
 class EchoMockProvider(FunctionalMockProvider):
-    def __init__(self, sender: str):
+    def __init__(self, role: str):
         # To avoid circular import
         from prompttrail.core import Message
 
         self.func: Callable[["Session"], "Message"] = lambda session: Message(
-            content=session.messages[-1].content, sender=sender
+            content=session.messages[-1].content, role=role
         )
 
     def call(self, session: "Session") -> "Message":

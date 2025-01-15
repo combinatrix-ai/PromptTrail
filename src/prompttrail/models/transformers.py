@@ -112,7 +112,7 @@ class TransformersModel(Model):
         outputs = model.generate(**inputs, **generate_kwargs)
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        return Message(content=generated_text, sender="assistant")
+        return Message(content=generated_text, role="assistant")
 
     def _send_async(
         self,
@@ -144,12 +144,12 @@ class TransformersModel(Model):
             def on_finalized_text(self, text: str, stream_end: bool = False):
                 if self.yield_type == "new":
                     self._streamer_messages.append(
-                        Message(content=text, sender="assistant")
+                        Message(content=text, role="assistant")
                     )
                 elif self.yield_type == "all":
                     self._all_text += text
                     self._streamer_messages.append(
-                        Message(content=self._all_text, sender="assistant")
+                        Message(content=self._all_text, role="assistant")
                     )
 
         return TransformersStreamer(self.tokenizer)
@@ -163,6 +163,6 @@ class TransformersModel(Model):
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
-        return "\n".join(f"{message.sender}: {message.content}" for message in messages)
+        return "\n".join(f"{message.role}: {message.content}" for message in messages)

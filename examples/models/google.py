@@ -11,7 +11,7 @@ api_key = os.environ.get("GOOGLE_CLOUD_API_KEY", "")
 
 session = Session(
     messages=[
-        Message(content="What is 17 times 31? Just provide the number.", sender="user"),
+        Message(content="What is 17 times 31? Just provide the number.", role="user"),
     ]
 )
 

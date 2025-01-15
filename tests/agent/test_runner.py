@@ -29,7 +29,7 @@ from prompttrail.models.openai import (
 # Echo mock model
 echo_mock_model = OpenAIChatCompletionModel(
     configuration=OpenAIModelConfiguration(
-        api_key="", mock_provider=EchoMockProvider(sender="assistant")
+        api_key="", mock_provider=EchoMockProvider(role="assistant")
     ),
 )
 parameters = OpenAIModelParameters(

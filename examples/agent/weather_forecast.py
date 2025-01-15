@@ -91,7 +91,7 @@ template = LinearTemplate(
         # Then, according to the response, runner call the function with the arguments provided by the API.
         # Second, the API is called with the result of the function.
         # Finally, the API return the response.
-        # Therefore, this template yields three messages. (sender: assistant, function, assistant)
+        # Therefore, this template yields three messages. (role: assistant, function, assistant)
         OpenAIGenerateWithFunctionCallingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],

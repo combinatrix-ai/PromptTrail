@@ -18,7 +18,7 @@ model = OpenAIChatCompletionModel(configuration=config)
 
 session = Session(
     messages=[
-        Message(content="Hey how are you?", sender="user"),
+        Message(content="Hey how are you?", role="user"),
     ]
 )
 print("Calling GPT-3.5 with this conversation history:")
@@ -32,7 +32,7 @@ for message in message_generator:
 
 session = Session(
     messages=[
-        Message(content="Tell me about yourself.", sender="user"),
+        Message(content="Tell me about yourself.", role="user"),
     ]
 )
 print("\nOf course, you can show the results incrementally!")

@@ -94,12 +94,12 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 > model = OpenAIChatCompletionModel(configuration=config)
 > session = Session(
 >   messages=[
->     Message(content="Hey", sender="user"),
+>     Message(content="Hey", role="user"),
 >   ]
 > )
 > message = model.send(parameters=parameters, session=session)
 
-Message(content="Hello! How can I assist you today?", sender="assistant")
+Message(content="Hello! How can I assist you today?", role="assistant")
 ```
 
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.
@@ -126,18 +126,18 @@ For example, you can mock LLMs for testing.
 >         conversation_table={
 >             "1+1": "1215973652716",
 >         },
->         sender="assistant",
+>         role="assistant",
 >     )
 > )
 > session = Session(
 >     messages=[
->         Message(content="1+1", sender="user"),
+>         Message(content="1+1", role="user"),
 >     ]
 > )
 > message = model.send(parameters=parameters, session=session)
 > print(message)
 
-TextMessage(content="1215973652716", sender="assistant")
+TextMessage(content="1215973652716", role="assistant")
 ```
 
 ### Agent as Code

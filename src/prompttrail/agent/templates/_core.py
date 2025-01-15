@@ -146,7 +146,7 @@ class MessageTemplate(Template):
             metadata["template_id"] = self.template_id
             message = Message(
                 content=rendered_content,
-                sender=self.role,
+                role=self.role,
                 metadata=metadata,
             )
             session.append(message)
@@ -210,7 +210,7 @@ class GenerateTemplate(MessageTemplate):
         metadata["template_id"] = self.template_id
         message = Message(
             content=rendered_content,
-            sender=self.role,
+            role=self.role,
             metadata=metadata,
         )
         session.append(message)
@@ -255,7 +255,7 @@ class UserInputTextTemplate(MessageTemplate):
         metadata["template_id"] = self.template_id
         message = Message(
             content=rendered_content,
-            sender=self.role,
+            role=self.role,
             metadata=metadata,
         )
         session.append(message)

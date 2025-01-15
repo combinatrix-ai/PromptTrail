@@ -117,7 +117,7 @@ class GoogleCloudChatModel(Model):
         if not response.text:
             raise ProviderResponseError("No response text returned.", response=response)
 
-        return Message(content=response.text, sender="assistant")
+        return Message(content=response.text, role="assistant")
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         """Validate session for Google Cloud Chat models.

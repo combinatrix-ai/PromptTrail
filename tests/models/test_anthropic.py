@@ -36,7 +36,7 @@ class TestAnthropic(unittest.TestCase):
         # One message
         message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
-            sender="user",
+            role="user",
         )
         session = Session(messages=[message])
         response = self.model.send(self.parameters, session)
@@ -46,9 +46,9 @@ class TestAnthropic(unittest.TestCase):
 
         # All message types
         messages = [
-            Message(content="You're a helpful assistant.", sender="system"),
+            Message(content="You're a helpful assistant.", role="system"),
             Message(
-                content="Calculate 14+13", sender="user"
+                content="Calculate 14+13", role="user"
             ),  # Haiku won't answer difficult questions if the system message is present?
         ]
         session = Session(messages=messages)
@@ -63,29 +63,25 @@ class TestAnthropic(unittest.TestCase):
                 self.parameters,
                 Session(
                     messages=[
-                        Message(content="a", sender="system"),
-                        Message(content="a", sender="system"),
+                        Message(content="a", role="system"),
+                        Message(content="a", role="system"),
                     ]
                 ),
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(messages=[Message(content="", sender="User")]),  # empty message
+                Session(messages=[Message(content="", role="User")]),  # empty message
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(
-                    messages=[Message(content="Hello", sender="User")]
-                ),  # wrong sender
+                Session(messages=[Message(content="Hello", role="User")]),  # wrong role
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(
-                    messages=[Message(content="Hello", sender=None)]
-                ),  # missing sender
+                Session(messages=[Message(content="Hello", role=None)]),  # missing role
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, Session(messages=[]))
@@ -96,15 +92,15 @@ class TestAnthropic(unittest.TestCase):
                 self.parameters,
                 Session(
                     messages=[
-                        Message(content="You're a helpful assistant.", sender="system")
+                        Message(content="You're a helpful assistant.", role="system")
                     ]
                 ),
             )
 
         # Test valid system message with user message
         messages = [
-            Message(content="You're a helpful assistant.", sender="system"),
-            Message(content="What is 2+2?", sender="user"),
+            Message(content="You're a helpful assistant.", role="system"),
+            Message(content="What is 2+2?", role="user"),
         ]
         session = Session(messages=messages)
         response = self.model.send(self.parameters, session)

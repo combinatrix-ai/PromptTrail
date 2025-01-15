@@ -28,7 +28,7 @@ def mock_model():
 
 def test_send(mock_model):
     # Test session and parameters
-    session = Session(messages=[Message(content="Hello", sender="user")])
+    session = Session(messages=[Message(content="Hello", role="user")])
     params = TransformersModelParameters(max_tokens=10)
 
     # Set up mocks
@@ -51,12 +51,12 @@ def test_send(mock_model):
 
 def test_send_async(mock_model):
     # Test session and parameters
-    session = Session(messages=[Message(content="Hello", sender="user")])
+    session = Session(messages=[Message(content="Hello", role="user")])
     params = TransformersModelParameters(max_tokens=10)
 
     # Set up mocks
     mock_model._create_streamer = MagicMock()
-    mock_model._streamer_messages = [Message(content="Mock stream", sender="assistant")]
+    mock_model._streamer_messages = [Message(content="Mock stream", role="assistant")]
 
     # Execute method
     responses = list(mock_model.send_async(parameters=params, session=session))
@@ -69,7 +69,7 @@ def test_send_async(mock_model):
 
 def test_validate_session(mock_model):
     # Valid session
-    valid_session = Session(messages=[Message(content="Valid", sender="user")])
+    valid_session = Session(messages=[Message(content="Valid", role="user")])
     mock_model.validate_session(valid_session, is_async=False)
 
     # Invalid session (no messages)
@@ -77,9 +77,9 @@ def test_validate_session(mock_model):
         empty_session = Session(messages=[])
         mock_model.validate_session(empty_session, is_async=False)
 
-    # Invalid session (no sender)
+    # Invalid session (no role)
     with pytest.raises(ParameterValidationError):
-        invalid_session = Session(messages=[Message(content="Invalid", sender=None)])
+        invalid_session = Session(messages=[Message(content="Invalid", role=None)])
         mock_model.validate_session(invalid_session, is_async=False)
 
 
@@ -99,7 +99,7 @@ def test_small_llm_on_cpu():
     transformers_model = TransformersModel(config, model, tokenizer)
 
     # Test session and parameters
-    session = Session(messages=[Message(content="Hello", sender="user")])
+    session = Session(messages=[Message(content="Hello", role="user")])
     params = TransformersModelParameters(max_tokens=5)  # Reduce token count
 
     # Execute method
