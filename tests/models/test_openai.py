@@ -68,17 +68,21 @@ class TestOpenAI(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(messages=[Message(content="", sender="User")]),
+                Session(messages=[Message(content="", sender="User")]),  # empty content
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(messages=[Message(content="Hello", sender="User")]),
+                Session(
+                    messages=[Message(content="Hello", sender="User")]
+                ),  # wrong sender
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(messages=[Message(content="Hello", sender=None)]),
+                Session(
+                    messages=[Message(content="Hello", sender=None)]
+                ),  # empty sender
             )
         with self.assertRaises(ParameterValidationError):
             self.model.send(self.parameters, Session(messages=[]))
