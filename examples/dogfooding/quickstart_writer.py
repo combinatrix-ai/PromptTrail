@@ -10,7 +10,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
+from prompttrail.core import Session
 from prompttrail.models.anthropic import (
     AnthropicClaudeModel,
     AnthropicClaudeModelConfiguration,
@@ -69,8 +69,7 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_session = Session()
-initial_session.append(Message(content="", metadata={"code": text}))
+initial_session = Session(initial_metadata={"code": text})
 session = runner.run(session=initial_session)
 last_message = session.get_last_message().content
 

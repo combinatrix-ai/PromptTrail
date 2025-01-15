@@ -18,7 +18,7 @@ from prompttrail.agent.templates.openai import (
     OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
+from prompttrail.core import Session
 from prompttrail.models.anthropic import (
     AnthropicClaudeModel,
     AnthropicClaudeModelConfiguration,
@@ -248,16 +248,12 @@ def main(
         print("Warning: No Git information found. Are you in a Git repository?")
         return ""
 
-    initial_session = Session()
-    initial_session.append(
-        Message(
-            content="",
-            metadata={
-                "branch": git_info["branch"],
-                "diff": git_info["diff"],
-                "log": git_info["log"],
-            },
-        )
+    initial_session = Session(
+        initial_metadata={
+            "branch": git_info["branch"],
+            "diff": git_info["diff"],
+            "log": git_info["log"],
+        }
     )
 
     session = runner.run(session=initial_session)

@@ -30,17 +30,18 @@ class TestExtractMarkdownCodeBlockHook(unittest.TestCase):
 class TestEvaluatePythonCodeHook(unittest.TestCase):
     def test_hook(self):
         session = Session()
-        session.append(Message(content="", metadata={"code": "print('Hello, World!')"}))
+        session.append(
+            Message(content="blah", metadata={"code": "print('Hello, World!')"})
+        )
         hook = EvaluatePythonCodeHook("answer", "code")
         session = hook.hook(session)
         self.assertEqual(session.get_latest_metadata()["answer"], None)
 
     def test_hook_no_code_block(self):
         session = Session()
-        session.append(Message(content="", metadata={}))
+        session.append(Message(content="blah", metadata={}))
         hook = EvaluatePythonCodeHook("answer", "code")
         with self.assertRaises(KeyError):
-            # TODO: Hook should raise error?
             session = hook.hook(session)
 
 

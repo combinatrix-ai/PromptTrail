@@ -63,15 +63,17 @@ class TestGoogleCloud(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             response = self.models.send(
                 self.parameters,
-                Session(messages=[Message(content="", sender="user")]),
+                Session(messages=[Message(content="", sender="user")]),  # empty message
             )
         with self.assertRaises(ParameterValidationError):
             self.models.send(
                 self.parameters,
-                Session(messages=[Message(content="Hello", sender=None)]),
+                Session(
+                    messages=[Message(content="Hello", sender=None)]
+                ),  # empty sender
             )
         with self.assertRaises(ParameterValidationError):
-            self.models.send(self.parameters, Session(messages=[]))
+            self.models.send(self.parameters, Session(messages=[]))  # empty session
 
         # On Google Cloud, sender can be anything
         response = self.models.send(
