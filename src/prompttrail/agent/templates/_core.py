@@ -218,10 +218,48 @@ class GenerateTemplate(MessageTemplate):
         return session
 
 
-class UserInputTextTemplate(MessageTemplate):
+class SystemTemplate(MessageTemplate):
+    """A template that creates a system message when rendered.
+    This is a convenience class that sets the role to "system" automatically."""
+
     def __init__(
         self,
-        role: MessageRoleType,
+        content: str,
+        template_id: Optional[str] = None,
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
+    ):
+        super().__init__(
+            content=content,
+            role="system",
+            template_id=template_id,
+            before_transform=before_transform,
+            after_transform=after_transform,
+        )
+
+
+class UserTemplate(MessageTemplate):
+    """A template that creates a user message when rendered.
+    This template can operate in two modes:
+    1. Static mode (when content is provided):
+       Creates a message with the given content.
+    2. Interactive mode (when content is None):
+       Prompts the user for input during runtime.
+
+    Examples:
+        # Static mode
+        user_static = UserTemplate("Hello!")
+
+        # Interactive mode
+        user_interactive = UserTemplate(
+            description="Please enter your message",
+            default="Hello!"
+        )
+    """
+
+    def __init__(
+        self,
+        content: Optional[str] = None,
         description: Optional[str] = None,
         default: Optional[str] = None,
         template_id: Optional[str] = None,
@@ -229,29 +267,94 @@ class UserInputTextTemplate(MessageTemplate):
         after_transform: Optional[List[TransformHook]] = None,
     ):
         super().__init__(
-            content="",  # TODO: This should be None. Or not use MessageTemplate?
-            role=role,
+            content=content or "",
+            role="user",
             template_id=template_id,
-            before_transform=before_transform if before_transform is not None else [],
-            after_transform=after_transform if after_transform is not None else [],
+            before_transform=before_transform,
+            after_transform=after_transform,
         )
-        self.role = role
+        self.is_interactive = content is None
         self.description = description
         self.default = default
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        # render
-        if session.runner is None:
-            raise ValueError(
-                "Runner must be given to use UserInputTextTemplate. Do you use Runner correctly? Runner must be passed via Session."
+        if self.is_interactive:
+            # Interactive mode
+            if session.runner is None:
+                raise ValueError(
+                    "Runner must be given to use interactive mode. Do you use Runner correctly?"
+                )
+            rendered_content = session.runner.user_interaction_provider.ask(
+                session, self.description, self.default
+            )
+        else:
+            # Static mode
+            rendered_content = self.jinja_template.render(
+                **session.get_latest_metadata()
             )
 
-        rendered_content = session.runner.user_interaction_provider.ask(
-            session, self.description, self.default
-        )
-        # Get metadata from the last message or initial metadata
         metadata = session.get_latest_metadata().copy()
-        # Add template_id to metadata
+        metadata["template_id"] = self.template_id
+        message = Message(
+            content=rendered_content,
+            role=self.role,
+            metadata=metadata,
+        )
+        session.append(message)
+        yield message
+        return session
+
+
+class AssistantTemplate(MessageTemplate):
+    """A template that creates an assistant message.
+    This template can operate in two modes:
+    1. Generate mode (when content is None):
+       Creates a message by calling LLM.
+    2. Static mode (when content is provided):
+       Creates a message with the given content.
+
+    Examples:
+        # Generate mode (LLM response)
+        assistant_generate = AssistantTemplate()
+
+        # Static mode
+        assistant_static = AssistantTemplate(content="Hello, I'm here to help!")
+    """
+
+    def __init__(
+        self,
+        content: Optional[str] = None,
+        template_id: Optional[str] = None,
+        before_transform: Optional[List[TransformHook]] = None,
+        after_transform: Optional[List[TransformHook]] = None,
+    ):
+        super().__init__(
+            content=content or "",
+            role="assistant",
+            template_id=template_id,
+            before_transform=before_transform,
+            after_transform=after_transform,
+        )
+        self.is_generate = content is None
+
+    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        if self.is_generate:
+            # Generate mode
+            if session.runner is None:
+                raise ValueError("runner is not set")
+            logger.info(
+                f"Generating content with {session.runner.models.__class__.__name__}..."
+            )
+            rendered_content = session.runner.models.send(
+                session.runner.parameters, session
+            ).content
+        else:
+            # Static mode
+            rendered_content = self.jinja_template.render(
+                **session.get_latest_metadata()
+            )
+
+        metadata = session.get_latest_metadata().copy()
         metadata["template_id"] = self.template_id
         message = Message(
             content=rendered_content,

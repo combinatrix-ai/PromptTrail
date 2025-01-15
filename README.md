@@ -152,17 +152,13 @@ template = LinearTemplate(
         ),
         LoopTemplate(
             [
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
-                GenerateTemplate(
-                    role="assistant",
-                ),
+                AssistantTemplate(),  # Generates response using LLM
                 MessageTemplate(role="assistant", content="Are you satisfied?"),
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Input:",
                     default="Yes.",
                 ),
@@ -172,9 +168,7 @@ template = LinearTemplate(
                     content="The user has stated their feedback."
                     + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`."
                 ),
-                check_end := GenerateTemplate(
-                    role="assistant",
-                ),
+                check_end := AssistantTemplate(),  # Generates END or RETRY response
             ],
             exit_condition=BooleanHook(
                 condition=lambda session: ("END" == session.get_last_message().content.strip())

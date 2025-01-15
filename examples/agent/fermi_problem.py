@@ -14,12 +14,12 @@ from prompttrail.agent.hooks import (
     ResetDataHook,
 )
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
-    GenerateTemplate,
     IfTemplate,
     LoopTemplate,
     MessageTemplate,
-    UserInputTextTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
@@ -68,22 +68,19 @@ Calculation:
             templates=[
                 # Then, we can start the conversation with user
                 # First, we ask user for their question
-                # UserInputTextTemplate is a template that ask user for their input.
+                # UserTemplate in interactive mode (when content is None) asks user for their input.
                 # As we see later, we use CLIRunner to run this model in CLI, so the input is given via console.
-                first := UserInputTextTemplate(
+                first := UserTemplate(
                     template_id="ask_question",
                     # Note: we can refer to this template later, so we give it a name: "first" with walrus operator.
                     # You can also use template_id to refer to a template.
-                    role="user",
                     description="Input:",
                     default="How many elephants in Japan?",
                 ),
-                GenerateTemplate(
+                AssistantTemplate(
                     template_id="generate_answer",
-                    role="assistant",
                     # Now we have the user's question, we can ask the API to generate the answer
-                    # Let's use GenerateTemplate to do this
-                    # GenerateTemplate make the content of the message using the model.
+                    # AssistantTemplate will generate the content using the model when no content is provided
                     # Previous message is used as context, so the model can generate the answer based on the question.
                     after_transform=[
                         # This is where things get interesting!
@@ -126,10 +123,9 @@ Calculation:
             role="assistant",
             content="The answer is {{ answer }} . Satisfied?",
         ),
-        UserInputTextTemplate(
+        UserTemplate(
             # Here is where we ask user for their feedback
             template_id="get_feedback",
-            role="user",
             description="Input:",
             default="Yes, I'm satisfied.",
         ),
@@ -140,9 +136,8 @@ Calculation:
             role="assistant",
             content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
         ),
-        check_end := GenerateTemplate(
+        check_end := AssistantTemplate(
             template_id="analyze_sentiment",
-            role="assistant",
             # API will return END or RETRY (mostly!)
         ),
     ],

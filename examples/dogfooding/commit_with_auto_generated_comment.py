@@ -7,13 +7,14 @@ from prompttrail.agent.hooks import BooleanHook, ResetDataHook
 from prompttrail.agent.hooks._core import TransformHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
-    GenerateTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
-    UserInputTextTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
@@ -104,9 +105,8 @@ class SaveCommitMessageHook(TransformHook):
 
 templates = LinearTemplate(
     [
-        MessageTemplate(
+        SystemTemplate(
             template_id="instruction",
-            role="system",
             content="""
 You are an expert at crafting Git commit messages.
 Your task is to analyze the provided Git repository information and generate an appropriate commit message.
@@ -134,14 +134,12 @@ Please generate a commit message based on the following information:
         ),
         LoopTemplate(
             [
-                GenerateTemplate(
+                AssistantTemplate(
                     template_id="generate_commit_message",
-                    role="assistant",
                     after_transform=[SaveCommitMessageHook()],
                 ),
-                UserInputTextTemplate(
+                UserTemplate(
                     template_id="get_feedback",
-                    role="user",
                     description="Please provide your feedback:",
                     default="Looks good!",
                 ),
@@ -164,9 +162,8 @@ Examples:
 - Respond with "END" for responses like "Perfect!", "OK", "Thanks"
 """,
                 ),
-                GenerateTemplate(
+                AssistantTemplate(
                     template_id="feedback_decision",
-                    role="assistant",
                 ),
                 IfTemplate(
                     true_template=BreakTemplate(),
