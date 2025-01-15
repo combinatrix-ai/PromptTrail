@@ -31,24 +31,22 @@ This is actually used in this repository to housekeep README.md, etc.
 See [examples/dogfooding/fix_markdown.py](https://github.com/combinatrix-ai/PromptTrail/blob/main/examples/dogfooding/fix_markdown.py) for the actual code.
 
 ```python
-from prompttrail.agent.templates import LinearTemplate, GenerateTemplate, MessageTemplate
+from prompttrail.agent.templates import LinearTemplate, AssistantTemplate, MessageTemplate, SystemTemplate, UserTemplate
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        SystemTemplate(
             content="""
 You're an AI proofreader that helps users fix markdown.
 You're given markdown content by the user.
 You only emit the corrected markdown. No explanation, comments, or anything else is needed.
 Do not remove > in the code section, which represents the prompt.
 """,
-            role="system",
         ),
-        MessageTemplate(
+        UserTemplate(
             content="{{content}}",
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),  # Generates response using LLM
     ],
 )
 ```
@@ -57,15 +55,15 @@ The template above is an example of a very simple agent.
 
 `LinearTemplate` is a template that runs templates in order. So, let's see child templates.
 
-The first `MessageTemplate` is a static template to tell LLM what they are, as you see `role` is set to `system` following OpenAI's convention.
+The first `SystemTemplate` is a convenience template that automatically sets the role to "system" following OpenAI's convention. It's used to tell LLM what they are.
 
 In this agent, markdown is passed to LLM and LLM returns the corrected markdown.
 
-The second `MessageTemplate` is a template that takes the user's input. `{{content}}` is a placeholder that will be replaced by `runner`.
+The second `UserTemplate` is a template that takes the user's input. `{{content}}` is a placeholder that will be replaced by `runner`. This template automatically sets the role to "user".
 
 This is where the actual markdown is passed. As some of you may have noticed, this is `Jinja2` template syntax. We use Jinja to dynamically generate templates.
 
-Finally, `GenerateTemplate` is a template that runs LLM actually. So, the result is what we are looking for.
+Finally, `AssistantTemplate` is a template that generates content using LLM. When no content is provided, it automatically calls the LLM to generate a response. This template automatically sets the role to "assistant".
 
 OK. You may grasp what's going on here. Let's run this agent.
 
@@ -199,8 +197,7 @@ Hooks are used to enhance the template.
 Let's see an excerpt from [examples/agent/fermi_problem.py]:
 
 ```python
-GenerateTemplate(
-    role="assistant",
+AssistantTemplate(
     after_transform=[
         ExtractMarkdownCodeBlockHook(
             key="python_segment", lang="python"

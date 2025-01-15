@@ -3,13 +3,15 @@ from prompttrail.agent import Session
 from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
     EndTemplate,
-    GenerateTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core.mocks import EchoMockProvider
@@ -33,14 +35,9 @@ parameters = OpenAIParam(
 def test_linear_template():
     template = LinearTemplate(
         templates=[
-            MessageTemplate(content="Repeat what the user said.", role="system"),
-            MessageTemplate(
-                content="Lazy fox jumps over the brown dog.",
-                role="user",
-            ),
-            GenerateTemplate(
-                role="assistant",
-            ),
+            SystemTemplate(content="Repeat what the user said."),
+            UserTemplate(content="Lazy fox jumps over the brown dog."),
+            AssistantTemplate(),
         ]
     )
     runner = CommandLineRunner(
@@ -312,6 +309,146 @@ def test_break_template():
     session = runner.run(session=session, max_messages=10)
     assert len(session.messages) == 1
     assert session.messages[0].content == "FALSE"
+
+
+def test_system_template():
+    """Test SystemTemplate with static content."""
+    template = LinearTemplate(
+        templates=[
+            SystemTemplate(
+                content="You are a helpful assistant.",
+            ),
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 3
+    assert session.messages[0].role == "system"
+    assert session.messages[0].content == "You are a helpful assistant."
+    assert session.messages[1].role == "user"
+    assert session.messages[1].content == "Hello!"
+    assert session.messages[2].role == "assistant"
+    assert session.messages[2].content == "Hello!"
+
+
+def test_user_template():
+    """Test UserTemplate in both static and interactive modes."""
+    # Test static mode
+    static_template = LinearTemplate(
+        templates=[
+            UserTemplate(
+                content="Hello, assistant!",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=static_template,
+    )
+    session = runner.run(session=Session(), max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello, assistant!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "Hello, assistant!"
+
+    # Test interactive mode
+    interactive_template = LinearTemplate(
+        templates=[
+            SystemTemplate(
+                content="You are a helpful assistant.",
+            ),
+            UserTemplate(
+                description="Enter your message:",
+                default="Hello from user!",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=interactive_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 3
+    assert session.messages[0].role == "system"
+    assert session.messages[0].content == "You are a helpful assistant."
+    assert session.messages[1].role == "user"
+    # Because we are using the echo mock provider, the user's message is echoed back
+    assert session.messages[1].content == "You are a helpful assistant."
+    assert session.messages[2].role == "assistant"
+    assert session.messages[2].content == "You are a helpful assistant."
+
+
+def test_assistant_template():
+    """Test AssistantTemplate in both static and generate modes."""
+    # Test static mode
+    static_template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(
+                content="I'm here to help!",
+            ),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=static_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "I'm here to help!"
+
+    # Test generate mode
+    generate_template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(),  # No content = generate mode
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=generate_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "Hello!"  # Echo mock returns user's message
 
 
 def test_nested_loop_with_break_template():

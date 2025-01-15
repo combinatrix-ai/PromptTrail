@@ -5,11 +5,10 @@ from tqdm import tqdm
 
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
-    GenerateTemplate,
+    AssistantTemplate,
     LinearTemplate,
     LoopTemplate,
-    MessageTemplate,
-    UserInputTextTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
@@ -17,21 +16,19 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, Anthro
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        UserTemplate(
             content="""
 You're given source code and test scripts and documents for a library, PromptTrail as below:
 {{code}}
 Discuss the question with user. User is the author of this library, who want to improve the design, implementation, and documentation of the library.
 """,
-            role="user",
         ),
         LoopTemplate(
             [
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Input:",
                 ),
-                GenerateTemplate(role="assistant"),
+                AssistantTemplate(),
             ]
         ),
     ],
