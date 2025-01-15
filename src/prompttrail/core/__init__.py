@@ -18,9 +18,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 if TYPE_CHECKING:
     from prompttrail.agent.runners import Runner
     from prompttrail.agent.templates import Stack
+    from prompttrail.agent.tools import Tool, ToolResult
 else:
     Runner = Any  # type: ignore
     Stack = Any  # type: ignore
+    Tool = Any  # type: ignore
+    ToolResult = Any  # type: ignore
 
 from prompttrail.core.cache import CacheProvider
 from prompttrail.core.errors import ParameterValidationError
@@ -56,10 +59,6 @@ class Message(BaseModel):
 class Configuration(BaseModel):
     """A configuration represents a set of data that is used to configure model."""
 
-    # Configuration is a set of data that is used to configure model.
-    # The name is following the naming convention of openai.
-    # Configuration does not have parameters that define the behavior of the model.
-
     cache_provider: Optional["CacheProvider"] = None
     """Cache provider to cache the response from the model."""
     mock_provider: Optional["MockProvider"] = None
@@ -79,7 +78,8 @@ class Parameters(BaseModel):
     """A parameters represents a set of data that is used to define the behavior of the model at runtime."""
 
     # Parameters is a set of data that is used to define the behavior of the model.
-    ...
+    tools: Optional[List["Tool"]] = None
+    """Optional list of tools that can be used by the model."""
 
 
 class Session(BaseModel):
@@ -189,19 +189,39 @@ class Model(BaseModel, ABC):
 
     @abstractmethod
     def _send(self, parameters: Parameters, session: Session) -> Message:
-        """A model should implement _send method to send a message to the model. You must implement this method to create a new model."""
+        """A model should implement _send method to send a message to the model."""
         raise NotImplementedError("Any model should implement _send method.")
+
+    def format_tool(self, tool: "Tool") -> Dict[str, Any]:
+        """Convert tool to model-specific format"""
+        raise NotImplementedError(
+            "Any model should implement format_tool method if it can use tools."
+        )
+
+    def format_tool_result(self, result: "ToolResult") -> Dict[str, Any]:
+        """Convert tool result to model-specific format"""
+        raise NotImplementedError(
+            "Any model should implement format_tool_result method if it can use tools."
+        )
+
+    def validate_tools(self, tools: List["Tool"]) -> None:
+        """Validate tools according to model-specific requirements"""
+        raise NotImplementedError(
+            "Any model should implement validate_tools method if it can use tools."
+        )
 
     def prepare(
         self, parameters: Parameters, session: Optional[Session], is_async: bool
     ) -> Tuple[UpdatedParameters, Session]:
-        """prepare method defines the standard procedure to pre/post-process parameters and session. You dont need to override this method usually."""
+        """prepare method defines the standard procedure to pre/post-process parameters and session."""
         if session is None:
             session = Session()
 
         self.validate_configuration(self.configuration, False)
         self.validate_parameters(parameters, False)
         self.validate_session(session, False)
+        if parameters.tools:
+            self.validate_tools(parameters.tools)
         self.vaidate_other(parameters, session, False)
         configuration_, parameters_, session_ = self.before_send(
             parameters, session, False
@@ -215,13 +235,12 @@ class Model(BaseModel, ABC):
         return parameters, session
 
     def send(self, parameters: Parameters, session: Session) -> Message:
-        """send method defines the standard procedure to send a message to the model. You dont need to override this method usually."""
+        """send method defines the standard procedure to send a message to the model."""
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
             if message is not None:
                 return message
         if self.configuration.mock_provider is not None:
-            # TODO: Should mock also process parameters?
             return self.configuration.mock_provider.call(session)
 
         parameters, session = self.prepare(parameters, session, False)
@@ -235,7 +254,7 @@ class Model(BaseModel, ABC):
         session: Session,
         yiled_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """A model should implement _send_async method to receive response asynchronously. You must implement this method to create a new model if you need async feature."""
+        """A model should implement _send_async method to receive response asynchronously."""
         raise NotImplementedError("Async method is not implemented for this model.")
 
     def send_async(
@@ -244,14 +263,13 @@ class Model(BaseModel, ABC):
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """send_async method defines the standard procedure to send a message to the model asynchronously. You dont need to override this method usually."""
+        """send_async method defines the standard procedure to send a message to the model asynchronously."""
         message: Optional[Message] = None
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
         if self.configuration.mock_provider is not None:
             message = self.configuration.mock_provider.call(session)
         if message is not None:
-            # character by character yield
             if yield_type == "all":
                 seq = ""
                 for char in message.content:
@@ -269,23 +287,15 @@ class Model(BaseModel, ABC):
     def validate_configuration(
         self, configuration: Configuration, is_async: bool
     ) -> None:
-        """validate_configuration method define the concrete procedure to validate configuration. You can override this method to add validation logic."""
+        """validate_configuration method define the concrete procedure to validate configuration."""
         ...
 
     def validate_parameters(self, parameters: Parameters, is_async: bool) -> None:
-        """validate_parameters method define the concrete procedure to validate parameters. You can override this method to add validation logic."""
+        """validate_parameters method define the concrete procedure to validate parameters."""
         ...
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        """validate_session method defines the basic validation procedure for sessions.
-
-        Validates:
-        - Session must have at least one message
-        - All messages must have string content
-        - All messages must have a role
-
-        You can override this method to add model-specific validation logic.
-        """
+        """validate_session method defines the basic validation procedure for sessions."""
         if len(session.messages) == 0:
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
@@ -302,7 +312,7 @@ class Model(BaseModel, ABC):
     def vaidate_other(
         self, parameters: Parameters, session: Session, is_async: bool
     ) -> None:
-        """vaidate_other method define the concrete procedure to validate other parameters and session. You can override this method to add validation logic."""
+        """vaidate_other method define the concrete procedure to validate other parameters and session."""
         ...
 
     def before_send(
@@ -312,7 +322,7 @@ class Model(BaseModel, ABC):
         Optional[UpdatedParameters],
         Optional[Session],
     ]:
-        """before_send method define the concrete procedure to pre-process parameters and session. You can override this method to add pre-processing logic."""
+        """before_send method define the concrete procedure to pre-process parameters and session."""
         return (None, None, None)
 
     def after_send(
@@ -322,9 +332,9 @@ class Model(BaseModel, ABC):
         message: Message,
         is_async: bool,
     ) -> UpdatedMessage:
-        """after_send method define the concrete procedure to post-process parameters, session, and message. You can override this method to add post-processing logic."""
+        """after_send method define the concrete procedure to post-process parameters, session, and message."""
         return message
 
     def list_models(self) -> List[str]:
-        """list_models method define the concrete procedure to list models. You can override this method to add list_models logic."""
+        """list_models method define the concrete procedure to list models."""
         raise NotImplementedError("List models is not implemented for this model.")

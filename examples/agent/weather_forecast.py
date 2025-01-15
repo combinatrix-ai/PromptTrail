@@ -1,114 +1,123 @@
-# This example shows how to create a simple agent for function calling.
+"""
+This example demonstrates how to use tools in PromptTrail.
 
-import enum
+Tools are a way to extend the capabilities of language models by allowing them to call external functions.
+In this example, we create a simple weather forecast tool that returns mock weather data.
+
+The example shows:
+1. How to define a tool result class that specifies the structure of the tool's output
+2. How to define a tool class with arguments and execution logic
+3. How to create a template that uses the tool
+4. How to run the template with a command line runner
+"""
+
 import os
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Literal
 
-from prompttrail.agent import Session
+from typing_extensions import TypedDict
+
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate, MessageTemplate
-from prompttrail.agent.templates.openai import OpenAIGenerateWithFunctionCallingTemplate
+from prompttrail.agent.templates import LinearTemplate
+from prompttrail.agent.templates.openai import (
+    OpenAIGenerateWithFunctionCallingTemplate,
+    OpenAIMessageTemplate,
+    OpenAISystemTemplate,
+)
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
+from prompttrail.core import Session
 from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
-# First, we must define the IO of the function.
 
-# The function takes two arguments: place and temperature_unit.
-# The function returns the weather and temperature.
+class WeatherData(TypedDict):
+    """Weather data structure"""
 
-
-# Start with the arguments.
-# We define the arguments as a subclass of ToolArgument.
-# value is the value of the argument. Define the type of value here.
-class Place(ToolArgument):
-    description: str = "The location to get the weather forecast"
-    value: str
+    temperature: float
+    weather: Literal["sunny", "rainy", "cloudy", "snowy"]
 
 
-# If you want to use enum, first define the enum.
-class TemperatureUnitEnum(enum.Enum):
-    Celsius = "Celsius"
-    Fahrenheit = "Fahrenheit"
-
-
-# And then you can use the class as the type of value.
-# Note that if you set the type as Optional, it means that the argument is not required.
-class TemperatureUnit(ToolArgument):
-    description: str = "The unit of temperature"
-    value: Optional[TemperatureUnitEnum]
-
-
-# We can instantiate the arguments like this:
-# place = Place(value="Tokyo")
-# temperature_unit = TemperatureUnit(value=TemperatureUnitEnum.Celsius)
-# Howwever, this is the job of the function itself, so we don't need to do this here.
-
-
-# Next, we define the result.
-# We define the result as a subclass of ToolResult.
-# The result must have a show method that can pass the result to the model.
 class WeatherForecastResult(ToolResult):
-    temperature: int
-    weather: str
+    """Weather forecast result
 
-    def show(self) -> Dict[str, Any]:
-        return {"temperature": self.temperature, "weather": self.weather}
+    This class defines the structure of the data returned by the weather forecast tool.
+    The content field is a dictionary that contains:
+    - temperature: The temperature in the specified unit (float)
+    - weather: The weather condition (one of: sunny, rainy, cloudy, snowy)
+    """
+
+    content: WeatherData
 
 
-# Finally, we define the function itself.
-# The function must implement the _call method.
-# The _call method takes a list of ToolArgument and returns a ToolResult.
-# Passed arguments are compared with argument_types and validated. This is why we have to define the type of arguments.
 class WeatherForecastTool(Tool):
-    name = "get_weather_forecast"
-    description = "Get the current weather in a given location and date"
-    argument_types = [Place, TemperatureUnit]
-    result_type = WeatherForecastResult
+    """Weather forecast tool
 
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
-        return WeatherForecastResult(temperature=0, weather="sunny")
+    This tool simulates getting weather forecast data for a location.
+    It demonstrates how to:
+    - Define tool arguments (location and temperature unit)
+    - Process those arguments in the execute method
+    - Return structured data using a ToolResult class
+    """
+
+    name: str = "get_weather_forecast"
+    description: str = "Get the current weather in a given location and date"
+    arguments: Dict[str, ToolArgument[Any]] = {
+        "location": ToolArgument(
+            name="location",
+            description="The location to get the weather forecast",
+            value_type=str,
+            required=True,
+        ),
+        "unit": ToolArgument(
+            name="unit",
+            description="The unit of temperature (Celsius or Fahrenheit)",
+            value_type=str,
+            required=False,
+        ),
+    }
+
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        """Execute weather forecast tool
+
+        This is a mock implementation that always returns the same data.
+        In a real application, this would call a weather API.
+        """
+        return WeatherForecastResult(content={"temperature": 0.0, "weather": "sunny"})
 
 
-# Let's define a template that uses the function.
+# Create OpenAI model with configuration
+api_key = os.environ.get("OPENAI_API_KEY", "dummy_key")
+config = OpenAIConfiguration(api_key=api_key)
+model = OpenAIModel(configuration=config)
+
+# Create templates for the conversation
+system = OpenAISystemTemplate(
+    content="You're an AI weather forecast assistant that help your users to find the weather forecast."
+)
+function_calling = OpenAIGenerateWithFunctionCallingTemplate(
+    role="assistant", functions=[WeatherForecastTool()]
+)
+
+# Create linear template that defines the conversation flow
 template = LinearTemplate(
     templates=[
-        MessageTemplate(
-            role="system",
-            content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
+        system,
+        OpenAIMessageTemplate(
+            content="What's the weather in Tokyo tomorrow?", role="user"
         ),
-        MessageTemplate(
-            role="user",
-            content="What's the weather in Tokyo tomorrow?",
-        ),
-        # In this template, two API calls are made.
-        # First, the API is called with the description of the function, which is generated automatically according to the type definition we made.
-        # The API return how they want to call the function.
-        # Then, according to the response, runner call the function with the arguments provided by the API.
-        # Second, the API is called with the result of the function.
-        # Finally, the API return the response.
-        # Therefore, this template yields three messages. (role: assistant, function, assistant)
-        OpenAIGenerateWithFunctionCallingTemplate(
-            role="assistant",
-            functions=[WeatherForecastTool()],
-        ),
+        function_calling,
     ]
 )
 
+# Create runner instance with model, parameters, and template
+parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
 runner = CommandLineRunner(
-    model=OpenAIModel(
-        configuration=OpenAIConfiguration(
-            api_key=os.environ.get("OPENAI_API_KEY", ""),
-        )
-    ),
-    parameters=OpenAIParam(
-        model_name="gpt-3.5-turbo",
-        max_tokens=1000,
-        temperature=0,
-    ),
+    model=model,
+    parameters=parameters,
     template=template,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interaction_provider=EchoUserInteractionTextMockProvider(),
 )
 
+
 if __name__ == "__main__":
-    runner.run()
+    session = Session()
+    runner.run(session=session, max_messages=10)

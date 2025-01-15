@@ -87,7 +87,8 @@ doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
 pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"
 "dogfooding:commit" = "python examples/dogfooding/commit_with_auto_generated_comment.py"
-"commit" = { chain = ["format-check", "all", "dogfooding:commit"] }
+chat = "python examples/dogfooding/chat.py"
+commit = { chain = ["format-check", "all", "dogfooding:commit"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

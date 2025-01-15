@@ -237,62 +237,72 @@ Go to [examples](examples) directory for more examples.
 
 ### Tooling
 
-You can use function calling!
-In function calling, you need to give LLM instructions to use the tool.
-Then, LLM give you the tool arguments and you need to give the result back to LLM.
-Therefore, you need:
+PromptTrail provides a powerful tool system for function calling that handles all the complexity of:
 
-- giving explanation by the way LLM can understand
-- handling of multiple turn conversations
-- validation of tool arguments given by LLM
-- executing the function and return the result to LLM
+- Type-safe argument validation
+- Automatic documentation generation from type hints
+- Function calling API formatting and execution
+- Result parsing and conversion
 
-PromptTrail handles all of these for you.
-You can define your own Tools to call and use them in your templates.
-Inherit `Tool`, `ToolArgument`, `ToolResult` and add type annotations.
-PromptTrail will automatically generate descriptions for LLM and let the LLM use the tool.
-Execution and validation is also handled by PromptTrail.
-Let's see a simple weather forecast tool as example:
+You can define your own tools using TypedDict for structured data and type annotations for safety:
 
 ```python
-class Place(ToolArgument):
-    description: str = "The location to get the weather forecast"
-    value: str
+from typing import Literal
+from typing_extensions import TypedDict
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 
-class TemperatureUnitEnum(enum.Enum):
-    Celsius = "Celsius"
-    Fahrenheit = "Fahrenheit"
+# Define the structure of tool output
+class WeatherData(TypedDict):
+    """Weather data structure"""
+    temperature: float
+    weather: Literal["sunny", "rainy", "cloudy", "snowy"]
 
-class TemperatureUnit(ToolArgument):
-    description: str = "The unit of temperature"
-    value: Optional[TemperatureUnitEnum]
-
+# Define the result wrapper
 class WeatherForecastResult(ToolResult):
-    temperature: int
-    weather: str
+    """Weather forecast result"""
+    content: WeatherData
 
-    def show(self) -> Dict[str, Any]:
-        return {"temperature": self.temperature, "weather": self.weather}
-
+# Implement the tool
 class WeatherForecastTool(Tool):
-    name = "get_weather_forecast"
-    description = "Get the current weather in a given location and date"
-    argument_types = [Place, TemperatureUnit]
-    result_type = WeatherForecastResult
+    """Weather forecast tool"""
+    name: str = "get_weather_forecast"
+    description: str = "Get the current weather in a given location"
+    
+    # Define arguments with type safety
+    arguments: Dict[str, ToolArgument[Any]] = {
+        "location": ToolArgument[str](
+            name="location",
+            description="The location to get the weather forecast",
+            value_type=str,
+            required=True
+        ),
+        "unit": ToolArgument[str](
+            name="unit",
+            description="Temperature unit (celsius or fahrenheit)",
+            value_type=str,
+            required=False
+        )
+    }
 
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        """Execute the weather forecast tool"""
         # Implement real API call here
-        return WeatherForecastResult(temperature=0, weather="sunny")
+        return WeatherForecastResult(
+            content={
+                "temperature": 20.5,
+                "weather": "sunny"
+            }
+        )
 
+# Use the tool in a template
 template = LinearTemplate(
     templates=[
-        MessageTemplate(
-            role="system",
-            content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
+        OpenAISystemTemplate(
+            content="You are a helpful weather assistant that provides weather forecasts.",
         ),
-        MessageTemplate(
+        OpenAIMessageTemplate(
             role="user",
-            content="What's the weather in Tokyo tomorrow?",
+            content="What's the weather in Tokyo?",
         ),
         OpenAIGenerateWithFunctionCallingTemplate(
             role="assistant",
@@ -307,19 +317,19 @@ The conversation will be like below:
 ```console
 ===== Start =====
 From: 📝 system
-message:  You're an AI weather forecast assistant that help your users to find the weather forecast.
+message:  You are a helpful weather assistant that provides weather forecasts.
 =================
 From: 👤 user
-message:  What's the weather in Tokyo tomorrow?
+message:  What's the weather in Tokyo?
 =================
 From: 🤖 assistant
-data:  {'function_call': {'name': 'get_weather_forecast', 'arguments': {'place': 'Tokyo', 'temperatureunit': 'Celsius'}}}
+data:  {'function_call': {'name': 'get_weather_forecast', 'arguments': {'location': 'Tokyo'}}}
 =================
 From: 🧮 function
-message:  {"temperature": 0, "weather": "sunny"}
+message:  {"content": {"temperature": 20.5, "weather": "sunny"}}
 =================
 From: 🤖 assistant
-message:  The weather in Tokyo tomorrow is expected to be sunny with a temperature of 0 degrees Celsius.
+message:  The weather in Tokyo is currently sunny with a temperature of 20.5°C.
 =================
 ====== End ======
 ```

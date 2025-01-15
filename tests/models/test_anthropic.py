@@ -8,7 +8,6 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, Anthro
 
 path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(path)
-from examples.agent import weather_forecast  # type: ignore # noqa: E402
 
 
 # TODO: Add error handling test
