@@ -137,7 +137,7 @@ class AnthropicModel(Model):
         if content == "":
             raise ValueError("Response is empty.")
 
-        result = Message(content=content, role=cast(str, response.role))
+        result = Message(content=content, role="assistant")
 
         # Process tool calls if present
         if hasattr(response, "tool_calls") and response.tool_calls:
@@ -176,39 +176,16 @@ class AnthropicModel(Model):
                 f"{self.__class__.__name__}: Session must contain at least one non-system message."
             )
 
-        # Anthropic API allow zero or one system message at the beginning
-
-        # Anthropic-specific validation for system message
-        if (
-            messages[0].role == "system"
-            and len([message for message in messages if message.role == "system"]) > 1
-        ) or (
-            messages[0].role != "system"
-            and len([message for message in messages if message.role == "system"]) > 0
-        ):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
-            )
-
-        # Anthropic-specific validation for allowed roles
-        if any(
-            [
-                message.role not in ["user", "assistant", "system"]
-                for message in messages
-            ]
-        ):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have role of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
-            )
-        if any([not isinstance(message.content, str) for message in messages]):  # type: ignore
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-
         # Anthropic-specific validation for empty messages
         if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Anthoropic API restriction)"
+                f"{self.__class__.__name__}: Empty messages are not allowed. (Anthropic API restriction)"
+            )
+
+        # Anthropic-specific validation for tool_result messages
+        if any([message.role == "tool_result" for message in session.messages]):
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Tool result messages are not supported"
             )
 
     @staticmethod
@@ -227,7 +204,12 @@ class AnthropicModel(Model):
             return (
                 [
                     AnthropicMessageDict(
-                        role=cast(AnthropicRole, message.role),
+                        role=cast(
+                            AnthropicRole,
+                            "assistant"
+                            if message.role == "assistant"
+                            else message.role,
+                        ),
                         content=str(message.content),
                     )
                     for message in messages[1:]
@@ -238,7 +220,12 @@ class AnthropicModel(Model):
             return (
                 [
                     AnthropicMessageDict(
-                        role=cast(AnthropicRole, message.role),
+                        role=cast(
+                            AnthropicRole,
+                            "assistant"
+                            if message.role == "assistant"
+                            else message.role,
+                        ),
                         content=str(message.content),
                     )
                     for message in messages

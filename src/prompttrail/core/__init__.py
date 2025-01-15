@@ -33,15 +33,19 @@ from prompttrail.core.utils import logger_multiline
 logger = logging.getLogger(__name__)
 
 
+# Define standard message roles
+MessageRoleType = Literal["system", "user", "assistant", "tool_result", "control"]
+
+
 class Message(BaseModel):
     """A message represents a single message from a user, model, or API etc..."""
 
     # We may soon get non-textual messages maybe, so we should prepare for that.
     content: str
-    role: Optional[str] = None
+    role: MessageRoleType
 
     # Store metadata in dict
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def __hash__(self) -> int:
         return hash((self.content, self.role))
@@ -236,14 +240,22 @@ class Model(BaseModel, ABC):
 
     def send(self, parameters: Parameters, session: Session) -> Message:
         """send method defines the standard procedure to send a message to the model."""
+        if self.configuration.mock_provider is not None:
+            # Even with mock provider, we still need to validate
+            self.validate_configuration(self.configuration, False)
+            self.validate_parameters(parameters, False)
+            self.validate_session(session, False)
+            if parameters.tools:
+                self.validate_tools(parameters.tools)
+            return self.configuration.mock_provider.call(session)
+
+        parameters, session = self.prepare(parameters, session, False)
+
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
             if message is not None:
                 return message
-        if self.configuration.mock_provider is not None:
-            return self.configuration.mock_provider.call(session)
 
-        parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
         logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)
         return self.after_send(parameters, session, message, False)
@@ -304,10 +316,23 @@ class Model(BaseModel, ABC):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
-        if any([message.role is None for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have role."
-            )
+
+        # Filter out control template messages for validation
+        messages = [
+            message for message in session.messages if message.role != "control"
+        ]
+
+        # Check for system messages
+        system_messages = [msg for msg in messages if msg.role == "system"]
+        if system_messages:
+            if len(system_messages) > 1:
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: Only one system message is allowed in a session."
+                )
+            if messages[0].role != "system":
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: System message must be at the beginning of the session."
+                )
 
     def vaidate_other(
         self, parameters: Parameters, session: Session, is_async: bool

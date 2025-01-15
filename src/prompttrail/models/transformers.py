@@ -136,6 +136,8 @@ class TransformersModel(Model):
         self._streamer_messages: List[Message] = []
         self._all_text = ""
 
+        outer_self = self
+
         class TransformersStreamer(TextStreamer):
             def __init__(self, tokenizer, *args, **kwargs):
                 super().__init__(tokenizer, *args, **kwargs)
@@ -143,13 +145,13 @@ class TransformersModel(Model):
 
             def on_finalized_text(self, text: str, stream_end: bool = False):
                 if self.yield_type == "new":
-                    self._streamer_messages.append(
+                    outer_self._streamer_messages.append(
                         Message(content=text, role="assistant")
                     )
                 elif self.yield_type == "all":
-                    self._all_text += text
-                    self._streamer_messages.append(
-                        Message(content=self._all_text, role="assistant")
+                    outer_self._all_text += text
+                    outer_self._streamer_messages.append(
+                        Message(content=outer_self._all_text, role="assistant")
                     )
 
         return TransformersStreamer(self.tokenizer)
@@ -165,4 +167,11 @@ class TransformersModel(Model):
             for message in session.messages
             if message.role != CONTROL_TEMPLATE_ROLE
         ]
+        # Check for tool_result messages
+        for message in messages:
+            if message.role == "tool_result":
+                raise ParameterValidationError(
+                    "TransformersModel: Tool result messages are not supported"
+                )
+
         return "\n".join(f"{message.role}: {message.content}" for message in messages)

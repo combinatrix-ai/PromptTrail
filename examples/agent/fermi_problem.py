@@ -15,13 +15,11 @@ from prompttrail.agent.hooks import (
 )
 from prompttrail.agent.templates import (
     BreakTemplate,
+    GenerateTemplate,
     IfTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
@@ -216,7 +214,6 @@ else:
                             content="END", role="assistant"
                         ),
                     },
-                    role="assistant",
                 ),
             ),
         ),

@@ -7,6 +7,7 @@ import google.generativeai.types as gai_types  # type: ignore
 from pydantic import BaseModel, ConfigDict  # type: ignore
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError, ProviderResponseError
 
 logger = getLogger(__name__)
@@ -74,6 +75,33 @@ class GoogleModel(Model):
             api_key=self.configuration.api_key,
         )
 
+    def validate_session(self, session: Session, is_async: bool) -> None:
+        """Validate session for Google Chat models.
+
+        Extends the base validation with Google-specific validation:
+        - No empty messages allowed (unlike OpenAI which allows them)
+        - No tool_result messages allowed
+        """
+        super().validate_session(session, is_async)
+
+        # Google-specific validation for empty messages
+        if any([message.content == "" for message in session.messages]):
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google API restriction)"
+            )
+
+        # Check for tool_result messages
+        messages = [
+            message
+            for message in session.messages
+            if message.role != CONTROL_TEMPLATE_ROLE
+        ]
+        for message in messages:
+            if message.role == "tool_result":
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: Tool result messages are not supported"
+                )
+
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
         if not isinstance(parameters, GoogleParam):
@@ -99,6 +127,7 @@ class GoogleModel(Model):
             chat.send_message(message.content)
 
         # Send the last message with generation config
+        session.messages[-1]
         response = chat.send_message(
             session.messages[-1].content,
             generation_config=palm.types.GenerationConfig(
@@ -118,20 +147,6 @@ class GoogleModel(Model):
             raise ProviderResponseError("No response text returned.", response=response)
 
         return Message(content=response.text, role="assistant")
-
-    def validate_session(self, session: Session, is_async: bool) -> None:
-        """Validate session for Google Chat models.
-
-        Extends the base validation with Google-specific validation:
-        - No empty messages allowed (unlike OpenAI which allows them)
-        """
-        super().validate_session(session, is_async)
-
-        # Google-specific validation for empty messages
-        if any([message.content == "" for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google API restriction)"
-            )
 
     def list_models(self) -> List[str]:
         self._authenticate()

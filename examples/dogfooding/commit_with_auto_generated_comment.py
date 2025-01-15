@@ -8,14 +8,12 @@ from prompttrail.agent.hooks._core import TransformHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     BreakTemplate,
+    GenerateTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session

@@ -8,7 +8,7 @@ import jinja2
 from pydantic import BaseModel
 
 from prompttrail.agent.hooks import TransformHook
-from prompttrail.core import Message, Session
+from prompttrail.core import Message, MessageRoleType, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
@@ -118,7 +118,7 @@ class MessageTemplate(Template):
     def __init__(
         self,
         content: str,
-        role: str,
+        role: MessageRoleType,
         template_id: Optional[str] = None,
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
@@ -181,7 +181,7 @@ class GenerateTemplate(MessageTemplate):
 
     def __init__(
         self,
-        role: str,
+        role: MessageRoleType,
         template_id: Optional[str] = None,
         before_transform: Optional[List[TransformHook]] = None,
         after_transform: Optional[List[TransformHook]] = None,
@@ -221,7 +221,7 @@ class GenerateTemplate(MessageTemplate):
 class UserInputTextTemplate(MessageTemplate):
     def __init__(
         self,
-        role: str,
+        role: MessageRoleType,
         description: Optional[str] = None,
         default: Optional[str] = None,
         template_id: Optional[str] = None,
