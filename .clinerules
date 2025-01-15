@@ -3,7 +3,7 @@ PromptTrail is a library designed for LLM programming.
 
 # Project Overview
 - PromptTrail is a lightweight library that helps you build applications with LLMs.
-- It provides a unified interface to various LLMs (OpenAI, Google Cloud, Anthropic Claude, Local LLMs) and a simple DSL for "Agent as Code".
+- It provides a unified interface to various LLMs (OpenAI, Google Gemini, Anthropic Claude, Local LLMs) and a simple DSL for "Agent as Code".
 - It also offers developer tools for prompt programming, including LLM mocking for testing.
 
 # Project Setup

@@ -19,11 +19,7 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 
 def get_git_info() -> dict:
@@ -220,13 +216,13 @@ def main(
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable is required")
 
-    configuration = AnthropicClaudeModelConfiguration(api_key=api_key)
-    parameter = AnthropicClaudeModelParameters(
+    configuration = AnthropicConfig(api_key=api_key)
+    parameter = AnthropicParam(
         model_name="claude-3-5-sonnet-20241022",
         temperature=0.7,
         max_tokens=1000,
     )
-    model = AnthropicClaudeModel(configuration=configuration)
+    model = AnthropicModel(configuration=configuration)
 
     runner = CommandLineRunner(
         model=model,

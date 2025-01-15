@@ -13,11 +13,7 @@ from prompttrail.agent.templates.openai import (
     OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 logging.basicConfig(level=logging.INFO)
 
@@ -62,12 +58,10 @@ template = LinearTemplate(
 
 
 runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(
-            api_key=os.environ.get("OPENAI_API_KEY", "")
-        )
+    model=OpenAIModel(
+        configuration=OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+    parameters=OpenAIParam(model_name="gpt-4o-mini"),
     template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )

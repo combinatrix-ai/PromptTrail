@@ -5,9 +5,9 @@ import pytest
 from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.models.transformers import (
+    TransformersConfig,
     TransformersModel,
-    TransformersModelConfiguration,
-    TransformersModelParameters,
+    TransformersParam,
 )
 
 
@@ -18,7 +18,7 @@ def mock_model():
     mock_tokenizer = MagicMock()
 
     # Model configuration
-    config = TransformersModelConfiguration(device="cpu")
+    config = TransformersConfig(device="cpu")
 
     # Create TransformersModel instance and inject mocks
     model = TransformersModel(config, mock_model, mock_tokenizer)
@@ -29,7 +29,7 @@ def mock_model():
 def test_send(mock_model):
     # Test session and parameters
     session = Session(messages=[Message(content="Hello", role="user")])
-    params = TransformersModelParameters(max_tokens=10)
+    params = TransformersParam(max_tokens=10)
 
     # Set up mocks
     mock_tensor = MagicMock()
@@ -52,7 +52,7 @@ def test_send(mock_model):
 def test_send_async(mock_model):
     # Test session and parameters
     session = Session(messages=[Message(content="Hello", role="user")])
-    params = TransformersModelParameters(max_tokens=10)
+    params = TransformersParam(max_tokens=10)
 
     # Set up mocks
     mock_model._create_streamer = MagicMock()
@@ -95,12 +95,12 @@ def test_small_llm_on_cpu():
     )
 
     # Model configuration
-    config = TransformersModelConfiguration(device="cpu")
+    config = TransformersConfig(device="cpu")
     transformers_model = TransformersModel(config, model, tokenizer)
 
     # Test session and parameters
     session = Session(messages=[Message(content="Hello", role="user")])
-    params = TransformersModelParameters(max_tokens=5)  # Reduce token count
+    params = TransformersParam(max_tokens=5)  # Reduce token count
 
     # Execute method
     response = transformers_model.send(parameters=params, session=session)

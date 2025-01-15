@@ -3,26 +3,22 @@ import unittest
 
 from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
-from prompttrail.models.google_cloud import (
-    GoogleCloudChatModel,
-    GoogleCloudChatModelConfiguration,
-    GoogleCloudChatModelParameters,
-)
+from prompttrail.models.google import GoogleConfig, GoogleModel, GoogleParam
 
 
 class TestGoogleCloud(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
-        self.configuration = GoogleCloudChatModelConfiguration(
+        self.configuration = GoogleConfig(
             api_key=self.api_key,
         )
         self.use_model = "models/gemini-1.5-flash"
-        self.parameters = GoogleCloudChatModelParameters(
+        self.parameters = GoogleParam(
             model_name=self.use_model,
             max_tokens=100,
             temperature=0,
         )
-        self.models = GoogleCloudChatModel(configuration=self.configuration)
+        self.models = GoogleModel(configuration=self.configuration)
 
     def test_model_list(self):
         model_list = self.models.list_models()
@@ -73,7 +69,7 @@ class TestGoogleCloud(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             self.models.send(self.parameters, Session(messages=[]))  # empty session
 
-        # On Google Cloud, role can be anything
+        # On Google, role can be anything
         response = self.models.send(
             self.parameters,
             Session(messages=[Message(content="Hello", role="")]),

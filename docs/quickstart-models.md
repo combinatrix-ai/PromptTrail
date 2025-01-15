@@ -18,15 +18,15 @@ Let's call OpenAI's GPT-3 model. (You need to set `API_KEY` environment variable
 import os
 from prompttrail.core import Session, Message
 from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters
+    OpenAIModel,
+    OpenAIConfiguration,
+    OpenAIParam
 )
 
 api_key = os.environ["OPENAI_API_KEY"]
-config = OpenAIModelConfiguration(api_key=api_key)
-parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
-model = OpenAIChatCompletionModel(configuration=config)
+config = OpenAIConfiguration(api_key=api_key)
+parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+model = OpenAIModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
@@ -127,24 +127,24 @@ For example, you may want to GPT-3.5 for the first message, and if the conversat
 
 ## Try different API
 
-### Google Cloud
+### Google
 
 If you want to call Google's Palm model, you can do it by changing some lines.
 
 ```python
 import os
 from prompttrail.core import Session, Message
-from prompttrail.models.google_cloud import (
-    GoogleCloudChatModel, # Change Model
-    GoogleCloudChatModelParameters, # Change Parameters
-    GoogleCloudChatModelConfiguration, # Change Configuration
+from prompttrail.models.google import (
+    GoogleModel, # Change Model
+    GoogleParam, # Change Parameters
+    GoogleConfig, # Change Configuration
 )
 
 api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
-config = GoogleCloudChatModelConfiguration(api_key=api_key)
+config = GoogleConfig(api_key=api_key)
 # Change model name, of course Google's model name is different from OpenAI's
-parameters = GoogleCloudChatModelParameters(model_name="models/chat-bison-001", max_tokens=100, temperature=0)
-model = GoogleCloudChatModel(configuration=config)
+parameters = GoogleParam(model_name="models/gemini-1.5-flash", max_tokens=100, temperature=0)
+model = GoogleModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
@@ -180,15 +180,15 @@ Anthropic's Claude is also available:
 import os
 from prompttrail.core import Session, Message
 from prompttrail.models.anthropic import (
-    AnthropicClaudeModel, # Change Model
-    AnthropicClaudeModelParameters, # Change Parameters
-    AnthropicClaudeModelConfiguration, # Change Configuration
+    AnthropicModel, # Change Model
+    AnthropicParam, # Change Parameters
+    AnthropicConfig, # Change Configuration
 )
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
-config = AnthropicClaudeModelConfiguration(api_key=api_key)
-parameters = AnthropicClaudeModelParameters(model_name="claude-3-haiku-20240307", max_tokens=100, temperature=0)
-model = AnthropicClaudeModel(configuration=config)
+config = AnthropicConfig(api_key=api_key)
+parameters = AnthropicParam(model_name="claude-3-haiku-20240307", max_tokens=100, temperature=0)
+model = AnthropicModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
@@ -216,8 +216,8 @@ Then you can use it like this:
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompttrail.models.transformers import (
     TransformersModel,
-    TransformersModelConfiguration,
-    TransformersModelParameters
+    TransformersConfig,
+    TransformersParam
 )
 from prompttrail.core import Session, Message
 
@@ -228,7 +228,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Create TransformersModel instance
 llm = TransformersModel(
-    configuration=TransformersModelConfiguration(
+    configuration=TransformersConfig(
         device="cuda"  # Use "cpu" if you don't have GPU
     ),
     model=model,
@@ -244,7 +244,7 @@ session = Session(
 # Generate response with custom parameters
 response = llm.send(
     session=session,
-    parameters=TransformersModelParameters(
+    parameters=TransformersParam(
         temperature=0.7,
         max_tokens=100,
         top_p=0.9,
@@ -285,6 +285,6 @@ For Transformers models, you can use streaming in the same way:
 ```python
 for partial_response in llm.send_async(
     session=session,
-    parameters=TransformersModelParameters(temperature=0.7)
+    parameters=TransformersParam(temperature=0.7)
 ):
     print(partial_response.content, end="", flush=True)

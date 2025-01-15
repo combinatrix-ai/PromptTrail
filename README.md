@@ -57,8 +57,7 @@ pip install -e .
 - PromptTrail offers the following features:
   - [Unified interface to various LLMs](#llm-api-call)
     - OpenAI
-    - Google Cloud (Palm)
-      - [TODO] Gemini
+    - Google Gemini
     - Anthropic Claude
     - Local LLMs (via Transformers)
   - [Developer Tools for prompt programming](#developer-tools)
@@ -86,12 +85,12 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 ```python
 > import os
 > from src.prompttrail.core import Session, Message
-> from src.prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
-> 
+> from src.prompttrail.models.openai import OpenAIModel, OpenAIConfiguration, OpenAIParam
+>
 > api_key = os.environ["OPENAI_API_KEY"]
-> config = OpenAIModelConfiguration(api_key=api_key)
-> parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
-> model = OpenAIChatCompletionModel(configuration=config)
+> config = OpenAIConfiguration(api_key=api_key)
+> parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+> model = OpenAIModel(configuration=config)
 > session = Session(
 >   messages=[
 >     Message(content="Hey", role="user"),
@@ -185,12 +184,12 @@ template = LinearTemplate(
 )
 
 runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(
+    model=OpenAIModel(
+        configuration=OpenAIConfiguration(
             api_key=os.environ.get("OPENAI_API_KEY", "")
         )
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-4"),
+    parameters=OpenAIParam(model_name="gpt-4"),
     template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )

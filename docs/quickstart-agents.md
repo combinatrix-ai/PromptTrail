@@ -92,18 +92,18 @@ from prompttrail.core import Session
 from prompttrail.agent.runner import CommandLineRunner
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
+    OpenAIModel,
+    OpenAIConfiguration,
+    OpenAIParam,
 )
 
 # Setup LLM model
 # Don't forget to set OPENAI_API_KEY environment variable
-configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIModelParameters(
+configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
+parameter = OpenAIParam(
     model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=8000
 )
-model = OpenAIChatCompletionModel(configuration=configuration)
+model = OpenAIModel(configuration=configuration)
 
 # Define runner
 runner = CommandLineRunner(

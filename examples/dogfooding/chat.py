@@ -13,11 +13,7 @@ from prompttrail.agent.templates import (
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 templates = LinearTemplate(
     templates=[
@@ -41,15 +37,13 @@ Discuss the question with user. User is the author of this library, who want to 
     ],
 )
 
-configuration = AnthropicClaudeModelConfiguration(
-    api_key=os.environ["ANTHROPIC_API_KEY"]
-)
-parameter = AnthropicClaudeModelParameters(
+configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+parameter = AnthropicParam(
     model_name="claude-3-sonnet-20240229",
     temperature=1,
     max_tokens=4096,
 )
-model = AnthropicClaudeModel(configuration=configuration)
+model = AnthropicModel(configuration=configuration)
 
 # load all files in examples and tests with its name in text
 text = ""

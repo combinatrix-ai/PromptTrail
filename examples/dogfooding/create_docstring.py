@@ -14,11 +14,7 @@ from prompttrail.agent.templates.openai import (
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Message, Session
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(
     templates=[
@@ -42,11 +38,11 @@ For your information, README is given below.
     ],
 )
 
-configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIModelParameters(
+configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
+parameter = OpenAIParam(
     model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=5000
 )
-model = OpenAIChatCompletionModel(configuration=configuration)
+model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,

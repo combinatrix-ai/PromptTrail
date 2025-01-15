@@ -6,11 +6,7 @@ from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
 from prompttrail.agent.tools import Tool, check_arguments
 from prompttrail.core import Message, Session
 from prompttrail.core.const import OPENAI_SYSTEM_ROLE
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelParameters,
-    OpenAIrole,
-)
+from prompttrail.models.openai import OpenAIModel, OpenAIParam, OpenAIrole
 
 
 class OpenAIGenerateTemplate(GenerateTemplate):
@@ -60,14 +56,12 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             raise ValueError(
                 "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via Session."
             )
-        if not isinstance(runner.models, OpenAIChatCompletionModel):
+        if not isinstance(runner.models, OpenAIModel):
             raise ValueError(
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
 
-        temporary_parameters = cast(
-            OpenAIModelParameters, runner.parameters.model_copy()
-        )
+        temporary_parameters = cast(OpenAIParam, runner.parameters.model_copy())
         temporary_parameters.functions = self.functions  # type: ignore
 
         # 1st message: pass functions and let the model use it

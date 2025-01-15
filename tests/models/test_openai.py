@@ -9,11 +9,7 @@ from prompttrail.core.cache import LRUCacheProvider
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(path)
@@ -26,13 +22,13 @@ class TestOpenAI(unittest.TestCase):
         self.api_key = os.environ["OPENAI_API_KEY"]
         self.organization_id = os.environ.get("OPENAI_ORGANIZATION_ID", None)
         self.use_model = "gpt-3.5-turbo"
-        self.config = OpenAIModelConfiguration(
+        self.config = OpenAIConfiguration(
             api_key=self.api_key, organization_id=self.organization_id
         )
-        self.parameters = OpenAIModelParameters(
+        self.parameters = OpenAIParam(
             model_name=self.use_model, max_tokens=100, temperature=0
         )
-        self.model = OpenAIChatCompletionModel(configuration=self.config)
+        self.model = OpenAIModel(configuration=self.config)
 
     def test_model_list(self):
         model_list = self.model.list_models()
@@ -116,7 +112,7 @@ class TestOpenAI(unittest.TestCase):
 
     def test_use_both_cache_and_mock(self):
         with self.assertRaises(ValidationError):
-            OpenAIModelConfiguration(
+            OpenAIConfiguration(
                 api_key="sk-xxx",
                 mock_provider=EchoMockProvider(role="assistant"),
                 cache_provider=LRUCacheProvider(),

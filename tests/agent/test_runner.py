@@ -16,23 +16,19 @@ from prompttrail.agent.templates.openai import (
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 # Run various templates
 
 # TODO: Add tests for all templates
 
 # Echo mock model
-echo_mock_model = OpenAIChatCompletionModel(
-    configuration=OpenAIModelConfiguration(
+echo_mock_model = OpenAIModel(
+    configuration=OpenAIConfiguration(
         api_key="", mock_provider=EchoMockProvider(role="assistant")
     ),
 )
-parameters = OpenAIModelParameters(
+parameters = OpenAIParam(
     model_name="gpt-3.5-turbo",
 )
 

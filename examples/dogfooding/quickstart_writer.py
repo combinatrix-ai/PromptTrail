@@ -11,11 +11,7 @@ from prompttrail.agent.templates.openai import (
 from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 templates = LinearTemplate(
     templates=[
@@ -33,15 +29,13 @@ Show plenty of self-contained code examples with comments.
     ],
 )
 
-configuration = AnthropicClaudeModelConfiguration(
-    api_key=os.environ["ANTHROPIC_API_KEY"]
-)
-parameter = AnthropicClaudeModelParameters(
+configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+parameter = AnthropicParam(
     model_name="claude-3-5-sonnet-20241022",
     temperature=1,
     max_tokens=8192,
 )
-model = AnthropicClaudeModel(configuration=configuration)
+model = AnthropicModel(configuration=configuration)
 
 # load all files in examples and tests with its name in text
 text = ""

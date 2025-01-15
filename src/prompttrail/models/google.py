@@ -12,18 +12,18 @@ from prompttrail.core.errors import ParameterValidationError, ProviderResponseEr
 logger = getLogger(__name__)
 
 
-class GoogleCloudChatModelConfiguration(Configuration):
+class GoogleConfig(Configuration):
     """Configuration for GoogleCloudChatModel."""
 
     api_key: str
-    """API key for Google Cloud Chat API."""
+    """API key for Google Chat API."""
 
     # required for autodoc
     model_config = ConfigDict(protected_namespaces=())
 
 
-class GoogleCloudChatExample(BaseModel):
-    """Example for Google Cloud Chat API."""
+class GoogleChatExample(BaseModel):
+    """Example for Google Chat API."""
 
     prompt: str
     """ Prompt for the example. """
@@ -34,10 +34,10 @@ class GoogleCloudChatExample(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
 
-class GoogleCloudChatModelParameters(Parameters):
-    """Parameters for Google Cloud Chat models.
+class GoogleParam(Parameters):
+    """Parameters for Google Chat models.
 
-    Inherits common parameters from Parameters base class and adds Google Cloud-specific parameters.
+    Inherits common parameters from Parameters base class and adds Google-specific parameters.
     For detailed description of each parameter, see https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
     """
 
@@ -55,16 +55,16 @@ class GoogleCloudChatModelParameters(Parameters):
     """ Number of candidate responses to generate. """
     context: Optional[str] = None
     """ Optional context to provide to the model. """
-    examples: Optional[List[GoogleCloudChatExample]] = None
+    examples: Optional[List[GoogleChatExample]] = None
     """ Optional examples to provide to the model for few-shot learning. """
 
     model_config = ConfigDict(protected_namespaces=())
 
 
-class GoogleCloudChatModel(Model):
-    """Model for Google Cloud Chat API."""
+class GoogleModel(Model):
+    """Model for Google Chat API."""
 
-    configuration: GoogleCloudChatModelConfiguration  # type: ignore
+    configuration: GoogleConfig  # type: ignore
 
     # required for autodoc
     model_config = ConfigDict(protected_namespaces=())
@@ -76,9 +76,9 @@ class GoogleCloudChatModel(Model):
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
-        if not isinstance(parameters, GoogleCloudChatModelParameters):
+        if not isinstance(parameters, GoogleParam):
             raise ParameterValidationError(
-                f"{GoogleCloudChatModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{GoogleParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         model = palm.GenerativeModel(parameters.model_name)
@@ -120,17 +120,17 @@ class GoogleCloudChatModel(Model):
         return Message(content=response.text, role="assistant")
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        """Validate session for Google Cloud Chat models.
+        """Validate session for Google Chat models.
 
-        Extends the base validation with Google Cloud-specific validation:
+        Extends the base validation with Google-specific validation:
         - No empty messages allowed (unlike OpenAI which allows them)
         """
         super().validate_session(session, is_async)
 
-        # Google Cloud-specific validation for empty messages
+        # Google-specific validation for empty messages
         if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google Cloud API restriction)"
+                f"{self.__class__.__name__}: All message in a session should not be empty string. (Google API restriction)"
             )
 
     def list_models(self) -> List[str]:
