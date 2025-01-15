@@ -64,6 +64,7 @@ dev-dependencies = [
     "transformers>=4.44.2",
     "torch>=2.5.1",
     "accelerate>=1.2.1",
+    "tqdm>=4.67.1",
 ]
 
 [tool.rye.scripts]
@@ -87,6 +88,7 @@ doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
 pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"
 "dogfooding:commit" = "python examples/dogfooding/commit_with_auto_generated_comment.py"
+"see-all" = "python examples/dogfooding/utils/load_all_important_files.py"
 chat = "python examples/dogfooding/chat.py"
 commit = { chain = ["format-check", "all", "dogfooding:commit"] }
 

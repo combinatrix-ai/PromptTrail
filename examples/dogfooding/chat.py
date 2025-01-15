@@ -1,8 +1,6 @@
-import glob
 import os
 
-from tqdm import tqdm
-
+from examples.dogfooding.utils.load_all_important_files import load_all_important_files
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -42,24 +40,7 @@ parameter = AnthropicParam(
 )
 model = AnthropicModel(configuration=configuration)
 
-# load all files in examples and tests with its name in text
-text = ""
-for file in tqdm(list(glob.glob("examples/**/*.py", recursive=True))):
-    text += f"Example filename: {file}\n"
-    text += f"```python\n{open(file, 'r').read()}\n```\n"
-
-for file in tqdm(list(glob.glob("tests/**/*.py", recursive=True))):
-    text += f"Test filename: {file}\n"
-    text += f"```python\n{open(file, 'r').read()}\n```\n"
-
-# add README.md content
-text += f"```README\n{open('README.md', 'r').read()}\n```\n"
-
-# add docs *.md content
-for file in tqdm(list(glob.glob("docs/*.md", recursive=False))):
-    text += f"Docs filename: {file}\n"
-    text += f"```markdown\n{open(file, 'r').read()}\n```\n"
-
+content = load_all_important_files()
 
 runner = CommandLineRunner(
     model=model,
@@ -68,5 +49,5 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_session = Session(initial_metadata={"code": text})
+initial_session = Session(initial_metadata={"code": content})
 runner.run(session=initial_session)

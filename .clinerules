@@ -1,18 +1,17 @@
-# About
-PromptTrail is a library designed for LLM programming.
-
-# Project Overview
-- PromptTrail is a lightweight library that helps you build applications with LLMs.
-- It provides a unified interface to various LLMs (OpenAI, Google Gemini, Anthropic Claude, Local LLMs) and a simple DSL for "Agent as Code".
-- It also offers developer tools for prompt programming, including LLM mocking for testing.
-
 # Project Setup
 - This project is managed with rye and pyproject.toml.
   - requirements.lock and requirements-dev.lock files should not be edited directly. Use `rye sync` to update them.
-- The project uses the following development tools: black, pautoflake, isort, mypy, flake8, and pytest.
+- The project uses the following development tools:
+  - black: Code formatter
+  - pautoflake: Removes unused imports
+  - isort: Sorts imports
+  - mypy: Static type checker
+  - flake8: Style guide enforcer
+  - pytest: Testing framework
 - You can run all these checks at once before committing by running `rye run all`.
 - Your environment is already configured with the necessary API keys. To install additional packages, run `rye add package-name` followed by `rye sync`.
 - For debugging purposes, the library uses `logger = logging.getLogger(__name__)`. Users can view API calls and other information by setting `logging.basicConfig(level=logging.INFO)`.
+- `rye run see-all`: Loads and displays the content of all source files, test files, and example files with their paths. Use this command to get a comprehensive view of the project's codebase.
 
 # Important Rules
 - If a diff application fails, re-read the file as it may have been updated.

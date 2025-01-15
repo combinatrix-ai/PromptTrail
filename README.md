@@ -34,7 +34,7 @@ And various "Developer Tools" to help you build LLM applications.
     - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
   - [Showcase](#showcase)
 
-## Qucikstart
+## Quickstart
 
 - See [Quickstart](https://prompttrail.readthedocs.io/en/latest/quickstart.html) for more details.
 
@@ -76,7 +76,20 @@ pip install -e .
 
 ## Examples
 
-You can find more examples in [examples](examples) directory.
+You can find more examples in [examples](examples) directory:
+
+- Agent Examples
+  - Fermi Problem Solver (examples/agent/fermi_problem.py)
+  - Math Teacher Bot (examples/agent/math_teacher.py)
+  - Weather Forecast Bot (examples/agent/weather_forecast.py)
+  - FAQ Bot (examples/agent/faq-bot/)
+
+- Developer Tools (Dogfooding)
+  - Auto-generated Commit Messages (examples/dogfooding/commit_with_auto_generated_comment.py)
+  - Docstring Generator (examples/dogfooding/create_docstring.py)
+  - Unit Test Generator (examples/dogfooding/create_unit_test.py)
+  - Comment Fixer (examples/dogfooding/fix_comment.py)
+  - Markdown Fixer (examples/dogfooding/fix_markdown.py)
 
 ### LLM API Call
 
