@@ -34,7 +34,7 @@ class TestGoogleCloud(unittest.TestCase):
         # One message
         message = Message(
             content="This is automated test API call. Please answer the calculation 17*31.",
-            sender="user",
+            role="user",
         )
         session = Session(messages=[message])
         response = self.models.send(self.parameters, session)
@@ -46,10 +46,10 @@ class TestGoogleCloud(unittest.TestCase):
         messages = [
             Message(
                 content="You're a helpful assistant. When you see a response starting with 'bc:', it means it's a calculation result from a basic calculator tool. Please acknowledge and use that result.",
-                sender="system",
+                role="system",
             ),
-            Message(content="Calculate 129183712*1271606", sender="user"),
-            Message(content="bc: The answer is 12696595579352", sender="system"),
+            Message(content="Calculate 129183712*1271606", role="user"),
+            Message(content="bc: The answer is 12696595579352", role="system"),
         ]
         session = Session(messages=messages)
         response = self.models.send(self.parameters, session)
@@ -63,22 +63,20 @@ class TestGoogleCloud(unittest.TestCase):
         with self.assertRaises(ParameterValidationError):
             response = self.models.send(
                 self.parameters,
-                Session(messages=[Message(content="", sender="user")]),  # empty message
+                Session(messages=[Message(content="", role="user")]),  # empty message
             )
         with self.assertRaises(ParameterValidationError):
             self.models.send(
                 self.parameters,
-                Session(
-                    messages=[Message(content="Hello", sender=None)]
-                ),  # empty sender
+                Session(messages=[Message(content="Hello", role=None)]),  # empty role
             )
         with self.assertRaises(ParameterValidationError):
             self.models.send(self.parameters, Session(messages=[]))  # empty session
 
-        # On Google Cloud, sender can be anything
+        # On Google Cloud, role can be anything
         response = self.models.send(
             self.parameters,
-            Session(messages=[Message(content="Hello", sender="")]),
+            Session(messages=[Message(content="Hello", role="")]),
         )
 
 

@@ -13,15 +13,15 @@ class TestLRUCacheProvider(unittest.TestCase):
     def test_add(self):
         cache_provider = LRUCacheProvider(3)
         session = Session()
-        message = Message(content="Test message", sender="user")
+        message = Message(content="Test message", role="user")
         cache_provider.add(session, message)
         self.assertEqual(cache_provider.cache[session], message)
 
     def test_search(self):
         cache_provider = LRUCacheProvider(3)
         session = Session()
-        message_1 = Message(content="Test message", sender="user")
-        message_2 = Message(content="Test message", sender="user")
+        message_1 = Message(content="Test message", role="user")
+        message_2 = Message(content="Test message", role="user")
         cache_provider.add(session, message_1)
         result = cache_provider.search(Parameters(), session)
         self.assertEqual(result, message_2)
@@ -29,7 +29,7 @@ class TestLRUCacheProvider(unittest.TestCase):
     def search_invalid_session(self):
         cache_provider = LRUCacheProvider(3)
         session = Session()
-        message = Message(content="Test message", sender="user")
+        message = Message(content="Test message", role="user")
         cache_provider.add(session, message)
         result = cache_provider.search(Parameters(), Session())
         self.assertIsNone(result)
@@ -38,8 +38,8 @@ class TestLRUCacheProvider(unittest.TestCase):
         # API key is invalid.
         api_key = ""
         cache_provider = LRUCacheProvider(1)
-        message_in = Message(content="Hey", sender="user")
-        message_out = Message(content="HeyHey", sender="user")
+        message_in = Message(content="Hey", role="user")
+        message_out = Message(content="HeyHey", role="user")
         session = Session(messages=[message_in])
         cache_provider.add(session, message_out)
         config = OpenAIModelConfiguration(

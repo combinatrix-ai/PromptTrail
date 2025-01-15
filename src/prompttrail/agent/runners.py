@@ -54,19 +54,19 @@ class Runner(metaclass=ABCMeta):
         return self.template_dict[template_like]
 
 
-def cutify_sender(sender: Optional[str]):
-    """Cutify sender name based on OpenAI's naming convention."""
-    if sender == "system":
+def cutify_role(role: Optional[str]):
+    """Cutify role name based on OpenAI's naming convention."""
+    if role == "system":
         return "📝 system"
-    if sender == "user":
+    if role == "user":
         return "👤 user"
-    if sender == "assistant":
+    if role == "assistant":
         return "🤖 assistant"
-    if sender == "function":
+    if role == "function":
         return "🧮 function"
-    if sender is None:
+    if role is None:
         return "❓ None"
-    return sender
+    return role
 
 
 class CommandLineRunner(Runner):
@@ -139,7 +139,7 @@ class CommandLineRunner(Runner):
                 session_ = cast(Session, e.value)
                 break
             if message:
-                print("From: " + cutify_sender(message.sender))
+                print("From: " + cutify_role(message.role))
                 if message.content:
                     print("message: ", message.content)
                 elif message.metadata:

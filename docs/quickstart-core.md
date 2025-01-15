@@ -33,7 +33,7 @@ from prompttrail.core import Session, Message
 from prompttrail.models.openai import OpenAIModelParameters
 parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
 session = Session(
-    messages = [Message(content="Hello, I'm a human.", sender="user")]
+    messages = [Message(content="Hello, I'm a human.", role="user")]
 )
 # This time, the model calls the API
 message_1 = model.send(parameters=parameters, session=session)
@@ -67,9 +67,9 @@ from prompttrail.core import Message
 from prompttrail.core.mock import OneTurnConversationMockProvider
 from prompttrail.models.openai import OpenAIModelConfiguration
 # First, you need to define a table to define how the mock return response based on last message
-sender = "assistant"
+role = "assistant"
 conversation_table = {
-    "Hello": Message(content="Hi", sender=sender),
+    "Hello": Message(content="Hi", role=role),
 }
 # Then, you can pass the table to the mock provider and pass the mock provider to the configuration
 config = OpenAIModelConfiguration(
@@ -85,7 +85,7 @@ from prompttrail.core import Session, Message
 from prompttrail.models.openai import OpenAIModelParameters
 parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
 session = Session(
-    messages = [Message(content="Hello", sender="user")]
+    messages = [Message(content="Hello", role="user")]
 )
 message = model.send(parameters=parameters, session=session)
 assert message.content == "Hi"

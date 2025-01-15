@@ -29,7 +29,7 @@ parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, t
 model = OpenAIChatCompletionModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 model.send(parameters=parameters, session=session)
@@ -38,7 +38,7 @@ model.send(parameters=parameters, session=session)
 You can see the response from the model like this:
 
 ```python
-Message(content="Hello! How can I assist you today?", sender="assistant")
+Message(content="Hello! How can I assist you today?", role="assistant")
 ```
 
 Yay! You have successfully called OpenAI's GPT-3.5 model.
@@ -51,15 +51,15 @@ You can skip the following sections if you're already familiar with other LLM li
 ### Message
 
 ```python
-Message(content="Hello! How can I assist you today?", sender="assistant", metadata={})
+Message(content="Hello! How can I assist you today?", role="assistant", metadata={})
 ```
 
 Message represents a single message in a conversation.
 It has the following attributes:
 
 - `content: str`: the content of the message (text)
-- `sender: str`: the sender of the message
-  - OpenAI's API expect one of `system`, `user`, `assistant` as the sender.
+- `role: str`: the role of the message
+  - OpenAI's API expect one of `system`, `user`, `assistant` as the role.
   - Other providers have different rules.
 - `metadata`: additional metadata for the message (used for templates, hooks, and other features)
 
@@ -68,7 +68,7 @@ It has the following attributes:
 ```python
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 ```
@@ -147,7 +147,7 @@ parameters = GoogleCloudChatModelParameters(model_name="models/chat-bison-001", 
 model = GoogleCloudChatModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 message = model.send(parameters=parameters, session=session)
@@ -156,10 +156,10 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hey there! How can I help you today?', sender='1', metadata={})
+Message(content='Hey there! How can I help you today?', role='1', metadata={})
 ```
 
-You may notice the sender system is different from OpenAI's!
+You may notice the role system is different from OpenAI's!
 We're successfully using Google's model!
 
 The code is almost the same as the OpenAI example. Just change the `Model`, `Configuration` and `Parameters` to Google's.
@@ -191,7 +191,7 @@ parameters = AnthropicClaudeModelParameters(model_name="claude-3-haiku-20240307"
 model = AnthropicClaudeModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 message = model.send(parameters=parameters, session=session)
@@ -200,7 +200,7 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hello! How can I assist you today?', sender='assistant', metadata={})
+Message(content='Hello! How can I assist you today?', role='assistant', metadata={})
 ```
 
 ## Try local LLMs
@@ -237,7 +237,7 @@ llm = TransformersModel(
 
 session = Session(
     messages=[
-        Message(content="What is machine learning?", sender="user")
+        Message(content="What is machine learning?", role="user")
     ]
 )
 

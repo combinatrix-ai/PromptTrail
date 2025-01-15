@@ -14,9 +14,9 @@ config = OpenAIModelConfiguration(
     api_key=api_key,
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={
-            "1+1": Message(content="1215973652716", sender="assistant"),
+            "1+1": Message(content="1215973652716", role="assistant"),
         },
-        sender="assistant",
+        role="assistant",
     ),
 )
 parameters = OpenAIModelParameters(
@@ -28,7 +28,7 @@ model = OpenAIChatCompletionModel(configuration=config)
 
 session = Session(
     messages=[
-        Message(content="1+1", sender="user"),
+        Message(content="1+1", role="user"),
     ]
 )
 
@@ -39,7 +39,7 @@ print(message)
 
 session = Session(
     messages=[
-        Message(content="1+2", sender="user"),
+        Message(content="1+2", role="user"),
     ]
 )
 

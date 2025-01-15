@@ -89,7 +89,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
             The pre-defined response based on the conversation history.
         """
         valid_messages = [
-            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
+            x for x in session.messages if x.role != CONTROL_TEMPLATE_ROLE
         ]
         last_message = valid_messages[-1].content
         if last_message not in self.conversation_table:

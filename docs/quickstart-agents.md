@@ -149,15 +149,15 @@ You will see the following output on your terminal.
 ```python
 StatefulMessage(
   'content': """\nYou're an AI proofreader that helps users fix markdown.\nYou're given markdown content by the user.\nYou only emit the corrected markdown. No explanation, comments, or anything else is needed.\nDo not remove > in the code section, which represents the prompt.""",
-  'sender': 'system',
+  'role': 'system',
 ),
 StatefulMessage(
   'content': """\n# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.""",
-  'sender': 'user',
+  'role': 'user',
 ),
 StatefulMessage(
   'content': """'# PromptTrail\n\nPromptTrail is a library to build a text generation agent with LLMs.""",
-  'sender': 'assistant',
+  'role': 'assistant',
 )
 ```
 
@@ -273,7 +273,7 @@ If you're going to build an application with `prompttrail.agent`, you just need 
 
 - `Session.messages`
   - This is a list of messages in the conversation.
-  - Each message has `content`, `sender`, and `metadata`.
+  - Each message has `content`, `role`, and `metadata`.
   - You can access the latest metadata using `get_latest_metadata()`.
 
 ```python
@@ -420,7 +420,7 @@ template = LinearTemplate(
         # Then, according to the response, the runner calls the function with the arguments provided by the API.
         # Second, the API is called with the result of the function.
         # Finally, the API returns the response.
-        # Therefore, this template yields three messages. (sender: assistant, function, assistant)
+        # Therefore, this template yields three messages. (role: assistant, function, assistant)
         OpenAIGenerateWithFunctionCallingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],

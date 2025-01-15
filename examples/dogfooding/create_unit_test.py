@@ -125,7 +125,7 @@ def main(
     initial_session.append(
         Message(
             content="",
-            sender="system",
+            role="system",
             metadata={
                 "code": load_file_content.read(),
                 "context_files": context_file_contents,

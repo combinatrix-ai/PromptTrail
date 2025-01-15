@@ -85,7 +85,7 @@ class AnthropicClaudeModel(Model):
         if content == "":
             raise ValueError("Response is empty.")
 
-        return Message(content=content, sender=response.role)
+        return Message(content=content, role=response.role)
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         """Validate session for Anthropic Claude models.
@@ -103,11 +103,11 @@ class AnthropicClaudeModel(Model):
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
 
         non_system_messages = [
-            message for message in messages if message.sender != "system"
+            message for message in messages if message.role != "system"
         ]
         if len(non_system_messages) == 0:
             raise ParameterValidationError(
@@ -118,11 +118,11 @@ class AnthropicClaudeModel(Model):
 
         # Anthropic-specific validation for system message
         if (
-            messages[0].sender == "system"
-            and len([message for message in messages if message.sender == "system"]) > 1
+            messages[0].role == "system"
+            and len([message for message in messages if message.role == "system"]) > 1
         ) or (
-            messages[0].sender != "system"
-            and len([message for message in messages if message.sender == "system"]) > 0
+            messages[0].role != "system"
+            and len([message for message in messages if message.role == "system"]) > 0
         ):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
@@ -131,12 +131,12 @@ class AnthropicClaudeModel(Model):
         # Anthropic-specific validation for allowed roles
         if any(
             [
-                message.sender not in ["user", "assistant", "system"]
+                message.role not in ["user", "assistant", "system"]
                 for message in messages
             ]
         ):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
+                f"{self.__class__.__name__}: All message in a session should have role of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
             )
         if any([not isinstance(message.content, str) for message in messages]):  # type: ignore
             raise ParameterValidationError(
@@ -158,13 +158,13 @@ class AnthropicClaudeModel(Model):
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
         # if system message
-        if messages[0].sender == "system":
+        if messages[0].role == "system":
             return (
                 [
-                    {"role": message.sender, "content": message.content}  # type: ignore
+                    {"role": message.role, "content": message.content}  # type: ignore
                     for message in messages[1:]
                 ],  # type: ignore
                 messages[0].content,
@@ -172,7 +172,7 @@ class AnthropicClaudeModel(Model):
         else:
             return (
                 [
-                    {"role": message.sender, "content": message.content}  # type: ignore
+                    {"role": message.role, "content": message.content}  # type: ignore
                     for message in messages
                 ],
                 None,

@@ -23,7 +23,7 @@ transformers_model = TransformersModel(
 )
 
 # Create a new session
-session = Session(messages=[Message(content="Hello", sender="user")])
+session = Session(messages=[Message(content="Hello", role="user")])
 
 # Set parameters for text generation
 params = TransformersModelParameters(max_tokens=5)

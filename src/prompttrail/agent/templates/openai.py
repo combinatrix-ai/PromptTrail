@@ -74,7 +74,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         rendered_message = runner.models.send(temporary_parameters, session)
         message = Message(
             content=rendered_message.content,
-            sender=self.role,
+            role=self.role,
             metadata={"template_id": self.template_id, **rendered_message.metadata},
         )
         session.append(message)
@@ -96,7 +96,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             result = function_.call(arguments, session)
             # Send result
             function_message = Message(
-                sender="function",
+                role="function",
                 metadata={"function_call": {"name": function_.name}},
                 content=json.dumps(result.show()),
             )
@@ -105,7 +105,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             second_response = runner.models.send(runner.parameters, session)
             message = Message(
                 content=second_response.content,
-                sender=second_response.sender,
+                role=second_response.role,
                 metadata={"template_id": self.template_id},
             )
             session.append(message)
