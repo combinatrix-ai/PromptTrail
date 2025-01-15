@@ -166,14 +166,8 @@ END
 ** Response must be either "RETRY" or "END" based on the feedback analysis. **
 
 Examples:
-- Respond with "RETRY" for:
-    - "not good"
-    - "Good, but add an emoji"
-    - "Great, but it would be better with xxx"
-- Respond with "END" for:
-    - "Perfect!"
-    - "OK"
-    - "Thanks"
+- Respond with "RETRY" for repsonses like "not good", "Good, but add an emoji", "Great, but it would be better with xxx"
+- Respond with "END" for responses like "Perfect!", "OK", "Thanks"
 """,
                 ),
                 GenerateTemplate(
@@ -187,9 +181,7 @@ Examples:
                         content="Generating a new message based on your feedback...",
                     ),
                     condition=BooleanHook(
-                        lambda session: session.get_last_message()
-                        .content.strip()
-                        .startswith("END")
+                        lambda session: "END" in session.get_last_message().content
                     ),
                 ),
             ],

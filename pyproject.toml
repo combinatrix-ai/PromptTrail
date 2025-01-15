@@ -69,9 +69,13 @@ dev-dependencies = [
 [tool.rye.scripts]
 all = { chain = ["format", "lint", "test", "doc"] }
 format = { chain = ["format:black", "format:autoflake", "format:isort"] }
+format-check = { chain = ["format:black-check", "format:autoflake-check", "format:isort-check"] }
 "format:black" = "black src tests examples"
 "format:autoflake" = "pautoflake src tests examples"
 "format:isort" = "isort src tests examples"
+"format:black-check" = "black --check src tests examples"
+"format:autoflake-check" = "pautoflake --check src tests examples"
+"format:isort-check" = "isort --check src tests examples"
 lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src tests examples"
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples"
@@ -83,7 +87,7 @@ doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
 pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"
 "dogfooding:commit" = "python examples/dogfooding/commit_with_auto_generated_comment.py"
-"commit" = { chain = ["all", "dogfooding:commit"] }
+"commit" = { chain = ["format-check", "all", "dogfooding:commit"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true
