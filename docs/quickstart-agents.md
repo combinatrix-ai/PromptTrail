@@ -31,9 +31,7 @@ This is actually used in this repository to housekeep README.md, etc.
 See [examples/dogfooding/fix_markdown.py](https://github.com/combinatrix-ai/PromptTrail/blob/main/examples/dogfooding/fix_markdown.py) for the actual code.
 
 ```python
-from prompttrail.agent.templates import LinearTemplate
-from prompttrail.agent.templates import OpenAIGenerateTemplate as GenerateTemplate
-from prompttrail.agent.templates import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import LinearTemplate, GenerateTemplate, MessageTemplate
 
 templates = LinearTemplate(
     templates=[
@@ -400,14 +398,14 @@ Then, you can use this tool with OpenAI's function calling feature through the `
 from prompttrail.agent.templates import (
     LinearTemplate,
     OpenAIMessageTemplate,
-    OpenAISystemTemplate,
     OpenAIGenerateWithFunctionCallingTemplate,
 )
 
 template = LinearTemplate(
     templates=[
-        OpenAISystemTemplate(
+        MessagenTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
+            role="system"
         ),
         OpenAIMessageTemplate(
             role="user",

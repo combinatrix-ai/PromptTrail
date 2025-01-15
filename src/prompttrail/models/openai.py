@@ -1,12 +1,10 @@
 import logging
-import typing
-from typing import Any, Dict, Generator, List, Literal, Optional, Tuple, cast
+from typing import Any, Dict, Generator, List, Literal, Optional
 
 import openai
-from openai.types.chat import ChatCompletionMessageParam
 from pydantic import ConfigDict
 
-from prompttrail.agent.tools import Tool, ToolResult
+from prompttrail.agent.tools import Tool
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
@@ -15,55 +13,65 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIConfiguration(Configuration):
+    """Configuration for OpenAI Chat API."""
+
     api_key: str
+    """API key for OpenAI API."""
     organization_id: Optional[str] = None
+    """Organization ID for OpenAI API."""
     api_base: Optional[str] = None
+    """Base URL for OpenAI API."""
     api_version: Optional[str] = None
+    """API version for OpenAI API."""
 
 
 class OpenAIParam(Parameters):
-    """Parameters for OpenAI models.
+    """Parameters for OpenAI Chat models.
 
     Inherits common parameters from Parameters base class and adds OpenAI-specific parameters.
+    For detailed description of each parameter, see https://platform.openai.com/docs/api-reference/chat
     """
 
-    model_name: str
-    temperature: Optional[float] = 1.0
-    max_tokens: int = 1024
-
-    model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
+    model_name: str = "gpt-3.5-turbo"
+    """ Name of the model to use. Use OpenAIModel.list_models() to get the list of available models. """
+    temperature: float = 1.0
+    """ Temperature for sampling. """
+    max_tokens: int = 100
+    """ Maximum number of tokens to generate. """
 
 
 class OpenAIModel(Model):
+    """Model for OpenAI Chat API."""
+
     configuration: OpenAIConfiguration  # type: ignore
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     def _authenticate(self) -> None:
-        openai.api_key = self.configuration.api_key  # type: ignore
-        openai.organization = self.configuration.organization_id  # type: ignore
-        if self.configuration.api_base is not None:
-            openai.api_base = self.configuration.api_base  # type: ignore
-        if self.configuration.api_version is not None:
-            openai.api_version = self.configuration.api_version  # type: ignore
+        openai.api_key = self.configuration.api_key
+        if self.configuration.organization_id:
+            openai.organization = self.configuration.organization_id
+        if self.configuration.api_base:
+            openai.base_url = self.configuration.api_base
+        if self.configuration.api_version:
+            openai.api_version = self.configuration.api_version
 
     def format_tool(self, tool: Tool) -> Dict[str, Any]:
-        """Convert tool to OpenAI Function Calling format"""
-        return tool.to_schema()
-
-    def format_tool_result(self, result: ToolResult) -> Dict[str, Any]:
-        """Format result for OpenAI API"""
+        """Convert tool to OpenAI format"""
+        schema = tool.to_schema()
         return {
-            "role": "function",
-            "name": result.metadata.get("function_name"),
-            "content": str(result.content),
+            "name": schema["name"],
+            "description": schema["description"],
+            "parameters": schema["parameters"],
         }
 
     def validate_tools(self, tools: List[Tool]) -> None:
         """Validate tools according to OpenAI API requirements"""
         for tool in tools:
             # Validate tool name
-            if not (tool.name.isalnum() or "_" in tool.name):
+            if not all(c.isalnum() or c in "-_" for c in tool.name):
                 raise ParameterValidationError(
-                    f"Tool name must be alphanumeric or underscore: {tool.name}"
+                    f"Tool name must be alphanumeric, hyphen, or underscore: {tool.name}"
                 )
             # Validate description
             if not tool.description:
@@ -76,13 +84,90 @@ class OpenAIModel(Model):
                     f"Tool must have at least one argument: {tool.name}"
                 )
 
-    def before_send(
-        self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
-        self._authenticate()
-        return (None, None, None)
+    def _session_to_openai_messages(
+        self, session: Session
+    ) -> List[Dict[str, Any]]:  # type: ignore
+        """Convert session messages to OpenAI format"""
+        messages = [
+            message
+            for message in session.messages
+            if message.role != CONTROL_TEMPLATE_ROLE
+        ]
+
+        result = []
+        for i, message in enumerate(messages):
+            if message.role == "system":
+                result.append({"content": message.content, "role": "system"})
+            elif message.role == "user":
+                result.append({"content": message.content, "role": "user"})
+            elif message.role == "assistant":
+                if "function_call" in message.metadata:
+                    result.append(
+                        {
+                            "content": message.content,
+                            "role": "assistant",
+                            "function_call": message.metadata["function_call"],
+                        }
+                    )
+                else:
+                    result.append({"content": message.content, "role": "assistant"})
+            elif message.role == "tool_result":
+                # Convert tool_result to function for OpenAI API
+                # Look for the previous assistant message with function_call
+                for j in range(i - 1, -1, -1):
+                    prev_message = messages[j]
+                    if (
+                        prev_message.role == "assistant"
+                        and "function_call" in prev_message.metadata
+                    ):
+                        name = prev_message.metadata["function_call"].get("name")
+                        if name:
+                            result.append(
+                                {
+                                    "content": str(message.content),
+                                    "role": "function",
+                                    "name": name,
+                                }
+                            )
+                            break
+                else:
+                    # If no matching function_call found, treat as assistant message
+                    result.append(
+                        {
+                            "content": str(message.content),
+                            "role": "assistant",
+                        }
+                    )
+            else:
+                raise ValueError(f"Unsupported role: {message.role}")
+        return result
+
+    def validate_session(self, session: Session, is_async: bool) -> None:
+        """Validate session for OpenAI Chat models.
+
+        Extends the base validation with OpenAI-specific validation:
+        - At most one system message at the beginning
+        - No tool_result messages allowed
+        """
+        super().validate_session(session, is_async)
+
+        # OpenAI-specific validation for checking at least one non-system message
+        messages = [
+            message
+            for message in session.messages
+            if message.role != CONTROL_TEMPLATE_ROLE
+        ]
+
+        non_system_messages = [
+            message for message in messages if message.role != "system"
+        ]
+        if len(non_system_messages) == 0:
+            raise ParameterValidationError(
+                f"{self.__class__.__name__}: Session must contain at least one non-system message."
+            )
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
+        self._authenticate()
         if not isinstance(parameters, OpenAIParam):
             raise ParameterValidationError(
                 f"{OpenAIParam.__name__} is expected, but {type(parameters).__name__} is given."
@@ -105,9 +190,10 @@ class OpenAIModel(Model):
             ]
 
         response = openai.chat.completions.create(**create_params)  # type: ignore
+        logger.debug(f"Response: {response}")
 
-        message = response.choices[0].message
-        content = message.content
+        message = response.choices[0].message  # type: ignore
+        content = message.content  # type: ignore
         if content is None:
             content = ""
 
@@ -167,55 +253,10 @@ class OpenAIModel(Model):
                 yield Message(content=all_text, role=role)  # type: ignore
             else:
                 raise ParameterValidationError(
-                    f"{self.__class__.__name__}: yiled_type should be 'all' or 'new'."
+                    f"Invalid yield_type: {yiled_type}. Must be either 'all' or 'new'."
                 )
-
-    def validate_session(self, session: Session, is_async: bool) -> None:
-        """Validate session for OpenAI models.
-
-        Extends the base validation with OpenAI-specific role validation.
-        """
-        super().validate_session(session, is_async)
-
-        # OpenAI-specific validation for allowed roles
-        allowed_roles = list(typing.get_args(OpenAIrole)) + [CONTROL_TEMPLATE_ROLE]
-        if any([message.role not in allowed_roles for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: role should be one of {allowed_roles} in a session."
-            )
-
-    @staticmethod
-    def _session_to_openai_messages(
-        session: Session,
-    ) -> List[ChatCompletionMessageParam]:
-        messages = [
-            message
-            for message in session.messages
-            if message.role != CONTROL_TEMPLATE_ROLE
-        ]
-
-        def convert_message(message: Message) -> ChatCompletionMessageParam:
-            if "function_call" in message.metadata:
-                return {
-                    "content": message.content,
-                    "role": cast(Literal["function"], message.role),
-                    "name": message.metadata["function_call"]["name"],
-                }
-            elif message.role == "system":
-                return {"content": message.content, "role": "system"}
-            elif message.role == "user":
-                return {"content": message.content, "role": "user"}
-            elif message.role == "assistant":
-                return {"content": message.content, "role": "assistant"}
-            else:
-                raise ValueError(f"Unsupported role: {message.role}")
-
-        return [convert_message(message) for message in messages]
 
     def list_models(self) -> List[str]:
         self._authenticate()
         response = openai.models.list()
         return [model.id for model in response.data]  # type: ignore
-
-
-OpenAIrole = Literal["system", "assistant", "user", "function"]

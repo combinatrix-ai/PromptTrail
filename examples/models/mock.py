@@ -12,7 +12,6 @@ config = OpenAIConfiguration(
         conversation_table={
             "1+1": Message(content="1215973652716", role="assistant"),
         },
-        role="assistant",
     ),
 )
 parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0)

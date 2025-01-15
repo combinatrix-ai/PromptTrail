@@ -29,7 +29,11 @@ class TestEvaluatePythonCodeHook(unittest.TestCase):
     def test_hook(self):
         session = Session()
         session.append(
-            Message(content="blah", metadata={"code": "print('Hello, World!')"})
+            Message(
+                content="blah",
+                role="assistant",
+                metadata={"code": "print('Hello, World!')"},
+            )
         )
         hook = EvaluatePythonCodeHook("answer", "code")
         session = hook.hook(session)
@@ -37,7 +41,7 @@ class TestEvaluatePythonCodeHook(unittest.TestCase):
 
     def test_hook_no_code_block(self):
         session = Session()
-        session.append(Message(content="blah", metadata={}))
+        session.append(Message(content="blah", role="assistant", metadata={}))
         hook = EvaluatePythonCodeHook("answer", "code")
         with self.assertRaises(KeyError):
             session = hook.hook(session)

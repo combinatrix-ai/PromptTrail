@@ -297,10 +297,11 @@ class WeatherForecastTool(Tool):
 # Use the tool in a template
 template = LinearTemplate(
     templates=[
-        OpenAISystemTemplate(
+        MessageTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
+            role="system"
         ),
-        OpenAIMessageTemplate(
+        MessageTemplate(
             role="user",
             content="What's the weather in Tokyo?",
         ),

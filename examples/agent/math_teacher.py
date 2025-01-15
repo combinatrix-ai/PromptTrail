@@ -4,13 +4,11 @@ import os
 from prompttrail.agent.hooks import BooleanHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
+    GenerateTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
     UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam

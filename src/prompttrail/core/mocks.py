@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, Dict
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 if TYPE_CHECKING:
-    from prompttrail.core import Message, Session
+    from prompttrail.core import Message, MessageRoleType, Session
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class MockProvider(ABC):
 class OneTurnConversationMockProvider(MockProvider):
     """A mock provider that returns a predefined response based on the last message."""
 
-    def __init__(self, conversation_table: Dict[str, "Message"], role: str):
+    def __init__(self, conversation_table: Dict[str, "Message"]):
         self.conversation_table = conversation_table
 
     def call(self, session: "Session") -> "Message":
@@ -48,16 +48,17 @@ class FunctionalMockProvider(MockProvider):
 
 
 class EchoMockProvider(FunctionalMockProvider):
-    def __init__(self, role: str):
+    def __init__(self, role: "MessageRoleType"):
         # To avoid circular import
         from prompttrail.core import Message
 
         self.func: Callable[["Session"], "Message"] = lambda session: Message(
             content=session.messages[-1].content, role=role
         )
+        self.role = role
 
     def call(self, session: "Session") -> "Message":
         # To avoid circular import
         from prompttrail.core import Message
 
-        return Message(content=session.messages[-1].content)
+        return Message(content=session.messages[-1].content, role=self.role)

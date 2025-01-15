@@ -5,9 +5,8 @@ from typing import Any, Dict, Generator, List, Optional, Sequence, cast
 from prompttrail.agent.hooks import TransformHook
 from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
 from prompttrail.agent.tools import Tool
-from prompttrail.core import Message, Session
-from prompttrail.core.const import OPENAI_SYSTEM_ROLE
-from prompttrail.models.openai import OpenAIModel, OpenAIParam, OpenAIrole
+from prompttrail.core import Message, MessageRoleType, Session
+from prompttrail.models.openai import OpenAIModel, OpenAIParam
 
 logger = logging.getLogger(__name__)
 
@@ -54,30 +53,12 @@ def check_tool_arguments(args_str: str, tool: Tool) -> Dict[str, Any]:
     return result
 
 
-class OpenAIGenerateTemplate(GenerateTemplate):
-    """GenerateTemplate for OpenAI. `role` is narrowed down to OpenAIrole."""
-
-    def __init__(
-        self,
-        role: OpenAIrole,
-        template_id: Optional[str] = None,
-        before_transform: List[TransformHook] = [],
-        after_transform: List[TransformHook] = [],
-    ):
-        super().__init__(
-            template_id=template_id,
-            role=role,
-            before_transform=before_transform,
-            after_transform=after_transform,
-        )
-
-
 class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
     """Function calling template for OpenAI. This template handle multiple turns of function calling."""
 
     def __init__(
         self,
-        role: OpenAIrole,
+        role: MessageRoleType,
         functions: Sequence[Tool],
         template_id: Optional[str] = None,
         before_transform: Optional[List[TransformHook]] = None,
@@ -135,7 +116,7 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
 
             # Send result
             function_message = Message(
-                role="function",
+                role="tool_result",
                 metadata={"function_call": {"name": tool.name}},
                 content=json.dumps(result.content),  # Use result.content directly
             )
@@ -157,28 +138,13 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
         return session
 
 
-class OpenAISystemTemplate(MessageTemplate):
-    """MessageTemplate for OpenAI. `role` is set to `system`."""
-
-    def __init__(
-        self,
-        content: str,
-        template_id: Optional[str] = None,
-    ):
-        super().__init__(
-            content=content,
-            template_id=template_id,
-            role=OPENAI_SYSTEM_ROLE,
-        )
-
-
 class OpenAIMessageTemplate(MessageTemplate):
     """MessageTemplate for OpenAI. `role` is narrowed down to OpenAIrole."""
 
     def __init__(
         self,
         content: str,
-        role: OpenAIrole,
+        role: MessageRoleType,
         template_id: Optional[str] = None,
         before_transform: List[TransformHook] = [],
         after_transform: List[TransformHook] = [],

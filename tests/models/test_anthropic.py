@@ -1,16 +1,16 @@
 import os
-import sys
 import unittest
 
 from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+from tests.models.test_utils import (
+    run_basic_message_test,
+    run_malformed_sessions_test,
+    run_system_message_test,
+)
 
-path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(path)
 
-
-# TODO: Add error handling test
 class TestAnthropic(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["ANTHROPIC_API_KEY"]
@@ -21,87 +21,29 @@ class TestAnthropic(unittest.TestCase):
         )
         self.model = AnthropicModel(configuration=self.config)
 
-    def test_model_list(self):
-        model_list = self.model.list_models()
-        self.assertIsInstance(model_list, list)
-        self.assertIsInstance(model_list[0], str)
-        self.assertIn(self.use_model, model_list)
-
     def test_model_send(self):
-        # One message
-        message = Message(
-            content="This is automated test API call. Please answer the calculation 17*31.",
-            role="user",
+        # Basic message handling
+        run_basic_message_test(self.model, self.parameters)
+
+        # System message handling
+        run_system_message_test(
+            self.model,
+            self.parameters,
+            "27",
+            user_message="Calculate 14+13",
         )
-        session = Session(messages=[message])
-        response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, Message)
-        self.assertIsInstance(response.content, str)
-        self.assertIn("527", response.content)
 
-        # All message types
-        messages = [
-            Message(content="You're a helpful assistant.", role="system"),
-            Message(
-                content="Calculate 14+13", role="user"
-            ),  # Haiku won't answer difficult questions if the system message is present?
-        ]
-        session = Session(messages=messages)
-        response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, Message)
-        self.assertIsInstance(response.content, str)
-        self.assertIn("27", response.content)
+        # Test malformed sessions
+        run_malformed_sessions_test(
+            self.model, self.parameters, supports_tool_result=True
+        )
 
-        # malformed session
+        # Test empty messages (Anthropic-specific)
         with self.assertRaises(ParameterValidationError):
             self.model.send(
                 self.parameters,
-                Session(
-                    messages=[
-                        Message(content="a", role="system"),
-                        Message(content="a", role="system"),
-                    ]
-                ),
+                Session(messages=[Message(content="", role="user")]),  # empty message
             )
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(
-                self.parameters,
-                Session(messages=[Message(content="", role="User")]),  # empty message
-            )
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(
-                self.parameters,
-                Session(messages=[Message(content="Hello", role="User")]),  # wrong role
-            )
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(
-                self.parameters,
-                Session(messages=[Message(content="Hello", role=None)]),  # missing role
-            )
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(self.parameters, Session(messages=[]))
-
-        # Test system message only (should raise error)
-        with self.assertRaises(ParameterValidationError):
-            self.model.send(
-                self.parameters,
-                Session(
-                    messages=[
-                        Message(content="You're a helpful assistant.", role="system")
-                    ]
-                ),
-            )
-
-        # Test valid system message with user message
-        messages = [
-            Message(content="You're a helpful assistant.", role="system"),
-            Message(content="What is 2+2?", role="user"),
-        ]
-        session = Session(messages=messages)
-        response = self.model.send(self.parameters, session)
-        self.assertIsInstance(response, Message)
-        self.assertIsInstance(response.content, str)
-        self.assertIn("4", response.content)
 
 
 if __name__ == "__main__":

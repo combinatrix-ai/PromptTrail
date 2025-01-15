@@ -5,14 +5,11 @@ from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     BreakTemplate,
     EndTemplate,
+    GenerateTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate,
-    OpenAISystemTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core.mocks import EchoMockProvider
@@ -36,12 +33,12 @@ parameters = OpenAIParam(
 def test_linear_template():
     template = LinearTemplate(
         templates=[
-            OpenAISystemTemplate(content="Repeat what the user said."),
+            MessageTemplate(content="Repeat what the user said.", role="system"),
             MessageTemplate(
                 content="Lazy fox jumps over the brown dog.",
                 role="user",
             ),
-            OpenAIGenerateTemplate(
+            GenerateTemplate(
                 role="assistant",
             ),
         ]
