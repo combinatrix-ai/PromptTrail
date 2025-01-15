@@ -1,12 +1,57 @@
 import json
-from typing import Generator, List, Optional, Sequence, cast
+import logging
+from typing import Any, Dict, Generator, List, Optional, Sequence, cast
 
 from prompttrail.agent.hooks import TransformHook
 from prompttrail.agent.templates import GenerateTemplate, MessageTemplate
-from prompttrail.agent.tools import Tool, check_arguments
+from prompttrail.agent.tools import Tool
 from prompttrail.core import Message, Session
 from prompttrail.core.const import OPENAI_SYSTEM_ROLE
 from prompttrail.models.openai import OpenAIModel, OpenAIParam, OpenAIrole
+
+logger = logging.getLogger(__name__)
+
+
+def check_tool_arguments(args_str: str, tool: Tool) -> Dict[str, Any]:
+    """Validate and process tool arguments
+
+    Args:
+        args_str: JSON string of arguments from the API
+        tool: Tool instance to validate against
+
+    Returns:
+        Dict[str, Any]: Processed arguments
+
+    Raises:
+        ValueError: If required arguments are missing or types don't match
+        json.JSONDecodeError: If arguments string is not valid JSON
+    """
+    try:
+        args_dict = json.loads(args_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in arguments: {e}")
+
+    result = {}
+
+    # Check required arguments
+    for name, arg in tool.arguments.items():
+        if arg.required and name not in args_dict:
+            raise ValueError(f"Missing required argument: {name}")
+
+        if name in args_dict:
+            value = args_dict[name]
+            if not arg.validate_value(value):
+                raise ValueError(
+                    f"Invalid type for argument {name}: expected {arg.value_type}, got {type(value)}"
+                )
+            result[name] = value
+
+    # Warn about unexpected arguments
+    for name in args_dict:
+        if name not in tool.arguments:
+            logger.warning(f"Unexpected argument: {name}")
+
+    return result
 
 
 class OpenAIGenerateTemplate(GenerateTemplate):
@@ -62,7 +107,9 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
             )
 
         temporary_parameters = cast(OpenAIParam, runner.parameters.model_copy())
-        temporary_parameters.functions = self.functions  # type: ignore
+        temporary_parameters.tools = list(
+            self.functions.values()
+        )  # Update to use tools parameter
 
         # 1st message: pass functions and let the model use it
         rendered_message = runner.models.send(temporary_parameters, session)
@@ -76,26 +123,25 @@ class OpenAIGenerateWithFunctionCallingTemplate(GenerateTemplate):
 
         if rendered_message.metadata.get("function_call"):
             # 2nd message: call function if the model asks for it
-            if rendered_message.metadata["function_call"]["name"] not in self.functions:
+            function_call = rendered_message.metadata["function_call"]
+            if function_call["name"] not in self.functions:
                 raise ValueError(
-                    f"Function {rendered_message.metadata['function_call']['name']} is not defined in the template."
+                    f"Function {function_call['name']} is not defined in the template."
                 )
-            function_ = self.functions[
-                rendered_message.metadata["function_call"]["name"]
-            ]
-            arguments = check_arguments(
-                rendered_message.metadata["function_call"]["arguments"],
-                function_.argument_types,
-            )
-            result = function_.call(arguments, session)
+
+            tool = self.functions[function_call["name"]]
+            arguments = check_tool_arguments(function_call["arguments"], tool)
+            result = tool.execute(**arguments)
+
             # Send result
             function_message = Message(
                 role="function",
-                metadata={"function_call": {"name": function_.name}},
-                content=json.dumps(result.show()),
+                metadata={"function_call": {"name": tool.name}},
+                content=json.dumps(result.content),  # Use result.content directly
             )
             session.append(function_message)
             yield function_message
+
             second_response = runner.models.send(runner.parameters, session)
             message = Message(
                 content=second_response.content,

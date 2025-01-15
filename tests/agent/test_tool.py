@@ -1,212 +1,132 @@
 import enum
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict
 
 import pytest
+from typing_extensions import TypedDict
 
-from prompttrail.agent import Session
-from prompttrail.agent.tools import (
-    FunctionCallingPartialProperty,
-    FunctionCallingProperty,
-    Tool,
-    ToolArgument,
-    ToolResult,
-    convert_property_to_api_call_parts,
-    function_calling_type_to_partial_property,
-)
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
+from prompttrail.core.errors import ParameterValidationError
 
 
-class ToolResult1(ToolResult):
-    key: str
+class TestResultData(TypedDict):
+    """Test result data type"""
 
-    def show(self) -> Dict[str, Any]:
-        return {"key": self.key}
-
-
-class ToolArgument1(ToolArgument):
-    description: str = "test description"
     value: int
 
 
-class ToolArgument2(ToolArgument):
-    description: str = "test description2"
-    value: Optional[int]
+class TestResult(ToolResult):
+    """Test result class"""
+
+    content: TestResultData
 
 
-class ToolArgumentEnumType(enum.Enum):
-    A = "A"
-    B = "B"
+class TestEnumType(enum.Enum):
+    """Test enum type"""
+
+    A = "a"
+    B = "b"
 
 
-class ToolArgumentEnum(ToolArgument):
-    description: str = "test description3"
-    value: ToolArgumentEnumType
+def test_tool_result():
+    """Test tool result creation and validation"""
+    # Valid result
+    result = TestResult(content={"value": 42})
+    assert result.content["value"] == 42
+
+    # Invalid result (wrong type)
+    with pytest.raises(ValueError):
+        TestResult(content={"value": "not an int"})
 
 
-class MyTool(Tool):
-    name = "mytool"
-    description = "A test tool"
-    argument_types = [ToolArgument1]
-    result_type = ToolResult1
-
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
-        return ToolResult1(key="key")
-
-
-def test_show_method():
-    result = ToolResult1(key="value")
-    assert result.show() == {"key": "value"}
-
-
-def test_function_calling_type_to_partial_property():
-    # x vs Optional[x]
-    assert function_calling_type_to_partial_property(
-        str
-    ) == FunctionCallingPartialProperty(type="string", required=True)
-    assert function_calling_type_to_partial_property(
-        Optional[str]
-    ) == FunctionCallingPartialProperty(type="string", required=False)
-    # enum
-    assert function_calling_type_to_partial_property(
-        ToolArgumentEnumType
-    ) == FunctionCallingPartialProperty(type="string", required=True, enum=["A", "B"])
-    assert function_calling_type_to_partial_property(
-        Optional[ToolArgumentEnumType]
-    ) == FunctionCallingPartialProperty(type="string", required=False, enum=["A", "B"])
-
-
-def test_convert_property_to_api_call_parts():
-    prop = FunctionCallingProperty(
-        type="string", required=True, name="name", description="description"
+def test_tool_argument():
+    """Test tool argument creation and validation"""
+    # Test with required argument
+    arg = ToolArgument[int](
+        name="test", description="test argument", value_type=int, required=True
     )
-    assert convert_property_to_api_call_parts(prop=prop) == {
-        "type": "string",
-        "description": "description",
-    }
-    prop = FunctionCallingProperty(
-        type="int", required=False, name="name", description="description"
+    assert arg.name == "test"
+    assert arg.description == "test argument"
+    assert arg.value_type == int
+    assert arg.required is True
+
+    # Test with optional argument
+    arg = ToolArgument[str](
+        name="test", description="test argument", value_type=str, required=False
     )
-    assert convert_property_to_api_call_parts(prop) == {
-        "type": "int",
-        "description": "description",
-    }
-    prop = FunctionCallingProperty(
-        type="string",
-        required=True,
-        name="name",
-        description="description",
-        enum=["a", "b"],
+    assert arg.required is False
+
+    # Test with enum type
+    arg = ToolArgument[TestEnumType](
+        name="test", description="test argument", value_type=TestEnumType, required=True
     )
-    assert convert_property_to_api_call_parts(prop) == {
-        "type": "string",
-        "description": "description",
-        "enum": ["a", "b"],
-    }
-
-
-def test_tool_argument_class():
-    assert ToolArgument1.get_name() == "toolargument1"
-    assert ToolArgument1.is_required()
-    assert ToolArgument1.get_value_type() == int
-    assert ToolArgument1.get_description() == "test description"
-    with pytest.raises(AttributeError):
-        # Value itself cannot be accessed when it is not instantiated
-        ToolArgument1.value
-
-    # Optional
-    assert ToolArgument2.get_name() == "toolargument2"
-    # assert not toolargument2.is_required()
-    assert ToolArgument2.get_value_type() == Optional[int]
-    assert ToolArgument2.get_description() == "test description2"
-    with pytest.raises(AttributeError):
-        # Value itself cannot be accessed when it is not instantiated
-        ToolArgument2.value
-
-
-def test_tool_argument_instance():
-    arg = ToolArgument1(value=5)
-    assert arg.get_name() == "toolargument1"
-    assert arg.is_required()
-    assert arg.get_value_type() == int
-    assert arg.get_description() == "test description"
-    assert arg.value == 5
-
-    # Optional
-    arg = ToolArgument2(value=None)
-    assert arg.get_name() == "toolargument2"
-    # assert not arg.is_required()
-    assert arg.get_value_type() == Optional[int]
-    assert arg.get_description() == "test description2"
-    assert arg.value is None
-
-    # Enum
-    arg = ToolArgumentEnum(value=ToolArgumentEnumType.A)
-    assert arg.get_name() == "toolargumentenum"
-    assert arg.is_required()
-    assert arg.get_value_type() == ToolArgumentEnumType
-    assert arg.get_description() == "test description3"
-    assert arg.value == ToolArgumentEnumType.A
+    assert arg.value_type == TestEnumType
 
 
 def test_tool():
-    tool = MyTool()
-    args = [ToolArgument1(value=5)]
-    result = tool.call(args=args, session=Session())
-    assert isinstance(result, ToolResult1)
-    assert tool.show() == {
-        "name": "mytool",
-        "description": "A test tool",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "toolargument1": {"type": "int", "description": "test description"}
-            },
-            "required": ["toolargument1"],
-        },
-    }
+    """Test tool creation and execution"""
+
+    class TestTool(Tool):
+        """Test tool implementation"""
+
+        name: str = "test"
+        description: str = "test tool"
+        arguments: Dict[str, ToolArgument[Any]] = {
+            "arg1": ToolArgument[int](
+                name="arg1",
+                description="first argument",
+                value_type=int,
+                required=True,
+            ),
+            "arg2": ToolArgument[str](
+                name="arg2",
+                description="second argument",
+                value_type=str,
+                required=False,
+            ),
+        }
+
+        def _execute(self, args: Dict[str, Any]) -> ToolResult:
+            return TestResult(content={"value": args["arg1"]})
+
+    # Create and execute tool
+    tool = TestTool()
+    result = tool.execute(arg1=42)
+    assert isinstance(result, TestResult)
+    assert result.content["value"] == 42
 
 
-# TODO: Make Test Scenario: Cake chain store
+def test_tool_validation():
+    """Test tool validation"""
 
-# class Place(ToolArgument):
-#     description: str = "The city to search"
-#     value: str
+    class TestTool(Tool):
+        """Test tool implementation"""
 
+        name: str = "test"
+        description: str = "test tool"
+        arguments: Dict[str, ToolArgument[Any]] = {
+            "arg1": ToolArgument[int](
+                name="arg1",
+                description="first argument",
+                value_type=int,
+                required=True,
+            )
+        }
 
-# class CackTypeType(enum.Enum):
-#     Chocolate = "Chocolate"
-#     Strawberry = "Strawberry"
-#     Cheese = "Cheese"
+        def _execute(self, args: Dict[str, Any]) -> ToolResult:
+            return TestResult(content={"value": args["arg1"]})
 
+    # Test with invalid argument
+    tool = TestTool()
+    with pytest.raises(ParameterValidationError):
+        tool.validate_arguments({"unknown_arg": 42})
 
-# class CakeType(ToolArgument):
-#     # No description
-#     value: CackTypeType
+    # Test with missing required argument
+    with pytest.raises(ParameterValidationError):
+        tool.validate_arguments({})
 
+    # Test with wrong type
+    with pytest.raises(ParameterValidationError):
+        tool.validate_arguments({"arg1": "not an int"})
 
-# class LowerPrice(ToolArgument):
-#     value: int
-
-
-# class UpperPrice(ToolArgument):
-#     value: int
-
-
-# class SpecialMessage(ToolArgument):
-#     description: str = "The special message to write on the cake if any"
-#     # Optional
-#     value: Optional[str]
-
-
-# class Cake(BaseModel):
-#     name: str
-#     price: int
-
-
-# class CakeSearchResult(ToolResult):
-#     # No description
-#     cakes: List[Cake]
-
-#     def show(self) -> Dict[str, List[Dict[str, Any]]]:
-#         return {
-#             "cakes": [{"name": cake.name, "price": cake.price} for cake in self.cakes]
-#         }
+    # Test with valid arguments
+    tool.validate_arguments({"arg1": 42})

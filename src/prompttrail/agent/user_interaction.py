@@ -64,7 +64,24 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
 
 
 class UserInteractionMockProvider(UserInteractionProvider):
-    ...
+    def ask(
+        self,
+        session: Session,
+        description: Optional[str] = None,
+        default: Optional[str] = None,
+    ) -> str:
+        """
+        Base mock provider that returns an empty string.
+
+        Args:
+            session: The current session of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            An empty string.
+        """
+        return ""
 
 
 class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProvider):

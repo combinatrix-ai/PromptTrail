@@ -307,120 +307,117 @@ Other attributes can also be accessed:
 `agent.tool` is a set of tools that can be used by LLMs, especially OpenAI's function calling feature.
 
 Using `agent.tool`, functions called by LLMs can be written with a unified interface.
-
-Explanation of types of tool input/output is automatically generated from the type annotation of the function!
-
-Therefore, you don't need to write documentation for LLMs!
-
-Furthermore, `prompttrail` automatically interprets the function calling arguments provided by LLMs!
+The tool system provides type safety and automatic documentation generation from type annotations.
 
 Let's see an example from [examples/agent/weather_forecast.py]:
 
 ```python
-from prompttrail.agent.tool import Tool, ToolArgument, ToolResult
+from typing import Literal
+from typing_extensions import TypedDict
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 
-# First, we must define the IO of the function.
+# First, define the structure of the tool's output using TypedDict
+class WeatherData(TypedDict):
+    """Weather data structure"""
+    temperature: float
+    weather: Literal["sunny", "rainy", "cloudy", "snowy"]
 
-# The function takes two arguments: place and temperature_unit.
-# The function returns the weather and temperature.
-
-# Start with the arguments.
-# We define the arguments as a subclass of ToolArgument.
-# value is the value of the argument. Define the type of value here.
-class Place(ToolArgument):
-    description: str = "The location to get the weather forecast"
-    value: str
-
-# If you want to use an enum, first define the enum.
-class TemperatureUnitEnum(enum.Enum):
-    Celsius = "Celsius"
-    Fahrenheit = "Fahrenheit"
-
-# And then you can use the class as the type of value.
-# Note that if you set the type as Optional, it means that the argument is not required.
-class TemperatureUnit(ToolArgument):
-    description: str = "The unit of temperature"
-    value: Optional[TemperatureUnitEnum]
-
-# We can instantiate the arguments like this:
-# place = Place(value="Tokyo")
-# temperature_unit = TemperatureUnit(value=TemperatureUnitEnum.Celsius)
-# However, this is the job of the function itself, so we don't need to do this here.
-
-# Next, we define the result.
-# We define the result as a subclass of ToolResult.
-# The result must have a show method that can pass the result to the model.
+# Then define the result class that wraps the output structure
 class WeatherForecastResult(ToolResult):
-    temperature: int
-    weather: str
+    """Weather forecast result
+    
+    This class defines the structure of the data returned by the weather forecast tool.
+    The content field contains:
+    - temperature: The temperature in the specified unit (float)
+    - weather: The weather condition (one of: sunny, rainy, cloudy, snowy)
+    """
+    content: WeatherData
 
-    def show(self) -> Dict[str, Any]:
-        return {"temperature": self.temperature, "weather": self.weather}
-
-# Finally, we define the function itself.
-# The function must implement the _call method.
-# The _call method takes a list of ToolArgument and returns a ToolResult.
-# Passed arguments are compared with argument_types and validated. This is why we have to define the type of arguments.
+# Finally, implement the tool itself
 class WeatherForecastTool(Tool):
-    name = "get_weather_forecast"
-    description = "Get the current weather in a given location and date"
-    argument_types = [Place, TemperatureUnit]
-    result_type = WeatherForecastResult
+    """Weather forecast tool
+    
+    This tool simulates getting weather forecast data for a location.
+    """
+    name: str = "get_weather_forecast"
+    description: str = "Get the current weather in a given location"
+    
+    # Define the tool's arguments using ToolArgument
+    arguments: Dict[str, ToolArgument[Any]] = {
+        "location": ToolArgument[str](
+            name="location",
+            description="The location to get the weather forecast",
+            value_type=str,
+            required=True
+        ),
+        "unit": ToolArgument[str](
+            name="unit",
+            description="Temperature unit (celsius or fahrenheit)",
+            value_type=str,
+            required=False
+        )
+    }
 
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
-        return WeatherForecastResult(temperature=0, weather="sunny")
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        """Execute the weather forecast tool
+        
+        This is where the actual weather data fetching would happen.
+        For this example, we return mock data.
+        """
+        return WeatherForecastResult(
+            content={
+                "temperature": 20.5,
+                "weather": "sunny"
+            }
+        )
 ```
-
-This tool definition is converted to the following function call:
+This tool definition is automatically converted to OpenAI's function calling format:
 
 ```json
 {
-   "name":"get_weather_forecast",
-   "description":"Get the current weather in a given location and date",
-   "parameters":{
-      "type":"object",
-      "properties":{
-         "place":{
-            "type":"string",
-            "description":"The location to get the weather forecast"
+   "name": "get_weather_forecast",
+   "description": "Get the current weather in a given location",
+   "parameters": {
+      "type": "object",
+      "properties": {
+         "location": {
+            "type": "string",
+            "description": "The location to get the weather forecast"
          },
-         "temperatureunit":{
-            "type":"string",
-            "description":"The unit of temperature",
-            "enum":[
-               "Celsius",
-               "Fahrenheit"
-            ]
+         "unit": {
+            "type": "string",
+            "description": "Temperature unit (celsius or fahrenheit)"
          }
       },
-      "required":[
-         "place",
-         "temperatureunit"
-      ]
+      "required": ["location"]
    }
 }
 ```
 
-Then, you can let LLM use this function by using `OpenAIGenerateWithFunctionCallingTemplate`:
+Then, you can use this tool with OpenAI's function calling feature through the `OpenAIGenerateWithFunctionCallingTemplate`:
 
 ```python
+from prompttrail.agent.templates import (
+    LinearTemplate,
+    OpenAIMessageTemplate,
+    OpenAISystemTemplate,
+    OpenAIGenerateWithFunctionCallingTemplate,
+)
+
 template = LinearTemplate(
     templates=[
-        MessageTemplate(
-            role="system",
-            content="You're an AI weather forecast assistant that helps your users find the weather forecast.",
+        OpenAISystemTemplate(
+            content="You are a helpful weather assistant that provides weather forecasts.",
         ),
-        MessageTemplate(
+        OpenAIMessageTemplate(
             role="user",
-            content="What's the weather in Tokyo tomorrow?",
+            content="What's the weather in Tokyo?",
         ),
-        # In this template, two API calls are made.
-        # First, the API is called with the description of the function, which is generated automatically according to the type definition we made.
-        # The API returns how they want to call the function.
-        # Then, according to the response, the runner calls the function with the arguments provided by the API.
-        # Second, the API is called with the result of the function.
-        # Finally, the API returns the response.
-        # Therefore, this template yields three messages. (role: assistant, function, assistant)
+        # This template handles the function calling flow:
+        # 1. Sends the function definition to OpenAI
+        # 2. Gets back which function to call with what arguments
+        # 3. Executes the function with those arguments
+        # 4. Sends the result back to OpenAI for final response
         OpenAIGenerateWithFunctionCallingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],
@@ -429,15 +426,13 @@ template = LinearTemplate(
 )
 ```
 
-So, you don't have to handle the complex function calling by yourself!
+The tool system handles all the complexity of function calling for you:
 
-You can save your time of:
+- Type-safe argument validation
+- Automatic documentation generation from type hints and docstrings
+- Function calling API formatting and execution
+- Result parsing and conversion
 
-- Writing the documentation solely for LLM separated from the function definition
-- Formatting the input to OpenAI's function calling API
-- Writing the two-stage call of the function calling API
-- Writing the interpretation of the function calling API response to feed to the function
-- Executing the function
-
+This allows you to focus on implementing the actual tool functionality rather than dealing with API integration details.
 Isn't it great?
 
