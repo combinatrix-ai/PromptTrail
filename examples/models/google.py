@@ -1,11 +1,7 @@
 import os
 
 from prompttrail.core import Message, Session
-from prompttrail.models.google_cloud import (
-    GoogleCloudChatModel,
-    GoogleCloudChatModelConfiguration,
-    GoogleCloudChatModelParameters,
-)
+from prompttrail.models.google import GoogleConfig, GoogleModel, GoogleParam
 
 api_key = os.environ.get("GOOGLE_CLOUD_API_KEY", "")
 
@@ -16,9 +12,9 @@ session = Session(
 )
 
 
-config = GoogleCloudChatModelConfiguration(api_key=api_key)
-parameters = GoogleCloudChatModelParameters(model_name="models/gemini-1.5-flash")
-model = GoogleCloudChatModel(configuration=config)
+config = GoogleConfig(api_key=api_key)
+parameters = GoogleParam(model_name="models/gemini-1.5-flash")
+model = GoogleModel(configuration=config)
 message = model.send(parameters=parameters, session=session)
 
 print(message)

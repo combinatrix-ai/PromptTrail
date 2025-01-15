@@ -4,11 +4,7 @@ import unittest
 
 from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(path)
@@ -19,12 +15,12 @@ from examples.agent import weather_forecast  # type: ignore # noqa: E402
 class TestAnthropic(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["ANTHROPIC_API_KEY"]
-        self.config = AnthropicClaudeModelConfiguration(api_key=self.api_key)
+        self.config = AnthropicConfig(api_key=self.api_key)
         self.use_model = "claude-3-haiku-20240307"
-        self.parameters = AnthropicClaudeModelParameters(
+        self.parameters = AnthropicParam(
             model_name=self.use_model, max_tokens=100, temperature=0
         )
-        self.model = AnthropicClaudeModel(configuration=self.config)
+        self.model = AnthropicModel(configuration=self.config)
 
     def test_model_list(self):
         model_list = self.model.list_models()

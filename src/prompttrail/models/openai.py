@@ -14,14 +14,14 @@ from prompttrail.core.errors import ParameterValidationError
 logger = logging.getLogger(__name__)
 
 
-class OpenAIModelConfiguration(Configuration):
+class OpenAIConfiguration(Configuration):
     api_key: str
     organization_id: Optional[str] = None
     api_base: Optional[str] = None
     api_version: Optional[str] = None
 
 
-class OpenAIModelParameters(Parameters):
+class OpenAIParam(Parameters):
     """Parameters for OpenAI models.
 
     Inherits common parameters from Parameters base class and adds OpenAI-specific parameters.
@@ -35,8 +35,8 @@ class OpenAIModelParameters(Parameters):
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
 
-class OpenAIChatCompletionModel(Model):
-    configuration: OpenAIModelConfiguration  # type: ignore
+class OpenAIModel(Model):
+    configuration: OpenAIConfiguration  # type: ignore
 
     def _authenticate(self) -> None:
         openai.api_key = self.configuration.api_key  # type: ignore
@@ -53,9 +53,9 @@ class OpenAIChatCompletionModel(Model):
         return (None, None, None)
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
-        if not isinstance(parameters, OpenAIModelParameters):
+        if not isinstance(parameters, OpenAIParam):
             raise ParameterValidationError(
-                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{OpenAIParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
         # TODO: Add retry logic for http error and max_tokens_exceeded
         if parameters.functions is None:
@@ -96,9 +96,9 @@ class OpenAIChatCompletionModel(Model):
         session: Session,
         yiled_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        if not isinstance(parameters, OpenAIModelParameters):
+        if not isinstance(parameters, OpenAIParam):
             raise ParameterValidationError(
-                f"{OpenAIModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{OpenAIParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
         response: openai.Stream = openai.chat.completions.create(  # type: ignore
             model=parameters.model_name,

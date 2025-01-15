@@ -3,7 +3,7 @@ from pprint import pformat
 from typing import Dict, List, Optional, Tuple
 
 import anthropic
-from pydantic import BaseModel, ConfigDict  # type: ignore
+from pydantic import ConfigDict
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
@@ -12,14 +12,14 @@ from prompttrail.core.errors import ParameterValidationError
 logger = getLogger(__name__)
 
 
-class AnthropicClaudeModelConfiguration(Configuration):
+class AnthropicConfig(Configuration):
     """Configuration for AnthoropicClaudeModel."""
 
     api_key: str
     """API key for Anthropic API."""
 
 
-class AnthropicClaudeModelParameters(Parameters):
+class AnthropicParam(Parameters):
     """Parameters for Anthropic Claude models.
 
     Inherits common parameters from Parameters base class and adds Anthropic-specific parameters.
@@ -40,10 +40,10 @@ class AnthropicClaudeModelParameters(Parameters):
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
 
-class AnthropicClaudeModel(Model):
+class AnthropicModel(Model):
     """Model for Anthoropic Claude API."""
 
-    configuration: AnthropicClaudeModelConfiguration  # type: ignore
+    configuration: AnthropicConfig  # type: ignore
     client: Optional[anthropic.Anthropic] = None
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
@@ -53,9 +53,9 @@ class AnthropicClaudeModel(Model):
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
-        if not isinstance(parameters, AnthropicClaudeModelParameters):
+        if not isinstance(parameters, AnthropicParam):
             raise ParameterValidationError(
-                f"{AnthropicClaudeModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{AnthropicParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         messages, system_prompt = self._session_to_anthropic_messages(session)

@@ -10,11 +10,7 @@ from prompttrail.agent.templates import LinearTemplate, MessageTemplate
 from prompttrail.agent.templates.openai import OpenAIGenerateWithFunctionCallingTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 # First, we must define the IO of the function.
 
@@ -100,12 +96,12 @@ template = LinearTemplate(
 )
 
 runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(
+    model=OpenAIModel(
+        configuration=OpenAIConfiguration(
             api_key=os.environ.get("OPENAI_API_KEY", ""),
         )
     ),
-    parameters=OpenAIModelParameters(
+    parameters=OpenAIParam(
         model_name="gpt-3.5-turbo",
         max_tokens=1000,
         temperature=0,

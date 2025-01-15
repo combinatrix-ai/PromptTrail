@@ -1,20 +1,14 @@
 import os
 
 from prompttrail.core import Message, Session
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
 
 api_key = os.environ.get("OPENAI_API_KEY", "")
 
-config = OpenAIModelConfiguration(api_key=api_key)
-parameters = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0
-)
+config = OpenAIConfiguration(api_key=api_key)
+parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0)
 
-model = OpenAIChatCompletionModel(configuration=config)
+model = OpenAIModel(configuration=config)
 
 session = Session(
     messages=[

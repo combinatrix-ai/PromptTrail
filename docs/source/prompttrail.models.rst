@@ -12,10 +12,10 @@ prompttrail.models.anthropic module
    :undoc-members:
    :show-inheritance:
 
-prompttrail.models.google\_cloud module
----------------------------------------
+prompttrail.models.google module
+--------------------------------
 
-.. automodule:: prompttrail.models.google_cloud
+.. automodule:: prompttrail.models.google
    :members:
    :undoc-members:
    :show-inheritance:

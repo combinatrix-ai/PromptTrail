@@ -162,9 +162,9 @@ from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
 from prompttrail.models.openai import (  # noqa: E402
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
+    OpenAIConfiguration,
+    OpenAIModel,
+    OpenAIParam,
 )
 
 # We will provide other runner, which will enable you to input/output via HTTP, etc... in the future.
@@ -177,12 +177,12 @@ if not is_in_test_env():
     # First, let's see how the agent works in CLI (without mocking)!
     # Just set up the runner and run it!
     runner = CommandLineRunner(
-        model=OpenAIChatCompletionModel(
-            configuration=OpenAIModelConfiguration(
+        model=OpenAIModel(
+            configuration=OpenAIConfiguration(
                 api_key=os.environ.get("OPENAI_API_KEY", "")
             )
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+        parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
         user_interaction_provider=UserInteractionTextCLIProvider(),
     )
@@ -196,8 +196,8 @@ else:
     # If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
     runner = CommandLineRunner(
         # Use mock model in CI or DEBUG
-        model=OpenAIChatCompletionModel(
-            configuration=OpenAIModelConfiguration(
+        model=OpenAIModel(
+            configuration=OpenAIConfiguration(
                 # Of course, same arguments as OpenAIChatCompletionModel can be used
                 api_key=os.environ.get("OPENAI_API_KEY", ""),
                 # You can define the behaviour of the mock model using mock_provider
@@ -227,7 +227,7 @@ else:
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+        parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
     )
     if __name__ == "__main__":

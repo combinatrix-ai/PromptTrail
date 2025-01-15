@@ -15,11 +15,11 @@ from prompttrail.core.errors import ParameterValidationError
 logger = logging.getLogger(__name__)
 
 
-class TransformersModelConfiguration(Configuration):
+class TransformersConfig(Configuration):
     device: Optional[str] = None
 
 
-class TransformersModelParameters(Parameters):
+class TransformersParam(Parameters):
     """Parameters for TransformersModel.
 
     Inherits common parameters from Parameters base class and adds specific parameters
@@ -43,7 +43,7 @@ class TransformersModel(Model):
 
     def __init__(
         self,
-        configuration: TransformersModelConfiguration,
+        configuration: TransformersConfig,
         model: "AutoModelForCausalLM",
         tokenizer: "AutoTokenizer",
     ):
@@ -58,11 +58,11 @@ class TransformersModel(Model):
 
     def _validate_and_prepare(
         self, parameters: Parameters
-    ) -> tuple[TransformersModelParameters, "AutoModelForCausalLM", "AutoTokenizer"]:
+    ) -> tuple[TransformersParam, "AutoModelForCausalLM", "AutoTokenizer"]:
         """Validate parameters and prepare model for generation."""
-        if not isinstance(parameters, TransformersModelParameters):
+        if not isinstance(parameters, TransformersParam):
             raise ParameterValidationError(
-                f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{TransformersParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         if self.model is None or self.tokenizer is None:
@@ -88,7 +88,7 @@ class TransformersModel(Model):
 
     def _create_generate_kwargs(
         self,
-        parameters: TransformersModelParameters,
+        parameters: TransformersParam,
         streamer: Optional["TextStreamer"] = None,
     ) -> dict:
         """Create generation kwargs for the model."""

@@ -14,14 +14,14 @@ Let's see an example:
 
 ```python
 from prompttrail.core.cache import LRUCacheProvider
-from prompttrail.models.openai import OpenAIModelConfiguration
+from prompttrail.models.openai import OpenAIConfiguration
 
-config = OpenAIModelConfiguration(
+config = OpenAIConfiguration(
     api_key=api_key,
     # Just pass a cache provider to the configuration
     cache_provider=LRUCacheProvider()
 )
-model = OpenAIChatCompletionModel(config)
+model = OpenAIModel(config)
 ```
 
 We passed a `LRUCacheProvider` to the configuration. And the configuration is passed to the model.
@@ -30,8 +30,8 @@ Just call `send` method as usual. If you pass the same `session` and `parameter`
 
 ```python
 from prompttrail.core import Session, Message
-from prompttrail.models.openai import OpenAIModelParameters
-parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
+from prompttrail.models.openai import OpenAIParam
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-3.5-turbo")
 session = Session(
     messages = [Message(content="Hello, I'm a human.", role="user")]
 )
@@ -65,25 +65,25 @@ Let's see an example of `OneTurnConversationMockProvider`, which returns a messa
 ```python
 from prompttrail.core import Message
 from prompttrail.core.mock import OneTurnConversationMockProvider
-from prompttrail.models.openai import OpenAIModelConfiguration
+from prompttrail.models.openai import OpenAIConfiguration
 # First, you need to define a table to define how the mock return response based on last message
 role = "assistant"
 conversation_table = {
     "Hello": Message(content="Hi", role=role),
 }
 # Then, you can pass the table to the mock provider and pass the mock provider to the configuration
-config = OpenAIModelConfiguration(
+config = OpenAIConfiguration(
     api_key=api_key,
     mock_provider= OneTurnConversationMockProvider(conversation_table)
 )
-model = OpenAIChatCompletionModel(config)
+model = OpenAIModel(config)
 ```
 
 Let's call the model:
 ```python
 from prompttrail.core import Session, Message
-from prompttrail.models.openai import OpenAIModelParameters
-parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
+from prompttrail.models.openai import OpenAIParam
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-3.5-turbo")
 session = Session(
     messages = [Message(content="Hello", role="user")]
 )
