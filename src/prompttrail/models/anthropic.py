@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 from pprint import pformat
 from typing import Any, Dict, List, Literal, Optional, Tuple, cast
@@ -22,6 +23,9 @@ class AnthropicMessageDict(TypedDict):
     content: str
 
 
+MessageDict = Dict[str, str]
+
+
 class AnthropicConfig(Configuration):
     """Configuration for Anthropic Claude API."""
 
@@ -36,7 +40,7 @@ class AnthropicParam(Parameters):
     For detailed description of each parameter, see https://github.com/anthropics/anthropic-sdk-python/blob/main/api.md
     """
 
-    model_name: str = "claude-3-opus-20240229"
+    model_name: str = "claude-3-opus-latest"
     """ Name of the model to use. Use AnthoropicClaudeModel.list_models() to get the list of available models. """
     temperature: Optional[float] = 1.0
     """ Temperature for sampling. """
@@ -64,26 +68,36 @@ class AnthropicModel(Model):
     def format_tool(self, tool: Tool) -> Dict[str, Any]:
         """Convert tool to Anthropic format"""
         schema = tool.to_schema()
+        properties = {}
+        for name, arg in tool.arguments.items():
+            properties[name] = {
+                "type": "string",  # Currently only supporting string type
+                "description": arg.description,
+            }
+
         return {
-            "type": "function",
-            "function": {
-                "name": schema["name"],
-                "description": schema["description"],
-                "parameters": schema["parameters"],
+            "name": schema["name"],
+            "description": schema["description"],
+            "input_schema": {
+                "type": "object",
+                "properties": properties,
+                "required": [
+                    name for name, arg in tool.arguments.items() if arg.required
+                ],
             },
         }
 
     def format_tool_result(self, result: ToolResult) -> Dict[str, Any]:
         """Format result for Anthropic API"""
-        return {"role": "assistant", "content": str(result.content)}
+        return {"type": "tool_result", "content": str(result.content)}
 
     def validate_tools(self, tools: List[Tool]) -> None:
         """Validate tools according to Anthropic API requirements"""
         for tool in tools:
             # Validate tool name
-            if not tool.name.replace("-", "").isalnum():
+            if not tool.name.replace("-", "").replace("_", "").isalnum():
                 raise ParameterValidationError(
-                    f"Tool name must be alphanumeric or hyphen: {tool.name}"
+                    f"Tool name must be alphanumeric, hyphen, underscore: {tool.name}"
                 )
             # Validate description
             if not tool.description:
@@ -96,6 +110,32 @@ class AnthropicModel(Model):
                     f"Tool must have at least one argument: {tool.name}"
                 )
 
+    def _is_tool_result(self, message: MessageDict) -> bool:
+        """Check if a message contains a tool result"""
+        try:
+            content = message["content"]
+            if not content.startswith("{") or not content.endswith("}"):
+                logger.debug(f"Message content is not JSON format: {content}")
+                return False
+
+            # Try to parse as JSON
+            data = json.loads(content)
+            logger.debug(f"Parsed JSON data: {data}")
+
+            # Check if it has expected tool result fields
+            has_fields = all(
+                field in data for field in ["temperature", "condition", "city"]
+            )
+            logger.debug(f"Has tool result fields: {has_fields}")
+
+            return has_fields
+        except json.JSONDecodeError:
+            logger.debug(f"Failed to parse message as JSON: {content}")
+            return False
+        except Exception as e:
+            logger.debug(f"Error checking tool result: {e}")
+            return False
+
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
         if not isinstance(parameters, AnthropicParam):
@@ -104,6 +144,11 @@ class AnthropicModel(Model):
             )
 
         messages, system_prompt = self._session_to_anthropic_messages(session)
+        logger.debug(f"Converted messages: {messages}")
+        logger.debug(f"System prompt: {system_prompt}")
+
+        # Convert AnthropicMessageDict to MessageDict for tool use check
+        [dict(msg) for msg in messages]
 
         create_params = {
             "model": parameters.model_name,
@@ -129,25 +174,47 @@ class AnthropicModel(Model):
         if self.client is None:
             raise RuntimeError("Anthropic client not initialized")
 
+        logger.debug(f"Request parameters: {pformat(create_params)}")  # type: ignore
+
         response: anthropic.Message = self.client.messages.create(**create_params)  # type: ignore
-        logger.debug(pformat(object=response))  # type: ignore
+        logger.debug(f"Response: {pformat(response)}")  # type: ignore
+        logger.debug(f"Response content: {pformat(response.content)}")  # type: ignore
 
-        # Handle non-text response
-        content = "".join([block.text for block in response.content])
-        if content == "":
-            raise ValueError("Response is empty.")
+        # Handle response content
+        content = ""
+        tool_use_block = None
 
-        result = Message(content=content, role="assistant")
+        # Process all blocks
+        for block in response.content:
+            logger.debug(f"Processing block: {pformat(block)}")  # type: ignore
+            logger.debug(f"Block type: {type(block)}")  # type: ignore
 
-        # Process tool calls if present
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            tool_call = response.tool_calls[0]  # Currently handle only first call
-            result.metadata["function_call"] = {
-                "name": tool_call.function.name,
-                "arguments": tool_call.function.arguments,
+            if hasattr(block, "text"):
+                content += block.text
+                logger.debug(f"Added text content: {block.text}")
+            elif hasattr(block, "type") and block.type == "tool_use":
+                tool_use_block = block
+                logger.debug(f"Found tool use block: {pformat(block)}")  # type: ignore
+
+        # Create message with appropriate content and metadata
+        metadata = {}
+        if tool_use_block:
+            metadata["tool_use"] = {
+                "name": tool_use_block.name,
+                "input": tool_use_block.input,
             }
+            logger.debug(f"Added tool use metadata: {metadata}")
 
-        return result
+        # Create message
+        message = Message(
+            content=content
+            if content
+            else "[tool_use]",  # Use placeholder only if no content
+            role="assistant",
+            metadata=metadata,
+        )
+        logger.debug(f"Created final message: {message}")
+        return message
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         """Validate session for Anthropic Claude models.
@@ -182,12 +249,6 @@ class AnthropicModel(Model):
                 f"{self.__class__.__name__}: Empty messages are not allowed. (Anthropic API restriction)"
             )
 
-        # Anthropic-specific validation for tool_result messages
-        if any([message.role == "tool_result" for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Tool result messages are not supported"
-            )
-
     @staticmethod
     def _session_to_anthropic_messages(
         session: Session,
@@ -208,6 +269,8 @@ class AnthropicModel(Model):
                             AnthropicRole,
                             "assistant"
                             if message.role == "assistant"
+                            else "user"  # Convert tool_result to user
+                            if message.role == "tool_result"
                             else message.role,
                         ),
                         content=str(message.content),
@@ -224,6 +287,8 @@ class AnthropicModel(Model):
                             AnthropicRole,
                             "assistant"
                             if message.role == "assistant"
+                            else "user"  # Convert tool_result to user
+                            if message.role == "tool_result"
                             else message.role,
                         ),
                         content=str(message.content),

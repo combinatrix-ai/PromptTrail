@@ -30,7 +30,7 @@ Do not remove > in the code section, which represents the prompt.
 )
 
 MAX_TOKENS = 8000
-MODEL_NAME = "gpt-3.5-turbo-16k"
+MODEL_NAME = "gpt-4o-mini"
 
 configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIParam(model_name=MODEL_NAME, temperature=0.0, max_tokens=MAX_TOKENS)

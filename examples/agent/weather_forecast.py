@@ -18,7 +18,7 @@ from typing_extensions import TypedDict
 
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import LinearTemplate, MessageTemplate
-from prompttrail.agent.templates.openai import OpenAIGenerateWithFunctionCallingTemplate
+from prompttrail.agent.templates.openai import OpenAIToolingTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core import Session
@@ -90,9 +90,7 @@ system = MessageTemplate(
     content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
     role="system",
 )
-function_calling = OpenAIGenerateWithFunctionCallingTemplate(
-    role="assistant", functions=[WeatherForecastTool()]
-)
+function_calling = OpenAIToolingTemplate(tools=[WeatherForecastTool()])
 
 # Create linear template that defines the conversation flow
 template = LinearTemplate(
@@ -104,7 +102,7 @@ template = LinearTemplate(
 )
 
 # Create runner instance with model, parameters, and template
-parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
 runner = CommandLineRunner(
     model=model,
     parameters=parameters,

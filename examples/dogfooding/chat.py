@@ -34,7 +34,7 @@ Discuss the question with user. User is the author of this library, who want to 
 
 configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
 parameter = AnthropicParam(
-    model_name="claude-3-sonnet-20240229",
+    model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=4096,
 )

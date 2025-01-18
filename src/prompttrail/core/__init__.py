@@ -55,9 +55,22 @@ class Message(BaseModel):
             content_part = 'content="""\n' + self.content + '\n"""'
         else:
             content_part = 'content="' + self.content + '"'
+
+        metadata_part = ""
+        if self.metadata:
+            metadata_part = ", metadata=" + str(self.metadata)
+
         if self.role is None:
-            return "Message(" + content_part + '")'
-        return "Message(" + content_part + ', role="' + self.role + '")'
+            return "Message(" + content_part + metadata_part + ")"
+        return (
+            "Message("
+            + content_part
+            + ', role="'
+            + self.role
+            + '"'
+            + metadata_part
+            + ")"
+        )
 
 
 class Configuration(BaseModel):

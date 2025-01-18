@@ -15,7 +15,7 @@ class TestAnthropic(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["ANTHROPIC_API_KEY"]
         self.config = AnthropicConfig(api_key=self.api_key)
-        self.use_model = "claude-3-haiku-20240307"
+        self.use_model = "claude-3-5-haiku-latest"
         self.parameters = AnthropicParam(
             model_name=self.use_model, max_tokens=100, temperature=0
         )

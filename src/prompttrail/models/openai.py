@@ -32,7 +32,7 @@ class OpenAIParam(Parameters):
     For detailed description of each parameter, see https://platform.openai.com/docs/api-reference/chat
     """
 
-    model_name: str = "gpt-3.5-turbo"
+    model_name: str = "gpt-4o-mini"
     """ Name of the model to use. Use OpenAIModel.list_models() to get the list of available models. """
     temperature: float = 1.0
     """ Temperature for sampling. """

@@ -31,7 +31,7 @@ Just call `send` method as usual. If you pass the same `session` and `parameter`
 ```python
 from prompttrail.core import Session, Message
 from prompttrail.models.openai import OpenAIParam
-parameter = OpenAIParam(max_tokens=100, model_name="gpt-3.5-turbo")
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-4o-mini")
 session = Session(
     messages = [Message(content="Hello, I'm a human.", role="user")]
 )
@@ -83,7 +83,7 @@ Let's call the model:
 ```python
 from prompttrail.core import Session, Message
 from prompttrail.models.openai import OpenAIParam
-parameter = OpenAIParam(max_tokens=100, model_name="gpt-3.5-turbo")
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-4o-mini")
 session = Session(
     messages = [Message(content="Hello", role="user")]
 )

@@ -28,7 +28,7 @@ echo_mock_model = OpenAIModel(
     ),
 )
 parameters = OpenAIParam(
-    model_name="gpt-3.5-turbo",
+    model_name="gpt-4o-mini",
 )
 
 

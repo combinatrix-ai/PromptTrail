@@ -80,7 +80,7 @@ Then, we need to define how the conversation is actually carried out. You need t
 
 In this example, we don't have any user interaction. If you want to see more about user interaction, see [examples/agent/fermi_problem.py](examples/agent/fermi_problem.py).
 
-Let's run the agent above on CLI. Use OpenAI's GPT-3.5-turbo with 16k context. The user is interacted with CLI.
+Let's run the agent above on CLI. Use OpenAI's gpt-4o-mini. The user is interacted with CLI.
 
 ```python
 import os
@@ -97,7 +97,7 @@ from prompttrail.models.openai import (
 # Don't forget to set OPENAI_API_KEY environment variable
 configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIParam(
-    model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=8000
+    model_name="gpt-4o-mini", temperature=0.0, max_tokens=8000
 )
 model = OpenAIModel(configuration=configuration)
 

@@ -28,7 +28,7 @@ Show plenty of self-contained code examples with comments.
 
 configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
 parameter = AnthropicParam(
-    model_name="claude-3-5-sonnet-20241022",
+    model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=8192,
 )

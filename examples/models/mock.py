@@ -14,7 +14,7 @@ config = OpenAIConfiguration(
         },
     ),
 )
-parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0)
+parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=1000, temperature=0)
 
 model = OpenAIModel(configuration=config)
 

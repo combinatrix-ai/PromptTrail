@@ -36,9 +36,7 @@ For your information, README is given below.
 )
 
 configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIParam(
-    model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=5000
-)
+parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=5000)
 model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
