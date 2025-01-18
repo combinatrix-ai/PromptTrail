@@ -40,7 +40,7 @@ class TestLRUCacheProvider(unittest.TestCase):
         cache_provider.add(session, message_out)
         config = OpenAIConfiguration(api_key=api_key, cache_provider=cache_provider)
         parameters = OpenAIParam(
-            model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0
+            model_name="gpt-4o-mini", max_tokens=1000, temperature=0
         )
         model = OpenAIModel(configuration=config)
         # But, cache is called, so no error is raised.

@@ -142,8 +142,6 @@ class MessageTemplate(Template):
             )
             # Get metadata from the last message or initial metadata
             metadata = session.get_latest_metadata().copy()
-            # Add template_id to metadata
-            metadata["template_id"] = self.template_id
             message = Message(
                 content=rendered_content,
                 role=self.role,
@@ -201,15 +199,11 @@ class GenerateTemplate(MessageTemplate):
         logger.info(
             f"Generating content with {session.runner.models.__class__.__name__}..."
         )
-        rendered_content = session.runner.models.send(
-            session.runner.parameters, session
-        ).content
-        # Get metadata from the last message or initial metadata
-        metadata = session.get_latest_metadata().copy()
-        # Add template_id to metadata
-        metadata["template_id"] = self.template_id
+        response = session.runner.models.send(session.runner.parameters, session)
+        # Get metadata from the response
+        metadata = response.metadata if response.metadata else {}
         message = Message(
-            content=rendered_content,
+            content=response.content,
             role=self.role,
             metadata=metadata,
         )
@@ -294,7 +288,6 @@ class UserTemplate(MessageTemplate):
             )
 
         metadata = session.get_latest_metadata().copy()
-        metadata["template_id"] = self.template_id
         message = Message(
             content=rendered_content,
             role=self.role,
@@ -345,17 +338,16 @@ class AssistantTemplate(MessageTemplate):
             logger.info(
                 f"Generating content with {session.runner.models.__class__.__name__}..."
             )
-            rendered_content = session.runner.models.send(
-                session.runner.parameters, session
-            ).content
+            response = session.runner.models.send(session.runner.parameters, session)
+            rendered_content = response.content
+            metadata = response.metadata if response.metadata else {}
         else:
             # Static mode
             rendered_content = self.jinja_template.render(
                 **session.get_latest_metadata()
             )
+            metadata = session.get_latest_metadata().copy()
 
-        metadata = session.get_latest_metadata().copy()
-        metadata["template_id"] = self.template_id
         message = Message(
             content=rendered_content,
             role=self.role,

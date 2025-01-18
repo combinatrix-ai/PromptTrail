@@ -133,3 +133,21 @@ class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
             The last message as the user's input.
         """
         return session.get_last().content
+
+
+class DefaultEchoMockProvider(UserInteractionMockProvider):
+    def ask(
+        self,
+        session: Session,
+        description: Optional[str] = None,
+        default: Optional[str] = None,
+    ) -> str:
+        prompt = description if description else "Enter your message"
+        if default:
+            prompt += f" (default: {default})"
+        prompt += ": "
+
+        user_input = input(prompt)
+        if not user_input and default:
+            return default
+        return user_input

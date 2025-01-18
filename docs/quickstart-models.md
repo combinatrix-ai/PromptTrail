@@ -25,7 +25,7 @@ from prompttrail.models.openai import (
 
 api_key = os.environ["OPENAI_API_KEY"]
 config = OpenAIConfiguration(api_key=api_key)
-parameters = OpenAIParam(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
 model = OpenAIModel(configuration=config)
 session = Session(
   messages=[
@@ -116,7 +116,7 @@ Things won't change course of the conversation (e.g. API key) are passed here.
 ### Parameters
 
 ```python
-parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+parameters = OpenAIModelParameters(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
 ...
 message = model.send(parameters=parameters, session=session)
 ```
@@ -187,7 +187,7 @@ from prompttrail.models.anthropic import (
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
 config = AnthropicConfig(api_key=api_key)
-parameters = AnthropicParam(model_name="claude-3-haiku-20240307", max_tokens=100, temperature=0)
+parameters = AnthropicParam(model_name="claude-3-5-haiku-latest", max_tokens=100, temperature=0)
 model = AnthropicModel(configuration=config)
 session = Session(
   messages=[

@@ -142,10 +142,18 @@ class CommandLineRunner(Runner):
                 print("From: " + cutify_role(message.role))
                 if message.content:
                     print("message: ", message.content)
-                elif message.metadata:
-                    print("metadata: ", end=" ")
-                    print(message.metadata)
-                else:
+                if message.metadata and any(
+                    key != "template_id" for key in message.metadata
+                ):
+                    # Filter out template_id from metadata
+                    metadata = {
+                        k: v for k, v in message.metadata.items() if k != "template_id"
+                    }
+                    if metadata:
+                        print("metadata: ", metadata)
+                if not message.content and not any(
+                    key != "template_id" for key in message.metadata
+                ):
                     print("Empty message!")
                 n_messages += 1
             if max_messages and n_messages >= max_messages:

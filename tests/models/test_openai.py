@@ -20,7 +20,7 @@ class TestOpenAI(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["OPENAI_API_KEY"]
         self.config = OpenAIConfiguration(api_key=self.api_key)
-        self.use_model = "gpt-3.5-turbo"
+        self.use_model = "gpt-4o-mini"
         self.parameters = OpenAIParam(
             model_name=self.use_model,
             temperature=0.0,

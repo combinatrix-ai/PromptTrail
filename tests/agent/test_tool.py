@@ -90,7 +90,11 @@ def test_tool():
 
     # Create and execute tool
     tool = TestTool()
+    result = tool.execute(arg1=42, arg2="test")
+    # Optional argument is not provided
     result = tool.execute(arg1=42)
+    # Order of arguments is not important
+    result = tool.execute(arg2="test", arg1=42)
     assert isinstance(result, TestResult)
     assert result.content["value"] == 42
 

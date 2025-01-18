@@ -213,7 +213,7 @@ def main(
 
     configuration = AnthropicConfig(api_key=api_key)
     parameter = AnthropicParam(
-        model_name="claude-3-5-sonnet-20241022",
+        model_name="claude-3-5-sonnet-latest",
         temperature=0.7,
         max_tokens=1000,
     )
