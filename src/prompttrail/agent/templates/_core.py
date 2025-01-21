@@ -210,15 +210,10 @@ class GenerateTemplate(MessageTemplate):
             f"Generating content with {session.runner.models.__class__.__name__}..."
         )
         response = session.runner.models.send(session.runner.parameters, session)
-        # Get metadata from the response
-        metadata = response.metadata if response.metadata else {}
-        message = Message(
-            content=response.content,
-            role=self.role,
-            metadata=metadata,
-        )
-        session.append(message)
-        yield message
+        if self.role:
+            response.role = self.role
+        session.append(response)
+        yield response
         return session
 
 

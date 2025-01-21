@@ -37,14 +37,20 @@ logger = logging.getLogger(__name__)
 MessageRoleType = Literal["system", "user", "assistant", "tool_result", "control"]
 
 
+def truncate_string(s: str, max_length: int = 100) -> str:
+    """Truncate string to max_length."""
+    if len(s) > max_length:
+        return s[: max_length - 3] + "..."
+    return s
+
+
 class Message(BaseModel):
     """A message represents a single message from a user, model, or API etc..."""
 
-    # We may soon get non-textual messages maybe, so we should prepare for that.
+    # TODO: Non-text content
     content: str
     role: MessageRoleType
-
-    # Store metadata in dict
+    tool_use: Optional[Dict[str, Any]] = Field(default=None)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def __hash__(self) -> int:
@@ -52,24 +58,26 @@ class Message(BaseModel):
 
     def __str__(self) -> str:
         if "\n" in self.content:
-            content_part = 'content="""\n' + self.content + '\n"""'
+            content_part = 'content="""\n' + truncate_string(self.content) + '\n"""'
         else:
-            content_part = 'content="' + self.content + '"'
+            content_part = 'content="' + truncate_string(self.content) + '"'
 
         metadata_part = ""
         if self.metadata:
-            metadata_part = ", metadata=" + str(self.metadata)
+            metadata_part = ", metadata=" + truncate_string(str(self.metadata))
 
-        if self.role is None:
-            return "Message(" + content_part + metadata_part + ")"
+        tool_use_part = ""
+        if self.tool_use:
+            tool_use_part = ", tool_use=" + truncate_string(str(self.tool_use))
+
         return (
             "Message("
             + content_part
             + ', role="'
             + self.role
-            + '"'
             + metadata_part
-            + ")"
+            + tool_use_part
+            + '")'
         )
 
 
