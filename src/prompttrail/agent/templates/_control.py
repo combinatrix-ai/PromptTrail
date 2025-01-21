@@ -1,6 +1,6 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Generator, List, Optional, Sequence, Set, TypeAlias
+from typing import Generator, List, Optional, Sequence, Set, TypeAlias, Union
 
 from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.templates._core import Stack, Template
@@ -26,8 +26,8 @@ class ControlTemplate(Template, metaclass=ABCMeta):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
@@ -108,8 +108,8 @@ class LoopTemplate(ControlTemplate):
         exit_condition: Optional[BooleanHook] = None,
         template_id: Optional[str] = None,
         exit_loop_count: Optional[int] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         """A template for a loop control flow. Unlike `LinearTemplate`, this template loops over the child templates until the exit condition is met.
 
@@ -183,8 +183,8 @@ class IfTemplate(ControlTemplate):
         true_template: Template,
         false_template: Optional[Template] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         """A template for a conditional control flow.
 
@@ -245,8 +245,8 @@ class LinearTemplate(ControlTemplate):
         self,
         templates: Sequence[Template],
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         """A template for a linear control flow. Unlike `LoopTemplate`, this template exits after rendering all the child templates.
 
@@ -328,7 +328,7 @@ class JumpTemplate(ControlTemplate):
         jump_to: Template | TemplateId,
         condition: BooleanHook,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         """A template for jumping to another template.
 
@@ -373,7 +373,7 @@ class BreakTemplate(ControlTemplate):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         """A template for breaking the loop.
 

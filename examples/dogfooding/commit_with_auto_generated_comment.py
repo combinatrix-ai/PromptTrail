@@ -3,8 +3,8 @@ import subprocess
 import tempfile
 from typing import Optional
 
-from prompttrail.agent.hooks import BooleanHook, ResetDataHook
-from prompttrail.agent.hooks._core import TransformHook
+from prompttrail.agent.hooks import BooleanHook
+from prompttrail.agent.hooks._core import ResetDataHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -19,6 +19,16 @@ from prompttrail.agent.templates import (
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+
+
+class RewriteMessageHook(TransformHook):
+    def __init__(self, index: int, new_content: str):
+        self.index = index
+        self.new_content = new_content
+
+    def hook(self, session: Session) -> Session:
+        session.messages[self.index].content = self.new_content
+        return session
 
 
 def get_git_info() -> dict:
@@ -131,12 +141,13 @@ Please generate a commit message based on the following information:
 3. Recent commit history:
 {{log}}
 """,
+            after_transform=ResetDataHook(),
         ),
         LoopTemplate(
-            [
+            templates=[
                 AssistantTemplate(
                     template_id="generate_commit_message",
-                    after_transform=[SaveCommitMessageHook()],
+                    after_transform=SaveCommitMessageHook(),
                 ),
                 UserTemplate(
                     template_id="get_feedback",
@@ -167,21 +178,15 @@ Examples:
                 ),
                 IfTemplate(
                     true_template=BreakTemplate(),
-                    false_template=MessageTemplate(
-                        role="assistant",
-                        content="Generating a new message based on your feedback...",
+                    false_template=AssistantTemplate(
+                        before_transform=RewriteMessageHook(-1, "RETRY"),
+                        content="Based on your feedback, I will regenerate the commit message.",
                     ),
                     condition=BooleanHook(
                         lambda session: "END" in session.get_last_message().content
                     ),
                 ),
             ],
-            exit_condition=BooleanHook(
-                lambda session: session.get_last_message()
-                .content.strip()
-                .startswith("END")
-            ),
-            before_transform=[ResetDataHook()],
         ),
     ]
 )

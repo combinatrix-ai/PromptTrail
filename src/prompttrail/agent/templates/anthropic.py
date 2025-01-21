@@ -100,8 +100,7 @@ class AnthropicToolingTemplate(ToolingTemplate):
         logger.debug(f"Generated initial message: {session}")
 
         # Check for tool call
-        tool_call = self.format_tool_call(session)
-        if tool_call:
+        while tool_call := self.format_tool_call(session):
             try:
                 # Get and execute tool
                 tool = self.get_tool(tool_call["name"])
@@ -115,18 +114,15 @@ class AnthropicToolingTemplate(ToolingTemplate):
                 yield result_message
                 session.append(result_message)
 
+                if session.messages[-1].metadata.get("tool_use"):
+                    del session.messages[-1].metadata["tool_use"]
+
                 # Generate final response with clean metadata
                 logger.debug("Generating final response")
                 session = yield from GenerateTemplate(role=self.role).render(session)
                 final_message = session.messages[-1]
 
                 logger.debug(f"Generated final message: {final_message}")
-
-                if "tool_use" in session.messages[-1].metadata:
-                    del session.messages[-1].metadata["tool_use"]
-
-                return session
-
             except Exception as e:
                 logger.error(f"Error executing tool {tool_call['name']}: {str(e)}")
                 raise

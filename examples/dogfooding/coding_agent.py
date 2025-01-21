@@ -1,36 +1,47 @@
 # flake8: noqa: E402
+
 import os
 import sys
 
+from prompttrail.agent.templates.anthropic import AnthropicToolingTemplate
+
 sys.path.append(os.path.abspath("."))
 
-from examples.dogfooding.dogfooding_tools import load_all_important_files
-from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import (
-    AssistantTemplate,
-    LinearTemplate,
-    LoopTemplate,
-    UserTemplate,
+from examples.dogfooding.dogfooding_tools import (
+    CreateOrOverwriteFile,
+    EditFile,
+    ExecuteCommand,
+    ReadFile,
+    ReadImportantFiles,
+    TreeDirectory,
+    load_all_important_files,
 )
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import LinearTemplate, LoopTemplate, UserTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
+tools_to_use = [
+    ReadImportantFiles(),
+    ExecuteCommand(),
+    ReadFile(),
+    TreeDirectory(),
+    CreateOrOverwriteFile(),
+    EditFile(),
+]
+
 templates = LinearTemplate(
     templates=[
         UserTemplate(
-            content="""
-You're given source code and test scripts and documents for a library, PromptTrail as below:
-{{code}}
-Discuss the question with user. User is the author of this library, who want to improve the design, implementation, and documentation of the library.
-""",
+            content="""Please help me improve my LLM library, PromptTrail. With the tools you provided, you can execute any linux command.""",
         ),
         LoopTemplate(
             [
                 UserTemplate(
                     description="Input:",
                 ),
-                AssistantTemplate(),
+                AnthropicToolingTemplate(tools=tools_to_use),
             ]
         ),
     ],
@@ -41,6 +52,7 @@ parameter = AnthropicParam(
     model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=4096,
+    tools=tools_to_use,
 )
 model = AnthropicModel(configuration=configuration)
 
