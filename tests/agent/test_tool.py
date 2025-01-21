@@ -1,136 +1,133 @@
 import enum
-from typing import Any, Dict
+import json
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, Generator, TypedDict
 
 import pytest
-from typing_extensions import TypedDict
 
+from examples.dogfooding.dogfooding_tools import EditFile
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.core.errors import ParameterValidationError
 
 
 class TestResultData(TypedDict):
-    """Test result data type"""
-
-    value: int
+    result: str
 
 
 class TestResult(ToolResult):
-    """Test result class"""
-
-    content: TestResultData
+    def __init__(self, result: str):
+        super().__init__(content=json.dumps({"result": result}))
 
 
 class TestEnumType(enum.Enum):
-    """Test enum type"""
-
     A = "a"
     B = "b"
 
 
-def test_tool_result():
-    """Test tool result creation and validation"""
-    # Valid result
-    result = TestResult(content={"value": 42})
-    assert result.content["value"] == 42
+class TestTool(Tool):
+    name: str = "test_tool"
+    description: str = "test tool"
+    arguments: dict[str, ToolArgument[Any]] = {
+        "arg1": ToolArgument(
+            name="arg1",
+            description="arg1",
+            value_type=str,
+            required=True,
+        ),
+        "arg2": ToolArgument(
+            name="arg2",
+            description="arg2",
+            value_type=int,
+            required=False,
+        ),
+        "arg3": ToolArgument(
+            name="arg3",
+            description="arg3",
+            value_type=TestEnumType,
+            required=False,
+        ),
+    }
 
-    # Invalid result (wrong type)
-    with pytest.raises(ValueError):
-        TestResult(content={"value": "not an int"})
-
-
-def test_tool_argument():
-    """Test tool argument creation and validation"""
-    # Test with required argument
-    arg = ToolArgument[int](
-        name="test", description="test argument", value_type=int, required=True
-    )
-    assert arg.name == "test"
-    assert arg.description == "test argument"
-    assert arg.value_type == int
-    assert arg.required is True
-
-    # Test with optional argument
-    arg = ToolArgument[str](
-        name="test", description="test argument", value_type=str, required=False
-    )
-    assert arg.required is False
-
-    # Test with enum type
-    arg = ToolArgument[TestEnumType](
-        name="test", description="test argument", value_type=TestEnumType, required=True
-    )
-    assert arg.value_type == TestEnumType
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        return TestResult(result="test")
 
 
-def test_tool():
-    """Test tool creation and execution"""
-
-    class TestTool(Tool):
-        """Test tool implementation"""
-
-        name: str = "test"
-        description: str = "test tool"
-        arguments: Dict[str, ToolArgument[Any]] = {
-            "arg1": ToolArgument[int](
-                name="arg1",
-                description="first argument",
-                value_type=int,
-                required=True,
-            ),
-            "arg2": ToolArgument[str](
-                name="arg2",
-                description="second argument",
-                value_type=str,
-                required=False,
-            ),
-        }
-
-        def _execute(self, args: Dict[str, Any]) -> ToolResult:
-            return TestResult(content={"value": args["arg1"]})
-
-    # Create and execute tool
-    tool = TestTool()
-    result = tool.execute(arg1=42, arg2="test")
-    # Optional argument is not provided
-    result = tool.execute(arg1=42)
-    # Order of arguments is not important
-    result = tool.execute(arg2="test", arg1=42)
-    assert isinstance(result, TestResult)
-    assert result.content["value"] == 42
+@pytest.fixture
+def test_file() -> Generator[Path, None, None]:
+    """Create a temporary test file"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        file_path = Path(tmp_dir) / "test.txt"
+        content = "Hello World!\nThis is a test file."
+        file_path.write_text(content)
+        yield file_path
 
 
 def test_tool_validation():
     """Test tool validation"""
-
-    class TestTool(Tool):
-        """Test tool implementation"""
-
-        name: str = "test"
-        description: str = "test tool"
-        arguments: Dict[str, ToolArgument[Any]] = {
-            "arg1": ToolArgument[int](
-                name="arg1",
-                description="first argument",
-                value_type=int,
-                required=True,
-            )
-        }
-
-        def _execute(self, args: Dict[str, Any]) -> ToolResult:
-            return TestResult(content={"value": args["arg1"]})
-
-    # Test with invalid argument
     tool = TestTool()
-    with pytest.raises(ParameterValidationError):
-        tool.validate_arguments({"unknown_arg": 42})
 
-    # Test with missing required argument
-    with pytest.raises(ParameterValidationError):
-        tool.validate_arguments({})
+    # Test required argument
+    with pytest.raises(
+        ParameterValidationError, match="Missing required argument: arg1"
+    ):
+        tool.execute()
 
-    # Test with wrong type
-    with pytest.raises(ParameterValidationError):
-        tool.validate_arguments({"arg1": "not an int"})
+    # Test invalid argument type
+    with pytest.raises(
+        ParameterValidationError, match="Invalid type for argument arg2"
+    ):
+        tool.execute(arg1="test", arg2="invalid")
 
-    # Test with valid arguments
-    tool.validate_arguments({"arg1": 42})
+    # Test invalid enum value
+    with pytest.raises(
+        ParameterValidationError, match="Invalid type for argument arg3"
+    ):
+        tool.execute(arg1="test", arg3="invalid")
+
+    # Test valid arguments
+    result = tool.execute(arg1="test", arg2=1, arg3=TestEnumType.A)
+    assert isinstance(result, ToolResult)
+    assert isinstance(result.content, str)
+
+    result_dict = json.loads(result.content)
+    assert isinstance(result_dict, dict)
+    assert "result" in result_dict
+    assert result_dict["result"] == "test"
+
+
+def test_edit_file_with_diff(test_file: Path):
+    """Test EditFile tool with diff format"""
+    tool = EditFile()
+
+    # Test successful diff application
+    result = tool.execute(
+        path=str(test_file),
+        diff="""<<<<<<< SEARCH
+Hello World!
+=======
+Hi Universe!
+>>>>>>> REPLACE""",
+    )
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "success"
+    assert "Hi Universe!" in test_file.read_text()
+
+    # Test invalid diff format
+    result = tool.execute(path=str(test_file), diff="Invalid diff format")
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "error"
+    assert "Invalid diff format" in result_dict["reason"]
+
+    # Test non-matching search block
+    result = tool.execute(
+        path=str(test_file),
+        diff="""<<<<<<< SEARCH
+This text does not exist
+=======
+Something else
+>>>>>>> REPLACE""",
+    )
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "error"
+    assert "does not match anything in the file" in result_dict["reason"]

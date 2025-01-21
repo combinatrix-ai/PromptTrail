@@ -80,7 +80,7 @@ format-check = { chain = ["format:black-check", "format:autoflake-check", "forma
 lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src tests examples"
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples"
-test = "pytest --log-cli-level=DEBUG --cov=src --cov-report=xml tests"
+test = "pytest --log-cli-level=DEBUG --cov=src --cov-report=xml tests examples"
 doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
 "doc:prep" = "sphinx-apidoc --implicit-namespaces -f -o docs/source src/prompttrail"
 "doc:rm" = "rm -rf docs/build docs/source/modules.rst"
@@ -90,6 +90,7 @@ pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:commit" = "python examples/dogfooding/commit_with_auto_generated_comment.py"
 "see-all" = "python examples/dogfooding/utils/load_all_important_files.py"
 chat = "python examples/dogfooding/chat.py"
+agent = "python examples/dogfooding/coding_agent.py"
 commit = { chain = ["format-check", "all", "dogfooding:commit"] }
 
 [tool.hatch.metadata]
@@ -115,3 +116,12 @@ remove-all-unused-imports = true
 ignore-init-module-imports = true
 remove-duplicate-keys = true
 remove-unused-variables = true
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
+testpaths = [
+    "tests",
+    "examples"
+]

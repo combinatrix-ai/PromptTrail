@@ -1,0 +1,3 @@
+# This line is required to make examples work as expected
+# Copy this file to .envrc and run `direnv allow` to set up your environment
+export PYTHONPATH="$PWD:$PYTHONPATH"

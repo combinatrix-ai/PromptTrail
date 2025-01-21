@@ -1,7 +1,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from pprint import pformat
-from typing import Generator, List, Optional, Set
+from typing import Generator, List, Optional, Set, Union
 from uuid import uuid4
 
 import jinja2
@@ -42,15 +42,25 @@ class Template(metaclass=ABCMeta):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         self.template_id: str = (
             template_id if template_id is not None else self._generate_name()
         )
         check_template_id(self.template_id)
-        self.before_transform = before_transform if before_transform is not None else []
-        self.after_transform = after_transform if after_transform is not None else []
+        self.before_transform = self._hooks_to_list(before_transform)
+        self.after_transform = self._hooks_to_list(after_transform)
+
+    def _hooks_to_list(
+        self, hooks: Optional[Union[List[TransformHook], TransformHook]]
+    ) -> List[TransformHook]:
+        if hooks is None:
+            return []
+        elif isinstance(hooks, list):
+            return hooks
+        else:
+            return [hooks]
 
     def get_logger(self) -> logging.Logger:
         return logging.getLogger(__name__ + "." + str(self.template_id))
@@ -120,8 +130,8 @@ class MessageTemplate(Template):
         content: str,
         role: MessageRoleType,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             template_id=template_id,
@@ -181,8 +191,8 @@ class GenerateTemplate(MessageTemplate):
         self,
         role: MessageRoleType,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
@@ -220,8 +230,8 @@ class SystemTemplate(MessageTemplate):
         self,
         content: str,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             content=content,
@@ -257,8 +267,8 @@ class UserTemplate(MessageTemplate):
         description: Optional[str] = None,
         default: Optional[str] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             content=content or "",
@@ -318,8 +328,8 @@ class AssistantTemplate(MessageTemplate):
         self,
         content: Optional[str] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[List[TransformHook]] = None,
-        after_transform: Optional[List[TransformHook]] = None,
+        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
     ):
         super().__init__(
             content=content or "",
@@ -331,6 +341,7 @@ class AssistantTemplate(MessageTemplate):
         self.is_generate = content is None
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        metadata = session.get_latest_metadata().copy()
         if self.is_generate:
             # Generate mode
             if session.runner is None:
@@ -340,13 +351,11 @@ class AssistantTemplate(MessageTemplate):
             )
             response = session.runner.models.send(session.runner.parameters, session)
             rendered_content = response.content
-            metadata = response.metadata if response.metadata else {}
         else:
             # Static mode
             rendered_content = self.jinja_template.render(
                 **session.get_latest_metadata()
             )
-            metadata = session.get_latest_metadata().copy()
 
         message = Message(
             content=rendered_content,
