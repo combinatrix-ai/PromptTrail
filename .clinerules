@@ -9,6 +9,7 @@
 - Set `logging.basicConfig(level=logging.DEBUG)` to see debug information.
 
 # Important Rules
-- If a diff application fails, re-read the file as it may have been updated.
+- If a diff application fails, re-read the file first and check it as it may have been updated.
 - If type matching fails repeatedly, you can add #type: ignore and proceed.
 - To run tests for specific files, use `rye run pytest [test files]`. Always run `rye run all` after successfully passing related tests.
+- Use `gpt-4o-mini` or `claude-3-5-haiku-latest` for easy task or test. Use `gpt-4o` or `claude-3-5-sonnet-latest` for complex tasks.

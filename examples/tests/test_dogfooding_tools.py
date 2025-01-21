@@ -20,9 +20,9 @@ def temp_dir() -> Generator[Path, None, None]:
     """Create a temporary directory for testing"""
     original_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tmp_dir:
-        os.chdir(tmp_dir)  # 一時ディレクトリを作業ディレクトリとして設定
+        os.chdir(tmp_dir)  # Set temporary directory as working directory
         yield Path(tmp_dir)
-        os.chdir(original_cwd)  # テスト後に元の作業ディレクトリに戻す
+        os.chdir(original_cwd)  # Return to original working directory after test
 
 
 @pytest.fixture
@@ -113,26 +113,26 @@ tmp/
     print("\nActual tree output:")
     print(tree)
 
-    # 期待される出力の検証
+    # Verify expected output
     assert "src" in tree
     assert "main.py" in tree
     assert "docs" in tree
     assert "index.md" in tree
 
-    # 無視されるべきファイル/ディレクトリの検証
+    # Verify files/directories that should be ignored
     assert ".venv" not in tree
     assert "test.pyc" not in tree
     assert "build" not in tree
     assert "tmp" not in tree
     assert "dist" not in tree
 
-    # 深さ制限のテスト
+    # Test depth limit
     result = tool.execute(path=str(temp_dir), max_depth=1)
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "success"
     tree = result_dict["tree"]
 
-    # トップレベルのみの検証
+    # Verify only top level entries
     assert "src" in tree
     assert "docs" in tree
     assert "main.py" not in tree

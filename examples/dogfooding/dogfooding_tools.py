@@ -11,7 +11,7 @@ from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 
 
 def print_debug(*args, **kwargs):
-    """デバッグ出力用のヘルパー関数"""
+    """Helper function for debug output"""
     print("[DEBUG]", *args, **kwargs)
 
 
@@ -169,7 +169,7 @@ class TreeDirectory(Tool):
         import subprocess
 
         try:
-            # まず現在のディレクトリの.gitignoreを試す
+            # First, try .gitignore in current directory
             gitignore_content = subprocess.check_output(
                 "cat .gitignore 2> /dev/null || "
                 "cat $(git rev-parse --show-toplevel 2> /dev/null)/.gitignore 2> /dev/null || "
@@ -178,34 +178,34 @@ class TreeDirectory(Tool):
                 text=True,
             )
 
-            # 行を処理
+            # Process lines
             patterns = []
             for line in gitignore_content.splitlines():
                 line = line.strip()
                 if line and not line.startswith("#"):
-                    # パターンの正規化
+                    # Normalize patterns
                     if line.endswith("/"):
-                        # ディレクトリパターン
+                        # Directory pattern
                         base = line.rstrip("/")
                         patterns.append(base)
-                        patterns.append(f"{base}/*")  # ディレクトリ内のすべてのファイル
+                        patterns.append(f"{base}/*")  # All files in directory
                     elif "*" in line:
-                        # ワイルドカードパターン
+                        # Wildcard pattern
                         if "/" in line:
-                            # パスを含むワイルドカード
+                            # Wildcard with path
                             patterns.append(line)
                         else:
-                            # グローバルワイルドカード
-                            patterns.append(f"*/{line}")  # どのディレクトリでもマッチ
-                            patterns.append(line)  # トップレベルでもマッチ
+                            # Global wildcard
+                            patterns.append(f"*/{line}")  # Match in any directory
+                            patterns.append(line)  # Match at top level
                     else:
-                        # 通常のパターン
+                        # Normal pattern
                         patterns.append(line)
                         if "/" in line:
-                            # パスパターンの場合は、そのパス以下も無視
+                            # For path patterns, ignore everything under that path
                             patterns.append(f"{line}/*")
 
-            # パターンを|で結合し、シングルクォートをエスケープ
+            # Combine patterns with | and escape single quotes
             combined_patterns = "|".join(p.replace("'", "\\'") for p in patterns)
             return combined_patterns
 
@@ -223,7 +223,7 @@ class TreeDirectory(Tool):
         import shutil
         import subprocess
 
-        # treeコマンドの存在確認
+        # Check if tree command exists
         if shutil.which("tree") is None:
             return {
                 "status": "error",
@@ -231,25 +231,27 @@ class TreeDirectory(Tool):
             }
 
         try:
-            # カレントディレクトリを一時的に変更して実行
+            # Temporarily change current directory for execution
             current_dir = os.getcwd()
             os.chdir(path)
 
             try:
-                # max_depthオプションの準備
+                # Prepare max_depth option
                 depth_opt = f"-L {max_depth + 1}" if max_depth is not None else ""
 
-                # 無視パターンの取得と整形
+                # Get and format ignore patterns
                 ignore_patterns = self._get_gitignore_patterns()
-                ignore_patterns = ignore_patterns.replace("'", "\\'")  # シングルクォートのエスケープ
+                ignore_patterns = ignore_patterns.replace(
+                    "'", "\\'"
+                )  # Escape single quotes
 
-                # treeコマンドの実行（相対パスを使用）
-                # --noreport: サマリー行を表示しない
-                # -a: 隠しファイルも表示
-                # --prune: 空のディレクトリを表示しない
-                # --matchdirs: ディレクトリにもパターンマッチを適用
-                # --charset=ascii: ASCII文字のみ使用
-                # -d: ディレクトリのみ表示（max_depth=1の場合）
+                # Execute tree command (using relative path)
+                # --noreport: Don't show summary line
+                # -a: Show hidden files
+                # --prune: Don't show empty directories
+                # --matchdirs: Apply pattern matching to directories
+                # --charset=ascii: Use ASCII characters only
+                # -d: Show only directories (when max_depth=1)
                 if max_depth == 1:
                     cmd = (
                         f"tree --noreport -a --prune -d "
@@ -262,21 +264,21 @@ class TreeDirectory(Tool):
                     )
                 output = subprocess.check_output(cmd, shell=True, text=True)
 
-                # 最初の行（カレントディレクトリ）を除去し、空行を除去
+                # Remove first line (current directory) and empty lines
                 tree_lines = [
                     line
                     for line in output.split("\n")[1:]
                     if line.strip() and not line.endswith("/")
                 ]
 
-                # カラーコードを除去
+                # Remove color codes
                 import re
 
                 tree_lines = [
                     re.sub(r"\x1b\[[0-9;]*[mK]", "", line) for line in tree_lines
                 ]
 
-                # .gitignoreを除外（max_depth=1の場合）
+                # Exclude .gitignore (when max_depth=1)
                 if max_depth == 1:
                     tree_lines = [
                         line for line in tree_lines if ".gitignore" not in line
@@ -285,7 +287,7 @@ class TreeDirectory(Tool):
                 return {"status": "success", "tree": "\n".join(tree_lines) + "\n"}
 
             finally:
-                # 必ずカレントディレクトリを元に戻す
+                # Always restore current directory
                 os.chdir(current_dir)
 
         except subprocess.CalledProcessError as e:
@@ -303,7 +305,7 @@ class TreeDirectory(Tool):
             )
 
         path = kwargs["path"]
-        # max_depthを整数に変換
+        # Convert max_depth to integer
         try:
             max_depth = int(kwargs["max_depth"]) if "max_depth" in kwargs else None
         except ValueError:
@@ -407,27 +409,27 @@ def line_trimmed_fallback_match(
     original_content: str, search_content: str, start_index: int
 ) -> Union[Tuple[int, int], bool]:
     """
-    行単位でトリミングしたフォールバックマッチを試みます。
-    各行の前後の空白を無視して比較を行います。
+    Try line-by-line trimmed fallback matching.
+    Compare lines ignoring whitespace at the beginning and end.
     """
     print_debug("=== line_trimmed_fallback_match ===")
     print_debug("Original content:", repr(original_content))
     print_debug("Search content:", repr(search_content))
     print_debug("Start index:", start_index)
 
-    # 両方のコンテンツを行に分割
+    # Split both contents into lines
     original_lines = original_content.split("\n")
     search_lines = search_content.split("\n")
 
     print_debug("Original lines:", len(original_lines))
     print_debug("Search lines:", len(search_lines))
 
-    # 末尾の空行を削除
+    # Remove trailing empty lines
     if search_lines and search_lines[-1] == "":
         search_lines.pop()
         print_debug("Removed empty last line from search content")
 
-    # start_indexが含まれる行番号を見つける
+    # Find the line number that contains start_index
     start_line_num = 0
     current_index = 0
     while current_index < start_index and start_line_num < len(original_lines):
@@ -436,12 +438,12 @@ def line_trimmed_fallback_match(
 
     print_debug("Starting search from line:", start_line_num)
 
-    # 元のコンテンツの各開始位置でマッチを試みる
+    # Try matching at each starting position in original content
     for i in range(start_line_num, len(original_lines) - len(search_lines) + 1):
         matches = True
         print_debug(f"Trying match at line {i}")
 
-        # この位置から全ての検索行とマッチするか確認
+        # Check if all search lines match from this position
         for j in range(len(search_lines)):
             original_trimmed = original_lines[i + j].strip()
             search_trimmed = search_lines[j].strip()
@@ -456,15 +458,15 @@ def line_trimmed_fallback_match(
                 break
             print_debug("    Match found")
 
-        # マッチが見つかった場合、正確な文字位置を計算
+        # If match found, calculate exact character positions
         if matches:
             print_debug("Full match found at line", i)
-            # 開始文字位置を計算
+            # Calculate start character position
             match_start_index = 0
             for k in range(i):
                 match_start_index += len(original_lines[k]) + 1
 
-            # 終了文字位置を計算
+            # Calculate end character position
             match_end_index = match_start_index
             for k in range(len(search_lines)):
                 match_end_index += len(original_lines[i + k]) + 1
@@ -480,8 +482,8 @@ def block_anchor_fallback_match(
     original_content: str, search_content: str, start_index: int
 ) -> Union[Tuple[int, int], bool]:
     """
-    ブロックの最初と最後の行をアンカーとして使用するフォールバックマッチを試みます。
-    3行以上のブロックに対してのみ適用されます。
+    Try fallback matching using first and last lines of block as anchors.
+    Only applies to blocks with 3 or more lines.
     """
     print_debug("=== block_anchor_fallback_match ===")
     print_debug("Original content:", repr(original_content))
@@ -491,12 +493,12 @@ def block_anchor_fallback_match(
     original_lines = original_content.split("\n")
     search_lines = search_content.split("\n")
 
-    # 3行未満のブロックには使用しない
+    # Don't use for blocks with less than 3 lines
     if len(search_lines) < 3:
         print_debug("Search block too short (<3 lines)")
         return False
 
-    # 末尾の空行を削除
+    # Remove trailing empty lines
     if search_lines and search_lines[-1] == "":
         search_lines.pop()
         print_debug("Removed empty last line from search content")
@@ -509,7 +511,7 @@ def block_anchor_fallback_match(
     print_debug("Last line:", repr(last_line_search))
     print_debug("Block size:", search_block_size)
 
-    # start_indexが含まれる行番号を見つける
+    # Find the line number that contains start_index
     start_line_num = 0
     current_index = 0
     while current_index < start_index and start_line_num < len(original_lines):
@@ -518,21 +520,21 @@ def block_anchor_fallback_match(
 
     print_debug("Starting search from line:", start_line_num)
 
-    # マッチする開始行と終了行を探す
+    # Search for matching start and end lines
     for i in range(start_line_num, len(original_lines) - search_block_size + 1):
         print_debug(f"Trying match at line {i}")
-        # 最初の行がマッチするか確認
+        # Check if first line matches
         if original_lines[i].strip() != first_line_search:
             print_debug("First line doesn't match")
             continue
 
-        # 最後の行が期待される位置でマッチするか確認
+        # Check if last line matches at expected position
         end_line_index = i + search_block_size - 1
         while end_line_index < len(original_lines):
             if original_lines[end_line_index].strip() == last_line_search:
                 print_debug("Found matching block")
 
-                # 正確な文字位置を計算
+                # Calculate exact character positions
                 match_start_index = 0
                 for k in range(i):
                     match_start_index += len(original_lines[k]) + 1
@@ -555,7 +557,7 @@ def construct_new_file_content(
     diff_content: str, original_content: str, is_final: bool
 ) -> str:
     """
-    差分コンテンツを元のファイル内容に適用して新しいファイル内容を構築します。
+    Apply diff content to original file content to construct new file content.
     """
     print_debug("=== construct_new_file_content ===")
     print_debug("Original content:", repr(original_content))
@@ -576,7 +578,7 @@ def construct_new_file_content(
     lines = diff_content.split("\n")
     print_debug("Number of lines in diff:", len(lines))
 
-    # 最後の行が不完全なマーカーの場合は削除
+    # Remove last line if it's an incomplete marker
     if (
         lines
         and any(lines[-1].startswith(p) for p in ["<", "=", ">"])
@@ -602,19 +604,19 @@ def construct_new_file_content(
             print_debug("Current search content:", repr(current_search_content))
             if not current_search_content:
                 print_debug("Empty search block")
-                # 空の検索ブロック
+                # Empty search block
                 if len(original_content) == 0:
-                    # 新規ファイルシナリオ
+                    # New file scenario
                     search_match_index = 0
                     search_end_index = 0
                     print_debug("New file scenario")
                 else:
-                    # ファイル全体置換シナリオ
+                    # Full file replacement scenario
                     search_match_index = 0
                     search_end_index = len(original_content)
                     print_debug("Full file replacement scenario")
             else:
-                # 完全一致検索
+                # Exact match search
                 exact_index = original_content.find(
                     current_search_content, last_processed_index
                 )
@@ -623,7 +625,7 @@ def construct_new_file_content(
                     search_match_index = exact_index
                     search_end_index = exact_index + len(current_search_content)
                 else:
-                    # 行トリムマッチを試みる
+                    # Try line trim match
                     line_match = line_trimmed_fallback_match(
                         original_content, current_search_content, last_processed_index
                     )
@@ -631,7 +633,7 @@ def construct_new_file_content(
                     if isinstance(line_match, tuple):
                         search_match_index, search_end_index = line_match
                     else:
-                        # ブロックアンカーマッチを試みる
+                        # Try block anchor match
                         block_match = block_anchor_fallback_match(
                             original_content,
                             current_search_content,
@@ -645,17 +647,17 @@ def construct_new_file_content(
                                 f"The SEARCH block:\n{current_search_content.rstrip()}\n...does not match anything in the file."
                             )
 
-            # マッチ位置までの内容を出力
+            # Output content up to match position
             result += original_content[last_processed_index:search_match_index]
             print_debug("Added content up to match")
             continue
 
         if line == ">>>>>>> REPLACE":
             print_debug("Found REPLACE marker")
-            # 置換ブロックの終了
+            # End of replacement block
             last_processed_index = search_end_index
 
-            # リセット
+            # Reset
             in_search = False
             in_replace = False
             current_search_content = ""
@@ -664,19 +666,19 @@ def construct_new_file_content(
             search_end_index = -1
             continue
 
-        # 検索または置換コンテンツを蓄積
+        # Accumulate search or replace content
         if in_search:
             current_search_content += line + "\n"
             print_debug("Added to search content:", repr(line))
         elif in_replace:
             current_replace_content += line + "\n"
             print_debug("Added to replace content:", repr(line))
-            # マッチ位置が分かっている場合は置換行を即時出力
+            # If match position is known, output replacement line immediately
             if search_match_index != -1:
                 result += line + "\n"
                 print_debug("Added replacement line")
 
-    # 最後のチャンクの場合、残りの元コンテンツを追加
+    # For the last chunk, add remaining original content
     if is_final and last_processed_index < len(original_content):
         result += original_content[last_processed_index:]
         print_debug("Added remaining content")

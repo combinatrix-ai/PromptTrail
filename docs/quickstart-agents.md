@@ -6,12 +6,12 @@ If you just want to call LLM API. See [models](#models) section first!
 ```
 
 An agent is defined as an executable control flow of a text generation session using LLMs, tools, and other functions.
-PromptTrail offer a simple and intuitive DSL to build agent with code.
+PromptTrail offers a simple and intuitive DSL to build agents with code.
 
 We call this `Agent as Code`.
 
 ```{Note}
-You can explore `core` module to how you can mock, cache and debug your agent.
+You can explore the `core` module to learn how you can mock, cache and debug your agent.
 ```
 
 You can use the agent via CLI, API, etc. Therefore, you can build a chatbot on Agent, but you can also build any application that requires multiple-step text generation. If you're only building applications with single-turn text generation, you just need to use prompttrail.models, which allows you to use LLMs with a simple API.
@@ -400,7 +400,7 @@ from prompttrail.agent.templates import (
 
 template = LinearTemplate(
     templates=[
-        MessagenTemplate(
+        MessageTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
             role="system"
         ),
@@ -430,4 +430,3 @@ The tool system handles all the complexity of function calling for you:
 
 This allows you to focus on implementing the actual tool functionality rather than dealing with API integration details.
 Isn't it great?
-

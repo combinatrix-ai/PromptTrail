@@ -1,25 +1,47 @@
-# PromptTrail
+<div align="center">
 
-PromptTrail is a lightweight library to help you build something with LLM.
+# 🚂 PromptTrail
 
-PromptTrail provide:
+**A lightweight, developer-friendly framework for building robust LLM applications**
+
+[![PyPI version](https://badge.fury.io/py/prompttrail.svg)](https://badge.fury.io/py/prompttrail)
+[![Python Versions](https://img.shields.io/pypi/pyversions/prompttrail.svg)](https://pypi.org/project/prompttrail/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://readthedocs.org/projects/prompttrail/badge/?version=latest)](https://prompttrail.readthedocs.io/en/latest/?badge=latest)
+
+</div>
 
 <p align="center">
   <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/dd766b44-165e-4c55-98a3-f009334bbc1c" width="640px">
-  <br>
-  A unified interface to various LLMs
 </p>
-
 <p align="center">
   <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/ef50b481-1ef5-4807-b9c4-6e2ef32d5641" width="640px">
-  <br>
-  A simple and intuituve DSL for "Agent as Code"
 </p>
 
-And various "Developer Tools" to help you build LLM applications.
+
+PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
+
+🔌 **Unified LLM Interface** - A clean, consistent way to work with multiple LLM providers
+- OpenAI GPT-3.5/4
+- Anthropic Claude
+- Google Gemini
+- Local models via Transformers
+- Easy to add new providers
+
+🤖 **Agent-as-Code DSL** - A simple, intuitive way to build complex conversational agents
+- Natural template-based conversation flows
+- Built-in tools and hooks system
+- Type-safe function calling
+- Easy to test and debug
+
+🛠️ **Developer Tools** - Everything you need to build production-ready LLM apps
+- Mock providers for testing
+- Caching to reduce API costs
+- Streaming responses
+- Rich type hints and documentation
 
 - [PromptTrail](#prompttrail)
-  - [Qucikstart](#qucikstart)
+  - [Quickstart](#quickstart)
   - [Installation](#installation)
   - [What PromptTrail can do?](#what-prompttrail-can-do)
   - [Examples](#examples)
@@ -54,25 +76,23 @@ pip install -e .
 
 ## What PromptTrail can do?
 
-- PromptTrail offers the following features:
-  - [Unified interface to various LLMs](#llm-api-call)
-    - OpenAI
-    - Google Gemini
-    - Anthropic Claude
-    - Local LLMs (via Transformers)
-  - [Developer Tools for prompt programming](#developer-tools)
-    - Mocking LLMs for testing
-    - [TODO] Logging
-    - [TODO] Debugging
-  - [Everything you need to do "Agent as Code"](#agent-as-code)
-    - Template
-    - Runner
-    - Hooks
-    - Calling other APIs other than LLMs (Tooling)
-      - Function Calling
-      - Built-in Tools
-        - [TODO] Code Execution
-        - [TODO] Vector Search
+- PromptTrail provides a comprehensive set of features for building LLM applications:
+
+### 🔌 Unified LLM Interface
+- **Multiple Providers**: OpenAI, Google Gemini, Anthropic Claude, and local models via Transformers
+- **Consistent API**: Same interface for all providers with full type hints
+- **Easy Extension**: Simple provider interface to add new LLM services
+
+### 🛠️ Developer Tools
+- **Testing**: Mock providers to test LLM interactions without API calls
+- **Cost Optimization**: Built-in caching to reduce API usage
+- **[Coming Soon]**: Advanced logging and debugging features
+
+### 🤖 Agent as Code Framework
+- **Intuitive Templates**: Natural way to define conversation flows
+- **Powerful Tooling**: Type-safe function calling and built-in utilities
+- **Extensible**: Hooks system for custom behaviors and integrations
+- **[Coming Soon]**: Code execution, vector search, and more built-in tools
 
 ## Examples
 
