@@ -1,7 +1,7 @@
-# `core`: Developer Tools for LLM
+# `core`: Developer Tools for LLMs
 
-`core` module is unified with other modules.
-Therefore, you should read other quickstart sections first.
+The `core` module provides foundational functionality used by other modules.
+We recommend reading the other quickstart sections before this one.
 
 (cache)=
 ## Cache

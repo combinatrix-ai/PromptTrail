@@ -12,7 +12,7 @@ See [agents](#agents) section for more details.
 ## Make an API Call
 
 PromptTrail implement many LLM models under `models`.
-Let's call OpenAI's GPT-3 model. (You need to set `API_KEY` environment variable with your OpenAI API key.)
+Let's call OpenAI's GPT models. (You need to set `OPENAI_API_KEY` environment variable with your API key.)
 
 ```python
 import os
@@ -41,7 +41,7 @@ You can see the response from the model like this:
 Message(content="Hello! How can I assist you today?", role="assistant")
 ```
 
-Yay! You have successfully called OpenAI's GPT-3.5 model.
+Yay! You have successfully called an OpenAI GPT model.
 
 ## Core Concepts
 
