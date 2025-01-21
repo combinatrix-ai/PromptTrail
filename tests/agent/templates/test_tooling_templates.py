@@ -86,7 +86,7 @@ class TestAnthoropicToolingTemplate(unittest.TestCase):
 
         # Session should look like this:
         # Message(role='user', content='What's the weather in Tokyo?')
-        # Message(role='assistant', content='[use_tol]', metadata={'tool_calls': [{'name': 'get_weather', 'arguments': {'city': 'Tokyo'}}})
+        # Message(role='assistant', content='[use_tol]', tool_use={'tool_calls': [{'name': 'get_weather', 'arguments': {'city': 'Tokyo'}}})
         # Message(role='tool_result', content='{"temperature": 20, "condition": "sunny", "city": "Tokyo"}')
         # Message(role='assistant', content='Weather in Tokyo is 20 degrees and sunny')
 
@@ -99,7 +99,7 @@ class TestAnthoropicToolingTemplate(unittest.TestCase):
             ["user", "assistant", "tool_result", "assistant"],
         )
         self.assertEqual(session.messages[0].content, "What's the weather in Tokyo?")
-        self.assertIn("tool_use", session.messages[1].metadata)
+        self.assertIsNotNone(session.messages[1].tool_use)
         self.assertEqual(
             session.messages[2].content,
             json.dumps(
@@ -107,7 +107,6 @@ class TestAnthoropicToolingTemplate(unittest.TestCase):
                     "temperature": 20,
                     "condition": "sunny",
                     "city": "Tokyo",
-                    "type": "tool_result",
                 }
             ),
         )

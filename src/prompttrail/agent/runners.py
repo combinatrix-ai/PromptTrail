@@ -4,7 +4,7 @@ from typing import Dict, Optional, Set, cast
 
 from prompttrail.agent.templates import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.core import Model, Parameters, Session
+from prompttrail.core import MessageRoleType, Model, Parameters, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException
 
 # Session is already imported from prompttrail.core
@@ -54,7 +54,7 @@ class Runner(metaclass=ABCMeta):
         return self.template_dict[template_like]
 
 
-def cutify_role(role: Optional[str]):
+def cutify_role(role: MessageRoleType) -> str:
     """Cutify role name based on OpenAI's naming convention."""
     if role == "system":
         return "📝 system"
@@ -63,9 +63,9 @@ def cutify_role(role: Optional[str]):
     if role == "assistant":
         return "🤖 assistant"
     if role == "function":
-        return "🧮 function"
-    if role is None:
-        return "❓ None"
+        return "🛠️ function"
+    if role == "tool_result":
+        return "📊 tool_result"
     return role
 
 
@@ -151,10 +151,8 @@ class CommandLineRunner(Runner):
                     }
                     if metadata:
                         print("metadata: ", metadata)
-                if not message.content and not any(
-                    key != "template_id" for key in message.metadata
-                ):
-                    print("Empty message!")
+                if message.tool_use:
+                    print("tool_use: ", message.tool_use)
                 n_messages += 1
             if max_messages and n_messages >= max_messages:
                 logger.warning(

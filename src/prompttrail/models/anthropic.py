@@ -196,22 +196,20 @@ class AnthropicModel(Model):
                 tool_use_block = block
                 logger.debug(f"Found tool use block: {pformat(block)}")  # type: ignore
 
-        # Create message with appropriate content and metadata
-        metadata = {}
+        # Create message with appropriate content and tool_use
+        tool_use = None
         if tool_use_block:
-            metadata["tool_use"] = {
-                "name": tool_use_block.name,
-                "input": tool_use_block.input,
+            tool_use = {
+                "name": cast(str, tool_use_block.name),
+                "input": cast(str, tool_use_block.input),
             }
-            logger.debug(f"Added tool use metadata: {metadata}")
+            logger.debug(f"Added tool use: {tool_use}")
 
         # Create message
         message = Message(
-            content=content
-            if content
-            else "[tool_use]",  # Use placeholder only if no content
+            content=content,
             role="assistant",
-            metadata=metadata,
+            tool_use=tool_use,
         )
         logger.debug(f"Created final message: {message}")
         return message

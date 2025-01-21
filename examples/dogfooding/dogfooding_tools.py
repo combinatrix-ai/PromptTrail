@@ -1,5 +1,6 @@
 import glob
 import json
+import logging
 import os
 import tempfile
 from typing import Any, Dict, Tuple, Union
@@ -12,6 +13,18 @@ from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 def print_debug(*args, **kwargs):
     """デバッグ出力用のヘルパー関数"""
     print("[DEBUG]", *args, **kwargs)
+
+
+def disable_noisy_loggers():
+    """Disable the specified loggers."""
+    # httpx
+    logging.getLogger("httpx").setLevel(logging.ERROR)
+    # httpcore
+    logging.getLogger("httpcore").setLevel(logging.ERROR)
+    # openai
+    logging.getLogger("openai").setLevel(logging.ERROR)
+    # anthropic
+    logging.getLogger("anthropic").setLevel(logging.ERROR)
 
 
 def load_all_important_files():

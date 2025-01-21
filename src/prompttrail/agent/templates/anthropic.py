@@ -41,12 +41,8 @@ class AnthropicToolingTemplate(ToolingTemplate):
             message = message.messages[-1]
 
         # Check for tool call in message metadata
-        if (
-            hasattr(message, "metadata")
-            and message.metadata
-            and "tool_use" in message.metadata
-        ):
-            tool_use = message.metadata["tool_use"]
+        if message.tool_use:
+            tool_use = message.tool_use
             logger.debug(f"Found tool call: {tool_use}")
             return {"name": tool_use["name"], "arguments": tool_use["input"]}
         logger.debug("No tool call found")
@@ -76,14 +72,12 @@ class AnthropicToolingTemplate(ToolingTemplate):
 
         """
         logger.debug(f"Formatting tool result: {result}")
-        content = result.content
-        content["type"] = "tool_result"
         content = json.dumps(result.content)
         logger.debug(f"Formatted content: {content}")
         message = Message(
             role="tool_result",
             content=content,
-            metadata={},  # Explicitly set empty metadata
+            tool_use={},  # We used the tool, so we need to clear this metadata
         )
         logger.debug(f"Created tool result message: {message}")
         return message
@@ -114,10 +108,7 @@ class AnthropicToolingTemplate(ToolingTemplate):
                 yield result_message
                 session.append(result_message)
 
-                if session.messages[-1].metadata.get("tool_use"):
-                    del session.messages[-1].metadata["tool_use"]
-
-                # Generate final response with clean metadata
+                # Generate final response
                 logger.debug("Generating final response")
                 session = yield from GenerateTemplate(role=self.role).render(session)
                 final_message = session.messages[-1]
