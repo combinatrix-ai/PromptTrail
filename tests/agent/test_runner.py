@@ -15,7 +15,7 @@ from prompttrail.agent.templates import (
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 # Run various templates
 
@@ -23,7 +23,7 @@ from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIPa
 
 # Echo mock model
 echo_mock_model = OpenAIModel(
-    configuration=OpenAIConfiguration(
+    configuration=OpenAIConfig(
         api_key="", mock_provider=EchoMockProvider(role="assistant")
     ),
 )

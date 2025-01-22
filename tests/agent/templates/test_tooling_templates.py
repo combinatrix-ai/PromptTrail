@@ -3,15 +3,14 @@ import os
 import unittest
 
 from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import AnthropicToolingTemplate, OpenAIToolingTemplate
 from prompttrail.agent.templates._control import LinearTemplate
 from prompttrail.agent.templates._core import MessageTemplate
-from prompttrail.agent.templates.anthropic import AnthropicToolingTemplate
-from prompttrail.agent.templates.openai import OpenAIToolingTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 
 class WeatherTool(Tool):
@@ -117,7 +116,7 @@ class TestOpenAIToolingTemplate(unittest.TestCase):
     def setUp(self):
         self.tool = WeatherTool()
         self.model = OpenAIModel(
-            configuration=OpenAIConfiguration(
+            configuration=OpenAIConfig(
                 api_key=os.environ.get("OPENAI_API_KEY"),
             )
         )

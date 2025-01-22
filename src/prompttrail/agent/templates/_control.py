@@ -28,11 +28,13 @@ class ControlTemplate(Template, metaclass=ABCMeta):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
             after_transform=after_transform if after_transform is not None else [],
+            enable_logging=enable_logging,
         )
 
     @abstractmethod
@@ -110,6 +112,7 @@ class LoopTemplate(ControlTemplate):
         exit_loop_count: Optional[int] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         """A template for a loop control flow. Unlike `LinearTemplate`, this template loops over the child templates until the exit condition is met.
 
@@ -125,6 +128,7 @@ class LoopTemplate(ControlTemplate):
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
             after_transform=after_transform if after_transform is not None else [],
+            enable_logging=enable_logging,
         )
         self.templates = templates
         self.exit_condition = exit_condition
@@ -185,6 +189,7 @@ class IfTemplate(ControlTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         """A template for a conditional control flow.
 
@@ -201,6 +206,7 @@ class IfTemplate(ControlTemplate):
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
             after_transform=after_transform if after_transform is not None else [],
+            enable_logging=enable_logging,
         )
         self.true_template = true_template
         self.false_template = false_template
@@ -247,6 +253,7 @@ class LinearTemplate(ControlTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         """A template for a linear control flow. Unlike `LoopTemplate`, this template exits after rendering all the child templates.
 
@@ -260,6 +267,7 @@ class LinearTemplate(ControlTemplate):
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
             after_transform=after_transform if after_transform is not None else [],
+            enable_logging=enable_logging,
         )
         self.templates = templates
 

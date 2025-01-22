@@ -1,3 +1,4 @@
+import inspect
 import logging
 import os
 import sys
@@ -65,3 +66,59 @@ def count_tokens(text: str, encoding_name: str) -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     encoded = encoding.encode(text)
     return len(encoded)
+
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    # Remove %(name)s and add %(filename)s:%(lineno)d in the desired position:
+    format="%(levelname)-8s %(filename)s:%(lineno)d %(message)s",
+)
+
+
+class Loggable:
+    def __init__(self):
+        # Use __name__ so the logger name matches your module name (e.g. "utils")
+        self.logger = logging.getLogger(__name__)
+        self.enable_logging = True
+
+    def setup_logger_for_pydantic(self):
+        """Setup logger for the class. This should be called after pydantic initialization. You should't remove this method unless you have a good reason."""
+        if not hasattr(self, "logger") or self.logger is None:
+            self.logger = logging.getLogger(__name__)
+        if not hasattr(self, "enable_logging"):
+            self.enable_logging = True
+
+    def disable_log(self):
+        if hasattr(self, "logger"):
+            self.logger.disabled = True
+
+    def log(self, level: int, msg: str, *args, **kwargs):
+        frame = inspect.currentframe()
+        if frame is not None:
+            frame = frame.f_back  # in debug/info/etc.
+        if frame is not None:
+            frame = frame.f_back  # in real caller
+        if frame is None:
+            func_name = "unknown"
+        else:
+            func_name = frame.f_code.co_name
+
+        # Insert [ClassName.functionName] into the final message
+        self.logger.log(
+            level, "[%s.%s] " + msg, self.__class__.__name__, func_name, *args, **kwargs
+        )
+
+    def debug(self, msg: str, *args, **kwargs):
+        self.log(logging.DEBUG, msg, *args, **kwargs)
+
+    def info(self, msg: str, *args, **kwargs):
+        self.log(logging.INFO, msg, *args, **kwargs)
+
+    def warning(self, msg: str, *args, **kwargs):
+        self.log(logging.WARNING, msg, *args, **kwargs)
+
+    def error(self, msg: str, *args, **kwargs):
+        self.log(logging.ERROR, msg, *args, **kwargs)
+
+    def critical(self, msg: str, *args, **kwargs):
+        self.log(logging.CRITICAL, msg, *args, **kwargs)

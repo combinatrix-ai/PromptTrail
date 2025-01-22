@@ -3,11 +3,12 @@ from abc import abstractmethod
 from typing import Any, Callable, Optional
 
 from prompttrail.core import Session
+from prompttrail.core.utils import Loggable
 
 logger = logging.getLogger(__name__)
 
 
-class Hook(object):
+class Hook(Loggable):
     """
     Base class for hooks in the agent template.
     """
@@ -184,8 +185,8 @@ class DebugHook(TransformHook):
         Returns:
             The modified session.
         """
-        print(self.message + " template_id: " + str(session.get_current_template_id()))
-        print(self.message + " metadata: " + str(session.get_latest_metadata()))
+        print(f"{self.message} template_id: {session.get_current_template_id()}")
+        print(f"{self.message} metadata: {session.get_latest_metadata()}")
         return session
 
 

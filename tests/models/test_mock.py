@@ -2,7 +2,7 @@ import unittest
 
 from prompttrail.core import Message, Session
 from prompttrail.core.mocks import OneTurnConversationMockProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 
 class TestOneTurnConversationMockProvider(unittest.TestCase):
@@ -33,9 +33,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
         }
         self.mock_provider = OneTurnConversationMockProvider(self.conversation_table)
         self.models = OpenAIModel(
-            configuration=OpenAIConfiguration(
-                api_key="", mock_provider=self.mock_provider
-            ),
+            configuration=OpenAIConfig(api_key="", mock_provider=self.mock_provider),
         )
         self.parameters = OpenAIParam(
             model_name="",

@@ -2,11 +2,11 @@ import os
 
 from prompttrail.core import Message, Session
 from prompttrail.core.mocks import OneTurnConversationMockProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 api_key = os.environ.get("OPENAI_API_KEY", "")
 
-config = OpenAIConfiguration(
+config = OpenAIConfig(
     api_key=api_key,
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={

@@ -17,12 +17,15 @@ from typing import Any, Dict, Literal
 from typing_extensions import TypedDict
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate, MessageTemplate
-from prompttrail.agent.templates.openai import OpenAIToolingTemplate
+from prompttrail.agent.templates import (
+    LinearTemplate,
+    MessageTemplate,
+    OpenAIToolingTemplate,
+)
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
 from prompttrail.core import Session
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 
 class WeatherData(TypedDict):
@@ -82,7 +85,7 @@ class WeatherForecastTool(Tool):
 
 # Create OpenAI model with configuration
 api_key = os.environ.get("OPENAI_API_KEY", "dummy_key")
-config = OpenAIConfiguration(api_key=api_key)
+config = OpenAIConfig(api_key=api_key)
 model = OpenAIModel(configuration=config)
 
 # Create templates for the conversation
