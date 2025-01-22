@@ -4,15 +4,14 @@ import os
 from tqdm import tqdm
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import GenerateTemplate, LinearTemplate
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import AssistantTemplate, LinearTemplate, UserTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        UserTemplate(
             content="""
 You're given examples and test scripts and documents for a library, PromptTrail.
 Write a quickstart document for user to coding on this library. The document should be written in markdown format.
@@ -20,9 +19,8 @@ Show plenty of self-contained code examples with comments.
 
 {{code}}
 """,
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 

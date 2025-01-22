@@ -12,7 +12,7 @@ from prompttrail.core.errors import ParameterValidationError
 logger = logging.getLogger(__name__)
 
 
-class OpenAIConfiguration(Configuration):
+class OpenAIConfig(Configuration):
     """Configuration for OpenAI Chat API."""
 
     api_key: str
@@ -43,7 +43,7 @@ class OpenAIParam(Parameters):
 class OpenAIModel(Model):
     """Model for OpenAI Chat API."""
 
-    configuration: OpenAIConfiguration  # type: ignore
+    configuration: OpenAIConfig  # type: ignore
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

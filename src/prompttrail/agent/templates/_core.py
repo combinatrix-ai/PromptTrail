@@ -15,6 +15,7 @@ from prompttrail.core.const import (
     JumpException,
     ReachedEndTemplateException,
 )
+from prompttrail.core.utils import Loggable
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class Stack(BaseModel):
     template_id: str
 
 
-class Template(metaclass=ABCMeta):
+class Template(Loggable, metaclass=ABCMeta):
     """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow.
 
     The user should inherit this class and implement `_render` method, which should yield messages and return the final state.
@@ -44,13 +45,16 @@ class Template(metaclass=ABCMeta):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
+        super().__init__()
         self.template_id: str = (
             template_id if template_id is not None else self._generate_name()
         )
         check_template_id(self.template_id)
         self.before_transform = self._hooks_to_list(before_transform)
         self.after_transform = self._hooks_to_list(after_transform)
+        self.enable_logging = enable_logging
 
     def _hooks_to_list(
         self, hooks: Optional[Union[List[TransformHook], TransformHook]]
@@ -61,9 +65,6 @@ class Template(metaclass=ABCMeta):
             return hooks
         else:
             return [hooks]
-
-    def get_logger(self) -> logging.Logger:
-        return logging.getLogger(__name__ + "." + str(self.template_id))
 
     def render(self, session: "Session") -> Generator[Message, None, "Session"]:
         logging.debug(f"Rendering {self.template_id}")
@@ -82,7 +83,7 @@ class Template(metaclass=ABCMeta):
         except JumpException as e:
             raise e
         except Exception as e:
-            self.get_logger().error(f"RenderingTemplateError@{self.template_id}")
+            self.error(f"RenderingTemplateError@{self.template_id}")
             raise e
         finally:
             session.pop_stack()
@@ -132,11 +133,13 @@ class MessageTemplate(Template):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         super().__init__(
             template_id=template_id,
             before_transform=before_transform if before_transform is not None else [],
             after_transform=after_transform if after_transform is not None else [],
+            enable_logging=True,
         )
         self.content = content
         self.jinja_template = jinja2.Template(self.content)
@@ -193,6 +196,7 @@ class GenerateTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging=True,
     ):
         super().__init__(
             content="",  # TODO: This should be None. Or not use MessageTemplate?
@@ -227,6 +231,7 @@ class SystemTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging=True,
     ):
         super().__init__(
             content=content,
@@ -264,6 +269,7 @@ class UserTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         super().__init__(
             content=content or "",
@@ -271,6 +277,7 @@ class UserTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=True,
         )
         self.is_interactive = content is None
         self.description = description
@@ -325,6 +332,7 @@ class AssistantTemplate(MessageTemplate):
         template_id: Optional[str] = None,
         before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
         after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        enable_logging: bool = True,
     ):
         super().__init__(
             content=content or "",
@@ -332,6 +340,7 @@ class AssistantTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=True,
         )
         self.is_generate = content is None
 

@@ -9,15 +9,19 @@ import click
 
 from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import GenerateTemplate, LinearTemplate
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import (
+    AssistantTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    UserTemplate,
+)
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Message
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        SystemTemplate(
             content="""
 You're an AI assistant that help user to create a unit test for given code.
 Your output is written to the file and will be executed by the user. Therefore, you only emit the test code.
@@ -57,9 +61,8 @@ class test_A(unittest.TestCase):
 
 Again, dont forget you only emit the test code. No explanation is needed. But can add comments in code.
 """,
-            role="system",
         ),
-        MessageTemplate(
+        UserTemplate(
             content="""
 * related files:
 {% for filename, file in context_files.items() %}
@@ -76,13 +79,12 @@ Again, dont forget you only emit the test code. No explanation is needed. But ca
 {{description}}
 
 """,
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 
-configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
+configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=5000)
 model = OpenAIModel(configuration=configuration)
 

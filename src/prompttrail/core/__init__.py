@@ -57,28 +57,23 @@ class Message(BaseModel):
         return hash((self.content, self.role))
 
     def __str__(self) -> str:
-        if "\n" in self.content:
-            content_part = 'content="""\n' + truncate_string(self.content) + '\n"""'
+        parts = []
+
+        # Handle content with proper quoting
+        content = truncate_string(self.content)
+        if "\n" in content:
+            parts.append(f'content="""\n{content}\n"""')
         else:
-            content_part = 'content="' + truncate_string(self.content) + '"'
+            parts.append(f'content="{content}"')
 
-        metadata_part = ""
+        parts.append(f'role="{self.role}"')
+
         if self.metadata:
-            metadata_part = ", metadata=" + truncate_string(str(self.metadata))
-
-        tool_use_part = ""
+            parts.append(f"metadata={truncate_string(str(self.metadata))}")
         if self.tool_use:
-            tool_use_part = ", tool_use=" + truncate_string(str(self.tool_use))
+            parts.append(f"tool_use={truncate_string(str(self.tool_use))}")
 
-        return (
-            "Message("
-            + content_part
-            + ', role="'
-            + self.role
-            + metadata_part
-            + tool_use_part
-            + '")'
-        )
+        return f"Message({', '.join(parts)})"
 
 
 class Configuration(BaseModel):

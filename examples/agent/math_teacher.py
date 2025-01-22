@@ -12,7 +12,7 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 logging.basicConfig(level=logging.INFO)
 
@@ -51,7 +51,7 @@ template = LinearTemplate(
 
 runner = CommandLineRunner(
     model=OpenAIModel(
-        configuration=OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
+        configuration=OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
     ),
     parameters=OpenAIParam(model_name="gpt-4o-mini"),
     template=template,

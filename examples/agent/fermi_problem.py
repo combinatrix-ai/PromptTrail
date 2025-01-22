@@ -155,7 +155,7 @@ from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
 from prompttrail.models.openai import (  # noqa: E402
-    OpenAIConfiguration,
+    OpenAIConfig,
     OpenAIModel,
     OpenAIParam,
 )
@@ -171,9 +171,7 @@ if not is_in_test_env():
     # Just set up the runner and run it!
     runner = CommandLineRunner(
         model=OpenAIModel(
-            configuration=OpenAIConfiguration(
-                api_key=os.environ.get("OPENAI_API_KEY", "")
-            )
+            configuration=OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
         ),
         parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
@@ -190,7 +188,7 @@ else:
     runner = CommandLineRunner(
         # Use mock model in CI or DEBUG
         model=OpenAIModel(
-            configuration=OpenAIConfiguration(
+            configuration=OpenAIConfig(
                 # Of course, same arguments as OpenAIChatCompletionModel can be used
                 api_key=os.environ.get("OPENAI_API_KEY", ""),
                 # You can define the behaviour of the mock model using mock_provider

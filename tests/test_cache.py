@@ -2,7 +2,7 @@ import unittest
 
 from prompttrail.core import Message, Parameters, Session
 from prompttrail.core.cache import LRUCacheProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 
 class TestLRUCacheProvider(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestLRUCacheProvider(unittest.TestCase):
         message_out = Message(content="HeyHey", role="user")
         session = Session(messages=[message_in])
         cache_provider.add(session, message_out)
-        config = OpenAIConfiguration(api_key=api_key, cache_provider=cache_provider)
+        config = OpenAIConfig(api_key=api_key, cache_provider=cache_provider)
         parameters = OpenAIParam(
             model_name="gpt-4o-mini", max_tokens=1000, temperature=0
         )

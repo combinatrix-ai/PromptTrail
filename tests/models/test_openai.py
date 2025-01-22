@@ -8,7 +8,7 @@ from prompttrail.core import Message, Session
 from prompttrail.core.cache import LRUCacheProvider
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 from tests.models.test_utils import (
     run_basic_message_test,
     run_malformed_sessions_test,
@@ -19,7 +19,7 @@ from tests.models.test_utils import (
 class TestOpenAI(unittest.TestCase):
     def setUp(self):
         self.api_key = os.environ["OPENAI_API_KEY"]
-        self.config = OpenAIConfiguration(api_key=self.api_key)
+        self.config = OpenAIConfig(api_key=self.api_key)
         self.use_model = "gpt-4o-mini"
         self.parameters = OpenAIParam(
             model_name=self.use_model,
@@ -84,7 +84,7 @@ class TestOpenAI(unittest.TestCase):
 
     def test_use_both_cache_and_mock(self):
         with self.assertRaises(ValidationError):
-            OpenAIConfiguration(
+            OpenAIConfig(
                 api_key="sk-xxx",
                 mock_provider=EchoMockProvider(role="assistant"),
                 cache_provider=LRUCacheProvider(),

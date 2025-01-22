@@ -5,32 +5,34 @@ import os
 import click
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import GenerateTemplate, LinearTemplate
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import (
+    AssistantTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    UserTemplate,
+)
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
 from prompttrail.core import Session
-from prompttrail.models.openai import OpenAIConfiguration, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        SystemTemplate(
             content="""
 You're an AI proofreader that help user to fix markdown.
 You're given python script content by the user.
 You must fix the missspellings in the comments.
 You only emit the corrected python script. No explanation is needed.
 """,
-            role="system",
         ),
-        MessageTemplate(
+        UserTemplate(
             content="{{content}}",
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 
-configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
+configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
 parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=8000)
 model = OpenAIModel(configuration=configuration)
 

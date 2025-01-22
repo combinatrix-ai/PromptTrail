@@ -394,7 +394,7 @@ Then, you can use this tool with OpenAI's function calling feature through the `
 ```python
 from prompttrail.agent.templates import (
     LinearTemplate,
-    OpenAIMessageTemplate,
+    UserTemplate,
     OpenAIGenerateWithFunctionCallingTemplate,
 )
 
@@ -404,7 +404,7 @@ template = LinearTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
             role="system"
         ),
-        OpenAIMessageTemplate(
+        UserTemplate(
             role="user",
             content="What's the weather in Tokyo?",
         ),

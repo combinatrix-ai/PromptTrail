@@ -1,8 +1,10 @@
+from logging import Logger
 from typing import Any, Dict, Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from prompttrail.core.errors import ParameterValidationError
+from prompttrail.core.utils import Loggable
 
 T = TypeVar("T")
 
@@ -27,12 +29,22 @@ class ToolResult(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
-class Tool(BaseModel):
+class Tool(BaseModel, Loggable):
     """Base tool class"""
 
     name: str
     description: str
     arguments: Dict[str, ToolArgument[Any]]
+    # To meet the Pydantic BaseModel requirements,
+    # we need to define the logger attribute as a class attribute.
+    logger: Logger = None  # type: ignore
+    enable_logging: bool = True
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def model_post_init(self, *args, **kwargs):
+        super().model_post_init(*args, **kwargs)
+        self.setup_logger_for_pydantic()
 
     def validate_arguments(self, args: Dict[str, Any]) -> None:
         """Validate tool arguments"""
