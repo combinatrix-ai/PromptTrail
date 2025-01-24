@@ -332,7 +332,7 @@ template = LinearTemplate(
             role="user",
             content="What's the weather in Tokyo?",
         ),
-        OpenAIGenerateWithFunctionCallingTemplate(
+        ToolingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],
         ),

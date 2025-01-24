@@ -389,13 +389,13 @@ This tool definition is automatically converted to OpenAI's function calling for
 }
 ```
 
-Then, you can use this tool with OpenAI's function calling feature through the `OpenAIGenerateWithFunctionCallingTemplate`:
+Then, you can use this tool with OpenAI's function calling feature through the `ToolingTemplate`:
 
 ```python
 from prompttrail.agent.templates import (
     LinearTemplate,
     UserTemplate,
-    OpenAIGenerateWithFunctionCallingTemplate,
+    ToolingTemplate,
 )
 
 template = LinearTemplate(
@@ -413,7 +413,7 @@ template = LinearTemplate(
         # 2. Gets back which function to call with what arguments
         # 3. Executes the function with those arguments
         # 4. Sends the result back to OpenAI for final response
-        OpenAIGenerateWithFunctionCallingTemplate(
+        ToolingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],
         ),

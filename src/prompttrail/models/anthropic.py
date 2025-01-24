@@ -57,7 +57,7 @@ class AnthropicParam(Parameters):
 class AnthropicModel(Model):
     """Model for Anthropic Claude API."""
 
-    configuration: AnthropicConfig  # type: ignore
+    configuration: AnthropicConfig
     client: Optional[anthropic.Anthropic] = None
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 

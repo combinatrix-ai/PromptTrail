@@ -31,7 +31,7 @@ class Runner(metaclass=ABCMeta):
                 raise ValueError(
                     f"Template id {next_template.template_id} is duplicated."
                 )
-            self.template_dict[next_template.template_id] = next_template  # type: ignore
+            self.template_dict[next_template.template_id] = next_template
         """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
 
     @abstractmethod

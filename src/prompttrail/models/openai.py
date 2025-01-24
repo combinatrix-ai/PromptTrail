@@ -43,7 +43,7 @@ class OpenAIParam(Parameters):
 class OpenAIModel(Model):
     """Model for OpenAI Chat API."""
 
-    configuration: OpenAIConfig  # type: ignore
+    configuration: OpenAIConfig
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -84,9 +84,7 @@ class OpenAIModel(Model):
                     f"Tool must have at least one argument: {tool.name}"
                 )
 
-    def _session_to_openai_messages(
-        self, session: Session
-    ) -> List[Dict[str, Any]]:  # type: ignore
+    def _session_to_openai_messages(self, session: Session) -> List[Dict[str, Any]]:
         """Convert session messages to OpenAI format"""
         messages = [
             message

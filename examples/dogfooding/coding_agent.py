@@ -4,7 +4,7 @@ import os
 import sys
 
 from prompttrail.agent.hooks._core import ResetDataHook
-from prompttrail.agent.templates import AnthropicToolingTemplate
+from prompttrail.agent.templates import ToolingTemplate
 
 sys.path.append(os.path.abspath("."))
 
@@ -67,7 +67,7 @@ Rules:
                 UserTemplate(
                     description="Input:",
                 ),
-                AnthropicToolingTemplate(tools=tools_to_use),
+                ToolingTemplate(tools=tools_to_use),
             ]
         ),
     ],

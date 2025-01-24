@@ -3,7 +3,7 @@ import os
 import unittest
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import AnthropicToolingTemplate, OpenAIToolingTemplate
+from prompttrail.agent.templates import OpenAIToolingTemplate, ToolingTemplate
 from prompttrail.agent.templates._control import LinearTemplate
 from prompttrail.agent.templates._core import MessageTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
@@ -48,7 +48,7 @@ class TestAnthoropicToolingTemplate(unittest.TestCase):
         self.template = LinearTemplate(
             [
                 MessageTemplate(role="user", content="What's the weather in Tokyo?"),
-                tooling_template := AnthropicToolingTemplate(tools=[self.tool]),
+                tooling_template := ToolingTemplate(tools=[self.tool]),
             ]
         )
         self.tooling_template = tooling_template

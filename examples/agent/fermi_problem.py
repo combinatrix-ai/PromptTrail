@@ -6,6 +6,7 @@
 
 import logging
 import os
+from typing import cast
 
 from prompttrail.agent.hooks import (
     BooleanHook,
@@ -19,6 +20,7 @@ from prompttrail.agent.templates import (
     IfTemplate,
     LoopTemplate,
     MessageTemplate,
+    SystemTemplate,
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import (
@@ -33,11 +35,10 @@ logging.basicConfig(level=logging.INFO)
 
 agent_template = LoopTemplate(
     [
-        MessageTemplate(
+        SystemTemplate(
             # First, let's give an instruction to the API
             # In OpenAI API, system is a special role that gives instruction to the API
             template_id="instruction",
-            role="system",
             content="""
 You're a helpful assistant to solve Fermi Problem.
 Answer the equation to estimate the answer to the user's query.
@@ -101,8 +102,7 @@ Calculation:
                     ],
                 ),
                 IfTemplate(
-                    true_template=MessageTemplate(
-                        role="assistant",
+                    true_template=AssistantTemplate(
                         content="LLM seems to unable to estimate. Try different question! Starting over...",
                     ),
                     false_template=BreakTemplate(),
@@ -113,14 +113,14 @@ Calculation:
             ],
             before_transform=[ResetDataHook()],
         ),
-        MessageTemplate(
+        AssistantTemplate(
             # You can also give assistant message without using model, as if the assistant said it
             # In this case, we want to ask user if the answer is satisfied or not
             # Analysing the user response is always hard, so we let the API to decide
             # First, we must ask user for their feedback
             # Let's ask user for question!
+            # If cotent is given, AssistantTemplate will just return the content as assistant message
             template_id="gather_feedback",
-            role="assistant",
             content="The answer is {{ answer }} . Satisfied?",
         ),
         UserTemplate(
@@ -129,11 +129,10 @@ Calculation:
             description="Input:",
             default="Yes, I'm satisfied.",
         ),
-        MessageTemplate(
+        AssistantTemplate(
             # Based on the feedback, we can decide to retry or end the conversation
             # Ask the API to analyze the user's sentiment
             template_id="instruction_sentiment",
-            role="assistant",
             content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
         ),
         check_end := AssistantTemplate(
@@ -213,7 +212,9 @@ else:
         user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
             conversation_table={
                 # 5300000 * 0.49 * 2.1 = 5453700.0
-                agent_template.templates[0].content: "How many cats in Japan?",  # type: ignore
+                cast(
+                    str, cast(MessageTemplate, agent_template.templates[0]).content
+                ): "How many cats in Japan?",
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),

@@ -6,6 +6,7 @@ from typing import Any, Dict, Generator, List, Optional, Union, cast
 from prompttrail.agent.templates import GenerateTemplate
 from prompttrail.agent.tools import Tool, ToolResult
 from prompttrail.core import Message, MessageRoleType, Session
+from prompttrail.models.anthropic import AnthropicModel
 from prompttrail.models.openai import OpenAIModel, OpenAIParam
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,8 @@ class ToolingTemplateBase(GenerateTemplate):
     format_tool_call and format_tool_result methods to handle provider-specific
     message formats.
     """
+
+    tools: Dict[str, Tool] = {}
 
     def __init__(
         self,
@@ -37,29 +40,6 @@ class ToolingTemplateBase(GenerateTemplate):
         """
         super().__init__(role=role, template_id=template_id, **kwargs)
         self.tools = {tool.name: tool for tool in tools}
-
-    @abstractmethod
-    def format_tool_call(self, message: Message) -> Optional[Dict[str, Any]]:
-        """Extract tool call information from message.
-
-        Args:
-            message: Message potentially containing tool call information
-
-        Returns:
-            Optional dictionary containing tool call details with "name" and "arguments",
-            or None if no tool call is present
-        """
-
-    @abstractmethod
-    def format_tool_result(self, result: ToolResult) -> Message:
-        """Format tool result as a message.
-
-        Args:
-            result: Result from tool execution
-
-        Returns:
-            Formatted message containing the tool result
-        """
 
     def get_tool(self, name: str) -> Tool:
         """Get tool by name.
@@ -350,4 +330,40 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 self.error("Error executing tool %s: %s", tool_call["name"], str(e))
                 raise
 
+        return session
+
+
+class ToolingTemplate(ToolingTemplateBase):
+    """Unified tooling template for different LLM providers."""
+
+    def _render(self, session: Session) -> Generator[Message, None, Session]:
+        """Render the template, handling tool calls and results.
+
+        This implementation ensures proper metadata handling and tool state tracking
+        for different LLM providers.
+        """
+        if session.runner is None:
+            raise ValueError(
+                "Runner must be given to use ToolingTemplate. Please set runner to the session."
+            )
+
+        template: Optional[ToolingTemplateBase] = None
+        if isinstance(session.runner.models, OpenAIModel):
+            template = OpenAIToolingTemplate(
+                tools=list(self.tools.values()),
+                role=self.role,
+                template_id=self.template_id,
+            )
+        elif isinstance(session.runner.models, AnthropicModel):
+            template = AnthropicToolingTemplate(
+                tools=list(self.tools.values()),
+                role=self.role,
+                template_id=self.template_id,
+            )
+        else:
+            raise ValueError(
+                "Unsupported model type, use OpenAIModel or AnthropicModel"
+            )
+
+        session = yield from template.render(session)
         return session
