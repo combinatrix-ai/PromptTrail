@@ -2,9 +2,8 @@ from logging import getLogger
 from pprint import pformat
 from typing import List, Optional
 
-import google.generativeai as palm  # type: ignore
-import google.generativeai.types as gai_types  # type: ignore
-from pydantic import BaseModel, ConfigDict  # type: ignore
+import google.generativeai as genai  # type: ignore
+from pydantic import BaseModel, ConfigDict
 
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
@@ -65,13 +64,13 @@ class GoogleParam(Parameters):
 class GoogleModel(Model):
     """Model for Google Chat API."""
 
-    configuration: GoogleConfig  # type: ignore
+    configuration: GoogleConfig
 
     # required for autodoc
     model_config = ConfigDict(protected_namespaces=())
 
     def _authenticate(self) -> None:
-        palm.configure(  # type: ignore
+        genai.configure(  # type: ignore
             api_key=self.configuration.api_key,
         )
 
@@ -109,7 +108,7 @@ class GoogleModel(Model):
                 f"{GoogleParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
-        model = palm.GenerativeModel(parameters.model_name)
+        model = genai.GenerativeModel(parameters.model_name)
         chat = model.start_chat()
 
         # Set context if provided
@@ -130,7 +129,7 @@ class GoogleModel(Model):
         session.messages[-1]
         response = chat.send_message(
             session.messages[-1].content,
-            generation_config=palm.types.GenerationConfig(
+            generation_config=genai.types.GenerationConfig(
                 temperature=parameters.temperature,
                 candidate_count=parameters.candidate_count,
                 top_p=parameters.top_p,
@@ -150,5 +149,5 @@ class GoogleModel(Model):
 
     def list_models(self) -> List[str]:
         self._authenticate()
-        models = palm.list_models()
+        models = genai.list_models()
         return [model.name for model in models]

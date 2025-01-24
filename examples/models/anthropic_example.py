@@ -5,7 +5,7 @@ from typing import Any, Dict, Literal
 from typing_extensions import TypedDict
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import AnthropicToolingTemplate, SystemTemplate
+from prompttrail.agent.templates import SystemTemplate, ToolingTemplate
 from prompttrail.agent.templates._control import LinearTemplate
 from prompttrail.agent.templates._core import UserTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
@@ -101,7 +101,7 @@ def main():
             UserTemplate(
                 content="What's the weather in Tokyo?",
             ),
-            AnthropicToolingTemplate(
+            ToolingTemplate(
                 tools=[weather_tool], role="assistant"  # Set tools in template
             ),
         ]

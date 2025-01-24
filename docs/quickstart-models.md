@@ -129,7 +129,7 @@ For example, you may want to GPT-3.5 for the first message, and if the conversat
 
 ### Google
 
-If you want to call Google's Palm model, you can do it by changing some lines.
+If you want to call Google's Gemini model, you can do it by changing some lines.
 
 ```python
 import os

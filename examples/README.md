@@ -12,7 +12,7 @@ If you want just to use LLMs, see these examples.
 - [`provider/stream.py`](provider/stream.py)
   - If you want to use OpenAI's streaming feature, see this example.
 - [`provider/google.py`](provider/google.py)
-  - This shows how to use `prompttrail` to generate prompts for Google's PaLM.
+  - This shows how to use `prompttrail` to generate prompts for Google's Gemini.
 - [`provider/mock.py`](provider/mock.py)
   - This shows how you can mock APIs for testing.
 
