@@ -184,54 +184,53 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         return session
 
 
-def check_tool_arguments(args_str: str, tool: Tool) -> Dict[str, Any]:
-    """Validate and process tool arguments
-
-    Args:
-        args_str: JSON string of arguments from the API
-        tool: Tool instance to validate against
-
-    Returns:
-        Dict[str, Any]: Processed arguments
-
-    Raises:
-        ValueError: If required arguments are missing or types don't match
-        json.JSONDecodeError: If arguments string is not valid JSON
-    """
-    try:
-        args_dict = json.loads(args_str)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in arguments: {e}")
-
-    result = {}
-
-    # Check required arguments
-    for name, arg in tool.arguments.items():
-        if arg.required and name not in args_dict:
-            raise ValueError(f"Missing required argument: {name}")
-
-        if name in args_dict:
-            value = args_dict[name]
-            if not arg.validate_value(value):
-                raise ValueError(
-                    f"Invalid type for argument {name}: expected {arg.value_type}, got {type(value)}"
-                )
-            result[name] = value
-
-    # Warn about unexpected arguments
-    for name in args_dict:
-        if name not in tool.arguments:
-            logger.warning(f"Unexpected argument: {name}")
-
-    return result
-
-
 class OpenAIToolingTemplate(ToolingTemplateBase):
     """OpenAI-specific implementation of tool handling template.
 
     This template handles the OpenAI-specific format for function calls and results,
     adapting them to the common interface provided by ToolingTemplate.
     """
+
+    def check_tool_arguments(self, args_str: str, tool: Tool) -> Dict[str, Any]:
+        """Validate and process tool arguments
+
+        Args:
+            args_str: JSON string of arguments from the API
+            tool: Tool instance to validate against
+
+        Returns:
+            Dict[str, Any]: Processed arguments
+
+        Raises:
+            ValueError: If required arguments are missing or types don't match
+            json.JSONDecodeError: If arguments string is not valid JSON
+        """
+        try:
+            args_dict = json.loads(args_str)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in arguments: {e}")
+
+        result = {}
+
+        # Check required arguments
+        for name, arg in tool.arguments.items():
+            if arg.required and name not in args_dict:
+                raise ValueError(f"Missing required argument: {name}")
+
+            if name in args_dict:
+                value = args_dict[name]
+                if not arg.validate_value(value):
+                    raise ValueError(
+                        f"Invalid type for argument {name}: expected {arg.value_type}, got {type(value)}"
+                    )
+                result[name] = value
+
+        # Warn about unexpected arguments
+        for name in args_dict:
+            if name not in tool.arguments:
+                self.warning(f"Unexpected argument: {name}")
+
+        return result
 
     def format_tool_call(self, message: Message) -> Optional[Dict[str, Any]]:
         """Extract tool call information from OpenAI message format.
@@ -246,13 +245,14 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
             function_call = message.metadata["function_call"]
             return {
                 "name": function_call["name"],
-                "arguments": check_tool_arguments(
+                "arguments": self.check_tool_arguments(
                     function_call["arguments"], self.get_tool(function_call["name"])
                 ),
             }
         return None
 
-    def format_tool_result(self, result: ToolResult) -> Message:
+    @staticmethod
+    def format_tool_result(result: ToolResult) -> Message:
         """Format tool result for OpenAI message format.
 
         Args:

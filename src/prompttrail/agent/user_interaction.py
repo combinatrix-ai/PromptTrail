@@ -4,11 +4,12 @@ from typing import Dict, Optional
 
 from prompttrail.agent import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
 
-class UserInteractionProvider:
+class UserInteractionProvider(Debuggable):
     @abstractmethod
     def ask(
         self,
@@ -51,12 +52,12 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         raw = input(description).strip()
         while 1:
             if (not raw) and default is not None:
-                logger.info(f"No input. Using default value: {default}")
+                self.info("No input. Using default value: %s", default)
                 raw = default
             if raw:
                 break
             else:
-                logger.warning(
+                self.warning(
                     "You must input something or set default value for template. Please try again."
                 )
                 raw = input(description).strip()

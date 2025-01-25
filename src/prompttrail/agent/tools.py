@@ -4,7 +4,7 @@ from typing import Any, Dict, Generic, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from prompttrail.core.errors import ParameterValidationError
-from prompttrail.core.utils import Loggable
+from prompttrail.core.utils import Debuggable
 
 T = TypeVar("T")
 
@@ -29,7 +29,7 @@ class ToolResult(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
-class Tool(BaseModel, Loggable):
+class Tool(BaseModel, Debuggable):
     """Base tool class"""
 
     name: str

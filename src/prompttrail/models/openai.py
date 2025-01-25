@@ -1,4 +1,5 @@
 import logging
+from pprint import pformat
 from typing import Any, Dict, Generator, List, Literal, Optional
 
 import openai
@@ -188,7 +189,7 @@ class OpenAIModel(Model):
             ]
 
         response = openai.chat.completions.create(**create_params)  # type: ignore
-        logger.debug(f"Response: {response}")
+        self.debug("Response: %s", pformat(response))
 
         message = response.choices[0].message  # type: ignore
         content = message.content  # type: ignore
@@ -236,11 +237,11 @@ class OpenAIModel(Model):
             ]
 
         response: openai.Stream = openai.chat.completions.create(**create_params)  # type: ignore
+        self.debug("Response: %s", pformat(response))
 
         all_text: str = ""
         role = None
         for message in response:  # type: ignore
-            logger.debug(f"Received message: {message}")
             if role is None:
                 role = message.choices[0].delta.role  # type: ignore
             new_text: str = message.choices[0].delta.content or ""  # type: ignore

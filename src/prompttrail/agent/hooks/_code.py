@@ -1,9 +1,7 @@
-import logging
 import re
 
 from prompttrail.agent import Session
 from prompttrail.agent.hooks._core import TransformHook
-from prompttrail.core.utils import hook_logger
 
 
 class ExtractMarkdownCodeBlockHook(TransformHook):
@@ -75,12 +73,7 @@ class EvaluatePythonCodeHook(TransformHook):
         try:
             answer = eval(python_segment)
         except Exception as e:
-            hook_logger(
-                self,
-                session,
-                f"Failed to evaluate python code: {python_segment}",
-                level=logging.WARNING,
-            )
+            self.error("Failed to evaluate python code: %s", python_segment)
             raise e
         metadata[self.key] = answer
         return session

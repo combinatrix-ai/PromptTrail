@@ -80,6 +80,7 @@ def test_tree_directory_with_system_tree(temp_dir: Path, gitignore: Path):
     # Test complete directory structure
     result = tool.execute(root_dir=str(temp_dir))
     result_dict = json.loads(result.content)
+    print(result_dict)
     assert result_dict["status"] == "success"
     tree = result_dict["tree"]
 
@@ -98,6 +99,7 @@ def test_tree_directory_with_system_tree(temp_dir: Path, gitignore: Path):
     # Test depth limit
     result = tool.execute(root_dir=str(temp_dir), max_depth=1)
     result_dict = json.loads(result.content)
+    print(result_dict)
     assert result_dict["status"] == "success"
     tree = result_dict["tree"]
 

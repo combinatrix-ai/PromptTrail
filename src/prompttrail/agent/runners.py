@@ -6,13 +6,14 @@ from prompttrail.agent.templates import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
 from prompttrail.core import MessageRoleType, Model, Parameters, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException
+from prompttrail.core.utils import Debuggable
 
 # Session is already imported from prompttrail.core
 
 logger = logging.getLogger(__name__)
 
 
-class Runner(metaclass=ABCMeta):
+class Runner(Debuggable, metaclass=ABCMeta):
     def __init__(
         self,
         model: Model,
@@ -20,6 +21,7 @@ class Runner(metaclass=ABCMeta):
         template: "Template",
         user_interaction_provider: UserInteractionProvider,
     ):
+        super().__init__()
         self.models = model
         self.parameters = parameters
         self.user_interaction_provider = user_interaction_provider
@@ -97,8 +99,10 @@ class CommandLineRunner(Runner):
             )
         else:
             if session.runner is None or session.runner != self:
-                logger.warning(
-                    f"Given session has different runner {session.runner} from the runner {self}. Overriding the session.",
+                self.warning(
+                    "Given session has different runner %s from the runner %s. Overriding the session.",
+                    session.runner,
+                    self,
                 )
                 session.runner = self
             session.debug_mode = debug_mode or session.debug_mode
@@ -121,8 +125,9 @@ class CommandLineRunner(Runner):
             try:
                 message = next(gen)
             except ReachedEndTemplateException:
-                logger.warning(
-                    f"End template {EndTemplate.template_id} is reached. Flow is forced to stop."
+                self.warning(
+                    "End template %s is reached. Flow is forced to stop.",
+                    EndTemplate.template_id,
                 )
                 break
             except JumpException as e:
@@ -155,8 +160,8 @@ class CommandLineRunner(Runner):
                     print("tool_use: ", message.tool_use)
                 n_messages += 1
             if max_messages and n_messages >= max_messages:
-                logger.warning(
-                    f"Max messages {max_messages} is reached. Flow is forced to stop."
+                self.warning(
+                    "Max messages %s is reached. Flow is forced to stop.", max_messages
                 )
                 break
             print("=================")

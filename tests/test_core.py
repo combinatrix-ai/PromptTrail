@@ -14,7 +14,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(message.content, "test")
         self.assertEqual(message.role, "user")
 
-    def test_text_session_creation(self):
+    def test_text_session_creation(self) -> None:
         """Test text session creation."""
         messages: List[Message] = [
             Message(content="test", role="user"),

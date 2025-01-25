@@ -155,8 +155,8 @@ class LoopTemplate(ControlTemplate):
                 self.exit_loop_count is not None
                 and stack.get_loop_idx() >= self.exit_loop_count
             ):
-                logger.warning(
-                    msg=f"Loop count is over {self.exit_loop_count}. Breaking the loop."
+                self.warning(
+                    "Loop count is over %s. Breaking the loop.", self.exit_loop_count
                 )
                 break
         return session
@@ -359,8 +359,10 @@ class JumpTemplate(ControlTemplate):
         self.condition = condition
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        logger.warning(
-            msg=f"Jumping to {self.jump_to} from {self.template_id}. This resets the stack, and the dialogue will not come back to this template."
+        self.warning(
+            "Jumping to %s from %s. This resets the stack, and the dialogue will not come back to this template.",
+            self.jump_to,
+            self.template_id,
         )
         raise JumpException(self.jump_to)
 
@@ -394,7 +396,7 @@ class BreakTemplate(ControlTemplate):
         )
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        logger.info(msg=f"Breaking the loop from {self.template_id}.")
+        self.info("Breaking the loop from %s.", self.template_id)
         raise BreakException()
 
     def walk(

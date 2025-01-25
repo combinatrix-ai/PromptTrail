@@ -1,5 +1,4 @@
 from logging import getLogger
-from pprint import pformat
 from typing import List, Optional
 
 import google.generativeai as genai  # type: ignore
@@ -137,7 +136,6 @@ class GoogleModel(Model):
                 max_output_tokens=parameters.max_tokens,
             ),
         )
-        logger.debug(pformat(object=response))
         if response.prompt_feedback.block_reason:
             raise ProviderResponseError(
                 f"Blocked: {response.prompt_feedback.block_reason}", response=response

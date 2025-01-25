@@ -125,6 +125,7 @@ Commit message format:
 - Line 1: Summary of changes (maximum 50 characters)
 - Line 2: Blank line
 - Line 3+: Detailed explanation of changes (when necessary)
+- Final line: (This commit message is auto-generated with examples/dogfooding/commit_with_auto_generated_comment.py)
 
 Provide only the commit message without any additional commentary or formatting.
 """,
