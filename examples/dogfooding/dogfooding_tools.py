@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import subprocess
 import tempfile
 from typing import Any, Dict, Optional, Tuple, Union
 
@@ -80,9 +81,8 @@ class ExecuteCommand(Tool):
                     {"status": "error", "reason": "No command was passed."}
                 )
             )
-        # execute the command and get stdout and stderr
-        import subprocess
 
+        # execute the command and get stdout and stderr
         command = args["command"]
         stdout_text = ""
         stderr_text = ""
@@ -154,15 +154,14 @@ class TreeDirectory(Tool):
 
     def run_command(self, max_depth: Optional[int], root_dir: Optional[str]) -> str:
         """Get ignore patterns from .gitignore file."""
-        import subprocess
 
         depth_part = f"-L {max_depth}" if max_depth else ""
 
         # https://gist.github.com/jpwilliams/dabff82b0ceb95dd57a7552ea7f2d675
 
-        # check if .gitignore exists in the root directory
+        # TODO: check if .gitignore exists in the root directory etc...
 
-        gitignore_content = subprocess.check_output(
+        return subprocess.check_output(
             " ".join(
                 [
                     f"tree {root_dir}",
@@ -172,9 +171,7 @@ class TreeDirectory(Tool):
             ),
             shell=True,
             text=True,
-        )
-
-        return gitignore_content.strip()
+        ).strip()
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         # Convert max_depth to integer

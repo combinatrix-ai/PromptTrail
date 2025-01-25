@@ -3,12 +3,12 @@ from abc import abstractmethod
 from typing import Any, Callable, Optional
 
 from prompttrail.core import Session
-from prompttrail.core.utils import Loggable
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
 
-class Hook(Loggable):
+class Hook(Debuggable):
     """
     Base class for hooks in the agent template.
     """

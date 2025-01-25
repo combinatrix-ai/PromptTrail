@@ -15,7 +15,7 @@ from prompttrail.core.const import (
     JumpException,
     ReachedEndTemplateException,
 )
-from prompttrail.core.utils import Loggable
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class Stack(BaseModel):
     template_id: str
 
 
-class Template(Loggable, metaclass=ABCMeta):
+class Template(Debuggable, metaclass=ABCMeta):
     """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow.
 
     The user should inherit this class and implement `_render` method, which should yield messages and return the final state.
@@ -210,8 +210,8 @@ class GenerateTemplate(MessageTemplate):
         # render
         if session.runner is None:
             raise ValueError("runner is not set")
-        logger.info(
-            f"Generating content with {session.runner.models.__class__.__name__}..."
+        self.info(
+            "Generating content with %s...", session.runner.models.__class__.__name__
         )
         response = session.runner.models.send(session.runner.parameters, session)
         if self.role:
@@ -350,8 +350,9 @@ class AssistantTemplate(MessageTemplate):
             # Generate mode
             if session.runner is None:
                 raise ValueError("runner is not set")
-            logger.info(
-                f"Generating content with {session.runner.models.__class__.__name__}..."
+            self.info(
+                "Generating content with %s...",
+                session.runner.models.__class__.__name__,
             )
             response = session.runner.models.send(session.runner.parameters, session)
             rendered_content = response.content

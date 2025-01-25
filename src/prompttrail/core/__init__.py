@@ -28,7 +28,7 @@ else:
 from prompttrail.core.cache import CacheProvider
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.mocks import MockProvider
-from prompttrail.core.utils import logger_multiline
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
@@ -194,10 +194,19 @@ UpdatedParameters: TypeAlias = Parameters
 UpdatedMessage: TypeAlias = Message
 
 
-class Model(BaseModel, ABC):
+class Model(BaseModel, ABC, Debuggable):
     """A model define an interface to interact with LLM models."""
 
     configuration: Configuration
+    # To meet the Pydantic BaseModel requirements,
+    # we need to define the logger attribute as a class attribute.
+    logger: Optional[logging.Logger] = None
+    enable_logging: bool = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def model_post_init(self, *args, **kwargs):
+        super().model_post_init(*args, **kwargs)
+        self.setup_logger_for_pydantic()
 
     def is_mocked(self) -> bool:
         """is_mocked method returns True if the model is mocked."""
@@ -266,6 +275,7 @@ class Model(BaseModel, ABC):
             return self.configuration.mock_provider.call(session)
 
         parameters, session = self.prepare(parameters, session, False)
+        self.debug("Communications %s", session)
 
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
@@ -273,7 +283,6 @@ class Model(BaseModel, ABC):
                 return message
 
         message = self._send(parameters, session)
-        logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)
         return self.after_send(parameters, session, message, False)
 
     def _send_async(

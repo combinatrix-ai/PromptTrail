@@ -1,4 +1,3 @@
-import json
 from logging import getLogger
 from pprint import pformat
 from typing import Any, Dict, List, Literal, Optional, Tuple, cast
@@ -110,32 +109,6 @@ class AnthropicModel(Model):
                     f"Tool must have at least one argument: {tool.name}"
                 )
 
-    def _is_tool_result(self, message: MessageDict) -> bool:
-        """Check if a message contains a tool result"""
-        try:
-            content = message["content"]
-            if not content.startswith("{") or not content.endswith("}"):
-                logger.debug(f"Message content is not JSON format: {content}")
-                return False
-
-            # Try to parse as JSON
-            data = json.loads(content)
-            logger.debug(f"Parsed JSON data: {data}")
-
-            # Check if it has expected tool result fields
-            has_fields = all(
-                field in data for field in ["temperature", "condition", "city"]
-            )
-            logger.debug(f"Has tool result fields: {has_fields}")
-
-            return has_fields
-        except json.JSONDecodeError:
-            logger.debug(f"Failed to parse message as JSON: {content}")
-            return False
-        except Exception as e:
-            logger.debug(f"Error checking tool result: {e}")
-            return False
-
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
         if not isinstance(parameters, AnthropicParam):
@@ -144,8 +117,6 @@ class AnthropicModel(Model):
             )
 
         messages, system_prompt = self._session_to_anthropic_messages(session)
-        logger.debug(f"Converted messages: {messages}")
-        logger.debug(f"System prompt: {system_prompt}")
 
         # Convert AnthropicMessageDict to MessageDict for tool use check
         [dict(msg) for msg in messages]
@@ -174,11 +145,8 @@ class AnthropicModel(Model):
         if self.client is None:
             raise RuntimeError("Anthropic client not initialized")
 
-        logger.debug(f"Request parameters: {pformat(create_params)}")  # type: ignore
-
         response: anthropic.Message = self.client.messages.create(**create_params)  # type: ignore
-        logger.debug(f"Response: {pformat(response)}")  # type: ignore
-        logger.debug(f"Response content: {pformat(response.content)}")  # type: ignore
+        self.debug("Response: %s", pformat(response))
 
         # Handle response content
         content = ""
@@ -186,15 +154,12 @@ class AnthropicModel(Model):
 
         # Process all blocks
         for block in response.content:
-            logger.debug(f"Processing block: {pformat(block)}")  # type: ignore
-            logger.debug(f"Block type: {type(block)}")  # type: ignore
-
             if hasattr(block, "text"):
                 content += block.text
-                logger.debug(f"Added text content: {block.text}")
+                self.debug("Added text content: %s", block.text)
             elif hasattr(block, "type") and block.type == "tool_use":
                 tool_use_block = block
-                logger.debug(f"Found tool use block: {pformat(block)}")  # type: ignore
+                self.debug("Found tool use block: %s", pformat(tool_use_block))
 
         # Create message with appropriate content and tool_use
         tool_use = None
@@ -203,7 +168,7 @@ class AnthropicModel(Model):
                 "name": cast(str, tool_use_block.name),
                 "input": cast(str, tool_use_block.input),
             }
-            logger.debug(f"Added tool use: {tool_use}")
+            self.debug("Added tool use: %s", tool_use)
 
         # Create message
         message = Message(
@@ -211,7 +176,7 @@ class AnthropicModel(Model):
             role="assistant",
             tool_use=tool_use,
         )
-        logger.debug(f"Created final message: {message}")
+        self.debug("Created final message: %s", message)
         return message
 
     def validate_session(self, session: Session, is_async: bool) -> None:
