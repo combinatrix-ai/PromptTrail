@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Callable, Optional
+from typing import Any, Callable, List, Optional
 
 from prompttrail.core import Session
 from prompttrail.core.utils import Debuggable
@@ -9,74 +9,68 @@ logger = logging.getLogger(__name__)
 
 
 class Hook(Debuggable):
-    """
-    Base class for hooks in the agent template.
-    """
+    """Base class for hooks in the agent template."""
 
     @abstractmethod
     def hook(self, session: Session) -> Any:
-        """
-        The hook method that is called during the execution of the template.
+        """Execute the hook functionality on the session.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session or any other value depending on the hook implementation.
+            Modified session or other value depending on implementation
         """
         raise NotImplementedError("hook method is not implemented")
 
 
 class TransformHook(Hook):
-    """
-    A hook that transforms the session of the conversation.
-    """
+    """Hook that transforms the session."""
 
     def __init__(self, function: Optional[Callable[[Session], Session]] = None):
         self.function = function
 
     def hook(self, session: Session) -> Session:
-        """
-        Transforms the session of the conversation using the provided function.
+        """Transform session using provided function.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Modified session
+
+        Raises:
+            ValueError: If no transform function is provided or set
         """
         if self.function is None:
             raise ValueError(
-                "function is not set. TransformHook can be used two ways. 1. Set function in the constructor. 2. Inherit TransformHook and override hook method."
+                "function is not set. TransformHook can be used two ways: "
+                "1. Set function in constructor "
+                "2. Inherit TransformHook and override hook method"
             )
         return self.function(session)
 
 
 class BooleanHook(Hook):
-    """
-    A hook that evaluates a boolean condition.
-    """
+    """Hook that evaluates a boolean condition."""
 
     def __init__(self, condition: Callable[[Session], bool]):
         self.condition = condition
 
     def hook(self, session: Session) -> bool:
-        """
-        Evaluates the boolean condition using the current session of the conversation.
+        """Evaluate boolean condition on session.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The result of the boolean condition evaluation.
+            Result of the condition evaluation
         """
         return self.condition(session)
 
 
 class AskUserHook(TransformHook):
-    """
-    A hook that asks the user for input and stores the result in the state.
-    """
+    """Hook that prompts user for input."""
 
     def __init__(
         self,
@@ -89,16 +83,14 @@ class AskUserHook(TransformHook):
         self.default = default
 
     def hook(self, session: Session) -> Session:
-        """
-        Asks the user for input and stores the result in the session metadata.
+        """Get user input and store in session metadata.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Session with updated metadata containing user input
         """
-        # show user a prompt on console
         raw = input(self.description).strip()
         if raw == "" and self.default is not None:
             raw = self.default
@@ -108,30 +100,25 @@ class AskUserHook(TransformHook):
 
 
 class GenerateChatHook(TransformHook):
-    """
-    A hook that generates a chat message using the LLM model and stores the result in the session metadata.
-    """
+    """Hook that generates LLM response."""
 
-    def __init__(
-        self,
-        key: str,
-    ):
+    def __init__(self, key: str):
         self.key = key
 
     def hook(self, session: Session) -> Session:
-        """
-        Generates a chat message using the LLM model and stores the result in the session metadata.
+        """Generate LLM response and store in session metadata.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Session with updated metadata containing LLM response
+
+        Raises:
+            ValueError: If session has no runner set
         """
         if session.runner is None:
-            raise ValueError(
-                "Runner must be given to use GenerateChatHook. Please set runner to the session."
-            )
+            raise ValueError("Runner must be set to use GenerateChatHook")
         message = session.runner.models.send(session.runner.parameters, session)
         metadata = session.get_latest_metadata()
         metadata[self.key] = message.content
@@ -139,51 +126,42 @@ class GenerateChatHook(TransformHook):
 
 
 class CountUpHook(TransformHook):
-    """
-    A hook that counts up a value in the session metadata.
-    """
-
-    def __init__(self):
-        pass  # No configuration is needed here.
+    """Hook that increments a counter in metadata."""
 
     def hook(self, session: Session) -> Session:
-        """
-        Counts up a value in the session metadata.
+        """Increment counter for current template.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Session with updated counter
+
+        Raises:
+            ValueError: If template_id is not set
         """
         template_id = session.get_current_template_id()
         if template_id is None:
             raise ValueError("template_id is not set")
         metadata = session.get_latest_metadata()
-        if template_id not in metadata:
-            metadata[template_id] = 0
-        else:
-            metadata[template_id] += 1
+        metadata[template_id] = metadata.get(template_id, 0) + 1
         return session
 
 
 class DebugHook(TransformHook):
-    """
-    A hook that prints debug information during the execution of the template.
-    """
+    """Hook that prints debug information."""
 
     def __init__(self, message_shown_when_called: str):
         self.message = message_shown_when_called
 
     def hook(self, session: Session) -> Session:
-        """
-        Prints debug information during the execution of the template.
+        """Print debug info about session.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Unmodified session
         """
         print(f"{self.message} template_id: {session.get_current_template_id()}")
         print(f"{self.message} metadata: {session.get_latest_metadata()}")
@@ -191,23 +169,75 @@ class DebugHook(TransformHook):
 
 
 class ResetDataHook(TransformHook):
-    """
-    A hook that resets the metadata in the session.
-    """
+    """Hook that resets metadata in session."""
 
-    def __init__(self):
-        pass  # No configuration is needed here.
+    def __init__(self, keys: Optional[str | List[str]] = None):
+        self.keys = (
+            keys if isinstance(keys, list) else [keys] if keys is not None else []
+        )
 
     def hook(self, session: Session) -> Session:
-        """
-        Resets the metadata in the session.
+        """Reset specified or all metadata keys.
 
         Args:
-            session: The current session of the conversation.
+            session: Current conversation session
 
         Returns:
-            The modified session.
+            Session with reset metadata
         """
         metadata = session.get_latest_metadata()
-        metadata.clear()
+        if self.keys:
+            for key in self.keys:
+                try:
+                    metadata.pop(key)
+                except KeyError:
+                    logger.warning(f"Key {key} not found in metadata")
+        else:
+            metadata.clear()
+        return session
+
+
+class UpdateHook(TransformHook):
+    """Hook that updates a metadata value."""
+
+    def __init__(self, key: str, value: Any):
+        self.key = key
+        self.value = value
+
+    def hook(self, session: Session) -> Session:
+        """Update specified metadata key with new value.
+
+        Args:
+            session: Current conversation session
+
+        Returns:
+            Session with updated metadata
+        """
+        metadata = session.get_latest_metadata()
+        metadata[self.key] = self.value
+        return session
+
+
+class IncrementHook(TransformHook):
+    """Hook that increments a numeric metadata value."""
+
+    def __init__(self, key: str, by: int = 1, initial: int = 0):
+        self.key = key
+        self.increment = by
+        self.initial = initial
+
+    def hook(self, session: Session) -> Session:
+        """Increment metadata value by specified amount.
+
+        Args:
+            session: Current conversation session
+
+        Returns:
+            Session with incremented metadata value
+        """
+        metadata = session.get_latest_metadata()
+        if self.key not in metadata:
+            metadata[self.key] = self.initial
+            return session
+        metadata[self.key] += self.increment
         return session

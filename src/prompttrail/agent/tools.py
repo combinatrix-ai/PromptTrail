@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 
 class ToolArgument(BaseModel, Generic[T]):
-    """Tool argument class"""
+    """Tool argument definition with name, description, type and required flag."""
 
     name: str
     description: str
@@ -18,36 +18,39 @@ class ToolArgument(BaseModel, Generic[T]):
     required: bool = True
 
     def validate_value(self, value: Any) -> bool:
-        """Validate argument value"""
+        """Validate if the given value matches the argument's type."""
         return isinstance(value, self.value_type)
 
 
 class ToolResult(BaseModel):
-    """Tool result class"""
+    """Container for a tool's execution result and optional metadata."""
 
     content: Any = Field(default=None)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class Tool(BaseModel, Debuggable):
-    """Base tool class"""
+    """Base class for implementing tools that can be called by LLMs.
+
+    Provides argument validation and schema generation for function calling APIs.
+    Subclasses should implement the _execute() method.
+    """
 
     name: str
     description: str
     arguments: Dict[str, ToolArgument[Any]]
-    # To meet the Pydantic BaseModel requirements,
-    # we need to define the logger attribute as a class attribute.
     logger: Logger = None  # type: ignore
     enable_logging: bool = True
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def model_post_init(self, *args, **kwargs):
+        """Configure logging after initialization."""
         super().model_post_init(*args, **kwargs)
         self.setup_logger_for_pydantic()
 
     def validate_arguments(self, args: Dict[str, Any]) -> None:
-        """Validate tool arguments"""
+        """Validate that all required arguments are present and have correct types."""
         # Check for unknown arguments
         unknown_args = set(args.keys()) - set(self.arguments.keys())
         if unknown_args:
@@ -69,19 +72,26 @@ class Tool(BaseModel, Debuggable):
                 )
 
     def execute(self, **kwargs) -> ToolResult:
-        """Execute tool with arguments"""
-        # Validate arguments
+        """Execute the tool after validating arguments."""
         self.validate_arguments(kwargs)
-
-        # Execute tool implementation with validated arguments
         return self._execute(kwargs)
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
-        """Execute tool implementation with validated arguments"""
+        """Execute tool implementation with validated arguments.
+
+        Args:
+            args: Dictionary of validated argument values
+
+        Returns:
+            ToolResult containing the execution result
+
+        Raises:
+            NotImplementedError: Subclasses must implement this method
+        """
         raise NotImplementedError("Tool._execute() must be implemented by subclass")
 
     def to_schema(self) -> Dict[str, Any]:
-        """Convert tool to schema format"""
+        """Generate function calling schema for this tool."""
         return {
             "name": self.name,
             "description": self.description,
