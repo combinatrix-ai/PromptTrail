@@ -99,11 +99,6 @@ class CommandLineRunner(Runner):
             )
         else:
             if session.runner is None or session.runner != self:
-                self.warning(
-                    "Given session has different runner %s from the runner %s. Overriding the session.",
-                    session.runner,
-                    self,
-                )
                 session.runner = self
             session.debug_mode = debug_mode or session.debug_mode
 

@@ -137,7 +137,7 @@ class Session(BaseModel):
     def get_latest_metadata(self) -> Dict[str, Any]:
         """Get metadata from the last message or initial metadata if no messages exist."""
         if not self.messages:
-            return self.initial_metadata.copy()
+            return self.initial_metadata
         return self.messages[-1].metadata
 
     def get_last_message(self) -> Message:

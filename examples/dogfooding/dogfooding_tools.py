@@ -166,7 +166,7 @@ class TreeDirectory(Tool):
                 [
                     f"tree {root_dir}",
                     depth_part,
-                    '-C -I $((cat .gitignore 2> /dev/null || cat $(git rev-parse --show-toplevel 2> /dev/null)/.gitignore 2> /dev/null || echo "node_modules") | egrep -v "^#.*$|^[[:space:]]*$" | tr "\\n" "|" | rev | cut -c 2- | rev)',
+                    "-C -I \"$( (cat .gitignore 2>/dev/null || cat $(git rev-parse --show-toplevel 2>/dev/null)/.gitignore 2>/dev/null) | grep -Ev '^#.*$|^[[:space:]]*$' | tr '\\n' '|' | rev | cut -c 2- | rev )\"",
                 ]
             ),
             shell=True,
@@ -198,6 +198,18 @@ class TreeDirectory(Tool):
                 )
             )
 
+        try:
+            # check if tree command is installed
+            subprocess.check_output("tree --version", shell=True)
+        except subprocess.CalledProcessError:
+            return ToolResult(
+                content=json.dumps(
+                    {
+                        "status": "error",
+                        "reason": "tree command is not installed. Please install tree command to use this tool.",
+                    }
+                )
+            )
         try:
             result = self.run_command(max_depth, root_dir)
             if "error opening dir" in result:
