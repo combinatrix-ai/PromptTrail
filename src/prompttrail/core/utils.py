@@ -6,10 +6,6 @@ from typing import TYPE_CHECKING, Optional
 
 import tiktoken
 
-if TYPE_CHECKING:
-    pass
-
-
 def is_in_test_env() -> bool:
     """
     Check if the code is running in a test environment.
@@ -32,12 +28,6 @@ def count_tokens(text: str, encoding_name: str) -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     encoded = encoding.encode(text)
     return len(encoded)
-
-
-logging.basicConfig(
-    # Remove %(name)s and add %(filename)s:%(lineno)d in the desired position:
-    format="%(levelname)-8s %(filename)s:%(lineno)d %(message)s",
-)
 
 
 class Debuggable:
