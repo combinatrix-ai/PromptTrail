@@ -20,8 +20,8 @@ from prompttrail.core.utils import Debuggable
 logger = logging.getLogger(__name__)
 
 
-# TODO: How can I force the user to use check_template_id on init?
 def check_template_id(template_id: str) -> None:
+    """Check if template ID is not reserved."""
     if template_id in RESERVED_TEMPLATE_IDS:
         raise ValueError(
             f"Template id {template_id} is reserved. Please use another template id."
@@ -29,14 +29,15 @@ def check_template_id(template_id: str) -> None:
 
 
 class Stack(BaseModel):
+    """Stack frame for template execution."""
+
     template_id: str
 
 
 class Template(Debuggable, metaclass=ABCMeta):
-    """A template represents a template that create some messages (usually one) when rendered and include some logic to control flow.
+    """Base template class for creating messages and controlling flow.
 
-    The user should inherit this class and implement `_render` method, which should yield messages and return the final state.
-    Also, the user should implement `create_stack` method, which should create a stack object that store status of the template on rendering.
+    Subclasses must implement _render() and create_stack() methods.
     """
 
     @abstractmethod
@@ -48,9 +49,7 @@ class Template(Debuggable, metaclass=ABCMeta):
         enable_logging: bool = True,
     ):
         super().__init__()
-        self.template_id: str = (
-            template_id if template_id is not None else self._generate_name()
-        )
+        self.template_id = template_id if template_id else self._generate_name()
         check_template_id(self.template_id)
         self.before_transform = self._hooks_to_list(before_transform)
         self.after_transform = self._hooks_to_list(after_transform)
@@ -59,28 +58,22 @@ class Template(Debuggable, metaclass=ABCMeta):
     def _hooks_to_list(
         self, hooks: Optional[Union[List[TransformHook], TransformHook]]
     ) -> List[TransformHook]:
+        """Convert hook(s) to list format."""
         if hooks is None:
             return []
-        elif isinstance(hooks, list):
-            return hooks
-        else:
-            return [hooks]
+        return [hooks] if not isinstance(hooks, list) else hooks
 
     def render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        """Render template with hooks and error handling."""
         logging.debug(f"Rendering {self.template_id}")
         session.push_stack(self.create_stack(session))
         try:
             for hook in self.before_transform:
                 session = hook.hook(session)
             res = yield from self._render(session)
-            # TODO: After transform is skipped if BreakTemplate, JumpTemplate, or EndTemplate is used. This is natural?
             for hook in self.after_transform:
                 session = hook.hook(session)
-        except BreakException as e:
-            raise e
-        except ReachedEndTemplateException as e:
-            raise e
-        except JumpException as e:
+        except (BreakException, ReachedEndTemplateException, JumpException) as e:
             raise e
         except Exception as e:
             self.error(f"RenderingTemplateError@{self.template_id}")
@@ -90,41 +83,36 @@ class Template(Debuggable, metaclass=ABCMeta):
         logging.debug(f"Rendered {self.template_id}")
         return res
 
+    @abstractmethod
     def create_stack(self, session: "Session") -> "Stack":
-        """Create a stack frame for this template."""
+        """Create stack frame for this template."""
         return Stack(template_id=self.template_id)
 
     @abstractmethod
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render the template and return a generator of messages."""
+        """Render the template and return message generator."""
         raise NotImplementedError("render method is not implemented")
 
     def walk(
         self, visited_templates: Optional[Set["Template"]] = None
     ) -> Generator["Template", None, None]:
-        if visited_templates is None:
-            visited_templates = set()
-        if self in visited_templates:
-            return
-        visited_templates.add(self)
-        yield self
+        """Walk through template tree yielding each template once."""
+        visited_templates = visited_templates or set()
+        if self not in visited_templates:
+            visited_templates.add(self)
+            yield self
 
     def __str__(self) -> str:
         return f"Template(id={self.template_id})"
 
     @classmethod
     def _generate_name(cls) -> str:
-        """Generate a unique name for an unnamed template."""
+        """Generate unique template ID."""
         return f"Unnamed_{cls.__name__}_{str(uuid4())}"
 
 
 class MessageTemplate(Template):
-    """A template that create a message when rendered.
-
-    This is the most basic template without user interaction or calling LLM.
-    Rendering is based on `content`, which is a string that will be rendered by jinja2 as a message.
-    Before rendering, `before_transform` hooks are applied. After rendering, `after_transform` hooks are applied.
-    """
+    """Template that creates a message using Jinja2 templating."""
 
     def __init__(
         self,
@@ -137,58 +125,51 @@ class MessageTemplate(Template):
     ):
         super().__init__(
             template_id=template_id,
-            before_transform=before_transform if before_transform is not None else [],
-            after_transform=after_transform if after_transform is not None else [],
-            enable_logging=True,
+            before_transform=before_transform,
+            after_transform=after_transform,
+            enable_logging=enable_logging,
         )
         self.content = content
         self.jinja_template = jinja2.Template(self.content)
         self.role = role
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        """Render message using Jinja template."""
         session.set_jump(None)
-        # no jump, then render
         if not session.get_jump():
-            # render
-            rendered_content = self.jinja_template.render(
-                **session.get_latest_metadata()
-            )
-            # Get metadata from the last message or initial metadata
             metadata = session.get_latest_metadata().copy()
+            rendered_content = self.jinja_template.render(**metadata)
             message = Message(
-                content=rendered_content,
-                role=self.role,
-                metadata=metadata,
+                content=rendered_content, role=self.role, metadata=metadata
             )
             session.append(message)
             yield message
         return session
 
-    def __str__(self) -> str:
-        if "\n" in self.content:
-            content_part = 'content="""\n' + self.content + '\n"""'
-        else:
-            content_part = 'content="' + self.content + '"'
-
-        if self.before_transform:
-            before_transform_part = ", before_transform=" + pformat(
-                self.before_transform
-            )
-        else:
-            before_transform_part = ""
-        if self.after_transform:
-            after_transform_part = ", after_transform=" + pformat(self.after_transform)
-        else:
-            after_transform_part = ""
-
-        return f"MessageTemplate(id={self.template_id}, {content_part}{before_transform_part}{after_transform_part})"
-
     def create_stack(self, session: "Session") -> "Stack":
         return Stack(template_id=self.template_id)
 
+    def __str__(self) -> str:
+        content_part = (
+            f'content="""\n{self.content}\n"""'
+            if "\n" in self.content
+            else f'content="{self.content}"'
+        )
+        before_part = (
+            f", before_transform={pformat(self.before_transform)}"
+            if self.before_transform
+            else ""
+        )
+        after_part = (
+            f", after_transform={pformat(self.after_transform)}"
+            if self.after_transform
+            else ""
+        )
+        return f"MessageTemplate(id={self.template_id}, {content_part}{before_part}{after_part})"
+
 
 class GenerateTemplate(MessageTemplate):
-    """A template that create a message by calling LLM."""
+    """Template that generates content using an LLM."""
 
     def __init__(
         self,
@@ -199,17 +180,18 @@ class GenerateTemplate(MessageTemplate):
         enable_logging=True,
     ):
         super().__init__(
-            content="",  # TODO: This should be None. Or not use MessageTemplate?
+            content="",
             role=role,
             template_id=template_id,
-            before_transform=before_transform if before_transform is not None else [],
-            after_transform=after_transform if after_transform is not None else [],
+            before_transform=before_transform,
+            after_transform=after_transform,
         )
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        # render
-        if session.runner is None:
+        """Generate content using LLM."""
+        if not session.runner:
             raise ValueError("runner is not set")
+
         self.info(
             "Generating content with %s...", session.runner.models.__class__.__name__
         )
@@ -222,8 +204,7 @@ class GenerateTemplate(MessageTemplate):
 
 
 class SystemTemplate(MessageTemplate):
-    """A template that creates a system message when rendered.
-    This is a convenience class that sets the role to "system" automatically."""
+    """Template for system messages."""
 
     def __init__(
         self,
@@ -243,23 +224,7 @@ class SystemTemplate(MessageTemplate):
 
 
 class UserTemplate(MessageTemplate):
-    """A template that creates a user message when rendered.
-    This template can operate in two modes:
-    1. Static mode (when content is provided):
-       Creates a message with the given content.
-    2. Interactive mode (when content is None):
-       Prompts the user for input during runtime.
-
-    Examples:
-        # Static mode
-        user_static = UserTemplate("Hello!")
-
-        # Interactive mode
-        user_interactive = UserTemplate(
-            description="Please enter your message",
-            default="Hello!"
-        )
-    """
+    """Template for user messages with optional interactive input."""
 
     def __init__(
         self,
@@ -277,24 +242,21 @@ class UserTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            enable_logging=True,
+            enable_logging=enable_logging,
         )
         self.is_interactive = content is None
         self.description = description
         self.default = default
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        """Render user message, either from input or template."""
         if self.is_interactive:
-            # Interactive mode
-            if session.runner is None:
-                raise ValueError(
-                    "Runner must be given to use interactive mode. Do you use Runner correctly?"
-                )
+            if not session.runner:
+                raise ValueError("Runner must be given to use interactive mode")
             rendered_content = session.runner.user_interaction_provider.ask(
                 session, self.description, self.default
             )
         else:
-            # Static mode
             rendered_content = self.jinja_template.render(
                 **session.get_latest_metadata()
             )
@@ -311,20 +273,7 @@ class UserTemplate(MessageTemplate):
 
 
 class AssistantTemplate(MessageTemplate):
-    """A template that creates an assistant message.
-    This template can operate in two modes:
-    1. Generate mode (when content is None):
-       Creates a message by calling LLM.
-    2. Static mode (when content is provided):
-       Creates a message with the given content.
-
-    Examples:
-        # Generate mode (LLM response)
-        assistant_generate = AssistantTemplate()
-
-        # Static mode
-        assistant_static = AssistantTemplate(content="Hello, I'm here to help!")
-    """
+    """Template for assistant messages with optional LLM generation."""
 
     def __init__(
         self,
@@ -340,15 +289,16 @@ class AssistantTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
-            enable_logging=True,
+            enable_logging=enable_logging,
         )
         self.is_generate = content is None
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+        """Render assistant message, either generated or from template."""
         metadata = session.get_latest_metadata().copy()
+
         if self.is_generate:
-            # Generate mode
-            if session.runner is None:
+            if not session.runner:
                 raise ValueError("runner is not set")
             self.info(
                 "Generating content with %s...",
@@ -357,7 +307,6 @@ class AssistantTemplate(MessageTemplate):
             response = session.runner.models.send(session.runner.parameters, session)
             rendered_content = response.content
         else:
-            # Static mode
             rendered_content = self.jinja_template.render(
                 **session.get_latest_metadata()
             )
