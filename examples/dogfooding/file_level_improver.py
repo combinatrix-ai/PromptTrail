@@ -94,7 +94,7 @@ for path in paths:
     )
 
     initial_session = Session(
-        initial_metadata={
+        metadata={
             "important_files": ReadImportantFiles().execute().content["result"],
             # all python files in src directory
             "content": "filepath: " + path + "\n\n" + open(path).read(),

@@ -90,7 +90,7 @@ runner = CommandLineRunner(
 )
 
 initial_session = Session(
-    initial_metadata={
+    metadata={
         # read .clinerules file
         "clinerules": open(".clinerules").read(),
     }

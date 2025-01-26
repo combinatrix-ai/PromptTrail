@@ -137,10 +137,9 @@ class MessageTemplate(Template):
         """Render message using Jinja template."""
         session.set_jump(None)
         if not session.get_jump():
-            metadata = session.get_latest_metadata().copy()
-            rendered_content = self.jinja_template.render(**metadata)
+            rendered_content = self.jinja_template.render(**session.metadata)
             message = Message(
-                content=rendered_content, role=self.role, metadata=metadata
+                content=rendered_content, role=self.role, metadata=session.metadata
             )
             session.append(message)
             yield message
@@ -250,6 +249,7 @@ class UserTemplate(MessageTemplate):
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         """Render user message, either from input or template."""
+        metadata = session.metadata
         if self.is_interactive:
             if not session.runner:
                 raise ValueError("Runner must be given to use interactive mode")
@@ -257,11 +257,8 @@ class UserTemplate(MessageTemplate):
                 session, self.description, self.default
             )
         else:
-            rendered_content = self.jinja_template.render(
-                **session.get_latest_metadata()
-            )
+            rendered_content = self.jinja_template.render(**metadata)
 
-        metadata = session.get_latest_metadata().copy()
         message = Message(
             content=rendered_content,
             role=self.role,
@@ -295,7 +292,7 @@ class AssistantTemplate(MessageTemplate):
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         """Render assistant message, either generated or from template."""
-        metadata = session.get_latest_metadata().copy()
+        metadata = session.metadata
 
         if self.is_generate:
             if not session.runner:
@@ -307,9 +304,7 @@ class AssistantTemplate(MessageTemplate):
             response = session.runner.models.send(session.runner.parameters, session)
             rendered_content = response.content
         else:
-            rendered_content = self.jinja_template.render(
-                **session.get_latest_metadata()
-            )
+            rendered_content = self.jinja_template.render(**metadata)
 
         message = Message(
             content=rendered_content,

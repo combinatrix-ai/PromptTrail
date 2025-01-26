@@ -2,15 +2,20 @@ import logging
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    AbstractSet,
     Any,
+    Callable,
     Dict,
     Generator,
+    ItemsView,
+    KeysView,
     List,
     Literal,
     Optional,
-    Sequence,
     Tuple,
     TypeAlias,
+    Union,
+    ValuesView,
 )
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -44,6 +49,66 @@ def truncate_string(s: str, max_length: int = 100) -> str:
     return s
 
 
+class Metadata(Dict[str, Any]):
+    """型安全なメタデータを提供するベースクラス"""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__()
+        if len(args) == 1:
+            if isinstance(args[0], (dict, Metadata)):
+                self.update(dict(args[0]))
+        elif kwargs:
+            self.update(kwargs)
+
+    def copy(self) -> "Metadata":
+        return self.__class__(dict(self))
+
+    def model_copy(self, *args: Any, **kwargs: Any) -> "Metadata":
+        return self.copy()
+
+    def dict(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        return dict(self)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: Any,
+        _handler: Any,
+    ) -> Any:
+        from pydantic_core.core_schema import (
+            dict_schema,
+            no_info_after_validator_function,
+            union_schema,
+        )
+
+        def validate_dict(value: Any) -> "Metadata":
+            if isinstance(value, cls):
+                return cls(dict(value))
+            if isinstance(value, dict):
+                return cls(value)
+            if value is None:
+                return cls()
+            try:
+                return cls(dict(value))
+            except (TypeError, ValueError):
+                raise ValueError(f"Cannot convert {type(value)} to Metadata")
+
+        def after_validate(value: Any) -> "Metadata":
+            if isinstance(value, dict):
+                return cls(value)
+            return value
+
+        return union_schema(
+            [
+                no_info_after_validator_function(after_validate, dict_schema()),
+                no_info_after_validator_function(validate_dict, dict_schema()),
+            ]
+        )
+
+    def __str__(self) -> str:
+        return str(dict(self))
+
+
 class Message(BaseModel):
     """A message represents a single message from a user, model, or API etc..."""
 
@@ -51,7 +116,27 @@ class Message(BaseModel):
     content: str
     role: MessageRoleType
     tool_use: Optional[Dict[str, Any]] = Field(default=None)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Metadata = Field(default_factory=Metadata, validate_default=True)
+
+    def __init__(
+        self,
+        content: str,
+        role: MessageRoleType,
+        metadata: Optional[Dict[str, Any] | Metadata] = None,
+        tool_use: Optional[Dict[str, Any]] = None,
+    ):
+        metadata = (
+            # Message save the snapshot of metadata, so we need to copy it.
+            metadata.copy()
+            if isinstance(metadata, Metadata)
+            else Metadata(metadata)
+            if isinstance(metadata, dict)
+            else Metadata()
+        )
+
+        super().__init__(
+            content=content, role=role, metadata=metadata, tool_use=tool_use
+        )
 
     def __hash__(self) -> int:
         return hash((self.content, self.role))
@@ -111,13 +196,40 @@ class Session(BaseModel):
 
     # Session is a list of messages with some metadata
     messages: List[Message] = Field(default_factory=list)
-    initial_metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Metadata = Field(
+        default_factory=lambda: Metadata(), validate_default=True
+    )
 
     # Runner and template related fields
     runner: Optional["Runner"] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
     jump_to_id: Optional[str] = Field(default=None)
+
+    def __init__(
+        self,
+        messages: List[Message] = [],
+        metadata: Optional[Dict[str, Any] | Metadata] = None,
+        runner: Optional["Runner"] = None,
+        debug_mode: bool = False,
+        stack: List["Stack"] = [],
+        jump_to_id: Optional[str] = None,
+    ) -> None:
+        metadata = (
+            metadata
+            if isinstance(metadata, Metadata)
+            else Metadata(metadata)
+            if isinstance(metadata, dict)
+            else Metadata()
+        )
+        super().__init__(
+            messages=messages,
+            metadata=metadata,
+            runner=runner,
+            debug_mode=debug_mode,
+            stack=stack,
+            jump_to_id=jump_to_id,
+        )
 
     def __hash__(self) -> int:
         return hash(tuple(self.messages))
@@ -133,12 +245,6 @@ class Session(BaseModel):
         if not self.messages:
             raise IndexError("Session has no messages")
         return self.messages[-1]
-
-    def get_latest_metadata(self) -> Dict[str, Any]:
-        """Get metadata from the last message or initial metadata if no messages exist."""
-        if not self.messages:
-            return self.initial_metadata
-        return self.messages[-1].metadata
 
     def get_last_message(self) -> Message:
         """Alias for get_last()."""

@@ -3,6 +3,37 @@
 The `core` module provides foundational functionality used by other modules.
 We recommend reading the other quickstart sections before this one.
 
+## Metadata
+
+The `Metadata` class provides a type-safe, dictionary-like interface for managing metadata in sessions and messages. It supports all common dictionary operations while ensuring type safety and proper data handling.
+
+```python
+from prompttrail.core import Metadata, Session, Message
+
+# Creating metadata
+metadata = Metadata()
+metadata["key"] = "value"
+metadata.update({"another_key": 42})
+
+# Using with Session
+session = Session(metadata={"user_id": "123"})
+session.metadata["language"] = "ja"
+
+# Using with Message
+message = Message(
+    content="Hello",
+    role="user",
+    metadata={"timestamp": "2024-01-26"}
+)
+```
+
+Key features of `Metadata`:
+- Dictionary-like operations (get, set, update)
+- Support for complex value types (strings, numbers, lists, dictionaries)
+- Copy operations that maintain independence
+- Type safety and proper data handling
+
+
 (cache)=
 ## Cache
 

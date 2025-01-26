@@ -126,7 +126,7 @@ Then, we need to pass the markdown to the agent.
 
 The point here is `session`. `session` is a state that is passed to the templates. In this example, we pass the markdown to the template.
 
-`session.initial_metadata` is passed to the Jinja2 processor and impute the template. Each message also has its own metadata that can be accessed via `message.metadata`.
+`session.metadata` is passed to the Jinja2 processor and impute the template. Each message also has its own metadata that can be accessed via `message.metadata`. The metadata is managed by a dedicated `Metadata` class that provides dictionary-like operations with type safety.
 
 You can also update the metadata with LLM outputs, function results, etc. See [examples/agent/fermi_problem.py] for an example.
 
@@ -135,7 +135,7 @@ Finally, run the agent!
 ```python
 result = runner.run(
     session=Session(
-        initial_metadata={"content": markdown},
+        metadata={"content": markdown},
     ),
 )
 ```
@@ -261,32 +261,26 @@ You can also add your own template. See [template.py] for more details.
 
 If you're going to build an application with `prompttrail.agent`, you just need the following:
 
-- `Session.initial_metadata`
-  - This is a Python dictionary you can use to pass initial data to the templates.
+- `Session.metadata`
+  - This is a `Metadata` instance that holds the session-level metadata.
+  - You can use this to pass data to the templates and store session state.
   - Each message also has its own metadata that can be accessed via `message.metadata`.
   - If a key is not found in the metadata, an error will be raised unless you specify a `default` in the template or hooks.
 
 - `Session.messages`
   - This is a list of messages in the conversation.
   - Each message has `content`, `role`, and `metadata`.
-  - You can access the latest metadata using `get_latest_metadata()`.
 
 ```python
 class Session(BaseModel):
     """A session represents a conversation between a user and a model, or API etc..."""
 
     messages: List[Message] = Field(default_factory=list)
-    initial_metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Metadata = Field(default_factory=Metadata)
     runner: Optional["Runner"] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
     jump_to_id: Optional[str] = Field(default=None)
-
-    def get_latest_metadata(self) -> Dict[str, Any]:
-        """Get metadata from the last message or initial metadata if no messages exist."""
-        if not self.messages:
-            return self.initial_metadata.copy()
-        return self.messages[-1].metadata
 ```
 
 Other attributes can also be accessed:

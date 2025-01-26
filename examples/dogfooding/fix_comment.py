@@ -56,7 +56,7 @@ def main(
 
     load_file_content = open(load_file, "r")
     initial_session = Session(
-        initial_metadata={
+        metadata={
             "content": load_file_content.read(),
         }
     )

@@ -59,5 +59,5 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_session = Session(initial_metadata={"code": content})
+initial_session = Session(metadata={"code": content})
 runner.run(session=initial_session)

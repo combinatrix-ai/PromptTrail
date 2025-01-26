@@ -4,7 +4,7 @@ from typing import List
 import pytest
 from pydantic import ValidationError
 
-from prompttrail.core import Message, Session
+from prompttrail.core import Message, Metadata, Session
 
 
 class TestCore(unittest.TestCase):
@@ -13,6 +13,13 @@ class TestCore(unittest.TestCase):
         message = Message(content="test", role="user")
         self.assertEqual(message.content, "test")
         self.assertEqual(message.role, "user")
+
+        message = Message(content="test", role="assistant", metadata={"test": "value"})
+        self.assertEqual(message.metadata["test"], "value")
+        message = Message(
+            content="test", role="assistant", metadata=Metadata({"test": "value"})
+        )
+        self.assertEqual(message.metadata["test"], "value")
 
     def test_text_session_creation(self) -> None:
         """Test text session creation."""
@@ -77,18 +84,23 @@ class TestCore(unittest.TestCase):
         # Test get_last with non-empty session
         self.assertEqual(session.get_last(), message)
 
-        # Test get_latest_metadata with empty session
-        empty_session = Session(messages=[], initial_metadata={"test": "value"})
-        self.assertEqual(empty_session.get_latest_metadata(), {"test": "value"})
+        # Test get_latest_metadata with empty session and empty messages
+        empty_session = Session(messages=[], metadata={"test": "value"})
+        self.assertEqual(empty_session.metadata, {"test": "value"})
 
         # Test get_latest_metadata with non-empty session
         message_with_metadata = Message(
             content="test", role="user", metadata={"test": "new_value"}
         )
-        session = Session(
-            messages=[message_with_metadata], initial_metadata={"test": "value"}
+        session = Session(messages=[message_with_metadata], metadata={"test": "value"})
+        self.assertEqual(session.metadata, {"test": "value"})
+
+        # Test get_latest_metadata with empty session metadata and message metadata
+        message_with_metadata = Message(
+            content="test", role="user", metadata={"test": "new_value"}
         )
-        self.assertEqual(session.get_latest_metadata(), {"test": "new_value"})
+        session = Session(messages=[message_with_metadata])
+        self.assertEqual(session.metadata, {})
 
         # Test basic stack operations (Real stack operations are tested in tests for ControlTemplate)
         with pytest.raises(IndexError):

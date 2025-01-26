@@ -107,7 +107,7 @@ Calculation:
                     ),
                     false_template=BreakTemplate(),
                     condition=BooleanHook(
-                        lambda session: "answer" not in session.get_latest_metadata()
+                        lambda session: "answer" not in session.metadata
                     ),
                 ),
             ],

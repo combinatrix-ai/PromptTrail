@@ -82,14 +82,14 @@ def test_if_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 2  # system message + True/False message
     assert session.messages[0].content == "TRUE"
     assert session.messages[1].content == "True"
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     print(session.messages)
     assert len(session.messages) == 2
@@ -103,8 +103,7 @@ def test_loop_template():
     def update_loop_count(session: Session) -> Session:
         nonlocal loop_count
         loop_count += 1
-        for message in session.messages:
-            message.metadata["loop_count"] = loop_count
+        session.metadata["loop_count"] = loop_count
         return session
 
     def mock_exit_condition(session: Session) -> bool:
@@ -130,7 +129,7 @@ def test_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    session = Session(initial_metadata={"loop_count": 1})
+    session = Session(metadata={"loop_count": 1})
     session = runner.run(session=session, max_messages=10)
 
     # Check if it looped 3 times
@@ -151,16 +150,14 @@ def test_nested_loop_template():
         nonlocal outer_loop_count
         inner_loop_count = 0
         outer_loop_count += 1
-        for message in session.messages:
-            message.metadata["inner_loop_count"] = 0
-            message.metadata["outer_loop_count"] = outer_loop_count
+        session.metadata["inner_loop_count"] = 0
+        session.metadata["outer_loop_count"] = outer_loop_count
         return session
 
     def update_inner_loop_count(session: Session) -> Session:
         nonlocal inner_loop_count
         inner_loop_count += 1
-        for message in session.messages:
-            message.metadata["inner_loop_count"] = inner_loop_count
+        session.metadata["inner_loop_count"] = inner_loop_count
         return session
 
     def mock_outer_exit_condition(session: Session) -> bool:
@@ -198,7 +195,7 @@ def test_nested_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    session = Session(initial_metadata={"outer_loop_count": 1, "inner_loop_count": 1})
+    session = Session(metadata={"outer_loop_count": 1, "inner_loop_count": 1})
     session = runner.run(session=session, max_messages=10)
 
     # Validate the generated messages
@@ -248,7 +245,7 @@ def test_end_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 3  # system message + True message + final message
@@ -259,7 +256,7 @@ def test_end_template():
         == "This is rendered if the previous message was TRUE"
     )
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     assert len(session.messages) == 1
     assert session.messages[0].content == "FALSE"
@@ -294,7 +291,7 @@ def test_break_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 3  # system message + True message + final message
@@ -305,7 +302,7 @@ def test_break_template():
         == "This is rendered if the previous message was TRUE"
     )
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     assert len(session.messages) == 1
     assert session.messages[0].content == "FALSE"
@@ -458,9 +455,8 @@ def test_nested_loop_with_break_template():
     def update_outer_loop_counter(session: Session) -> Session:
         nonlocal outer_loop_counter
         outer_loop_counter += 1
-        metadata = session.get_latest_metadata()
-        metadata["outer_loop_counter"] = outer_loop_counter
-        metadata["inner_loop_counter"] = 0  # Reset inner loop counter
+        session.metadata["outer_loop_counter"] = outer_loop_counter
+        session.metadata["inner_loop_counter"] = 0  # Reset inner loop counter
         # reset inner loop counter
         nonlocal inner_loop_counter
         inner_loop_counter = 0
@@ -469,8 +465,7 @@ def test_nested_loop_with_break_template():
     def update_inner_loop_counter(session: Session) -> Session:
         nonlocal inner_loop_counter
         inner_loop_counter = (inner_loop_counter + 1) % 5  # Reset after 5 iterations
-        metadata = session.get_latest_metadata()
-        metadata["inner_loop_counter"] = inner_loop_counter
+        session.metadata["inner_loop_counter"] = inner_loop_counter
         return session
 
     inner_loop_template = LoopTemplate(
@@ -483,8 +478,7 @@ def test_nested_loop_with_break_template():
                     content="Inner loop iteration {{ inner_loop_counter }} of outer iteration {{ outer_loop_counter }}",
                 ),
                 condition=BooleanHook(
-                    lambda session: session.get_latest_metadata()["inner_loop_counter"]
-                    > 2
+                    lambda session: session.metadata["inner_loop_counter"] > 2
                 ),
             ),
         ],
@@ -500,10 +494,7 @@ def test_nested_loop_with_break_template():
             inner_loop_template,
         ],
         exit_condition=BooleanHook(
-            condition=lambda session: session.get_latest_metadata()[
-                "outer_loop_counter"
-            ]
-            >= 3
+            condition=lambda session: session.metadata["outer_loop_counter"] >= 3
         ),
     )
 
@@ -515,9 +506,7 @@ def test_nested_loop_with_break_template():
     )
 
     # We'll break the inner loop on the 3rd iteration
-    session = Session(
-        initial_metadata={"outer_loop_counter": 1, "inner_loop_counter": 1}
-    )
+    session = Session(metadata={"outer_loop_counter": 1, "inner_loop_counter": 1})
     session = runner.run(
         session=session,
         max_messages=10,

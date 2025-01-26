@@ -28,6 +28,7 @@ class TransformHook(Hook):
     """Hook that transforms the session."""
 
     def __init__(self, function: Optional[Callable[[Session], Session]] = None):
+        super().__init__()
         self.function = function
 
     def hook(self, session: Session) -> Session:
@@ -55,6 +56,7 @@ class BooleanHook(Hook):
     """Hook that evaluates a boolean condition."""
 
     def __init__(self, condition: Callable[[Session], bool]):
+        super().__init__()
         self.condition = condition
 
     def hook(self, session: Session) -> bool:
@@ -78,6 +80,7 @@ class AskUserHook(TransformHook):
         description: Optional[str] = None,
         default: Optional[str] = None,
     ):
+        super().__init__()
         self.key = key
         self.description = description
         self.default = default
@@ -94,8 +97,7 @@ class AskUserHook(TransformHook):
         raw = input(self.description).strip()
         if raw == "" and self.default is not None:
             raw = self.default
-        metadata = session.get_latest_metadata()
-        metadata[self.key] = raw
+        session.metadata[self.key] = raw
         return session
 
 
@@ -103,6 +105,7 @@ class GenerateChatHook(TransformHook):
     """Hook that generates LLM response."""
 
     def __init__(self, key: str):
+        super().__init__()
         self.key = key
 
     def hook(self, session: Session) -> Session:
@@ -120,31 +123,7 @@ class GenerateChatHook(TransformHook):
         if session.runner is None:
             raise ValueError("Runner must be set to use GenerateChatHook")
         message = session.runner.models.send(session.runner.parameters, session)
-        metadata = session.get_latest_metadata()
-        metadata[self.key] = message.content
-        return session
-
-
-class CountUpHook(TransformHook):
-    """Hook that increments a counter in metadata."""
-
-    def hook(self, session: Session) -> Session:
-        """Increment counter for current template.
-
-        Args:
-            session: Current conversation session
-
-        Returns:
-            Session with updated counter
-
-        Raises:
-            ValueError: If template_id is not set
-        """
-        template_id = session.get_current_template_id()
-        if template_id is None:
-            raise ValueError("template_id is not set")
-        metadata = session.get_latest_metadata()
-        metadata[template_id] = metadata.get(template_id, 0) + 1
+        session.metadata[self.key] = message.content
         return session
 
 
@@ -152,6 +131,7 @@ class DebugHook(TransformHook):
     """Hook that prints debug information."""
 
     def __init__(self, message_shown_when_called: str):
+        super().__init__()
         self.message = message_shown_when_called
 
     def hook(self, session: Session) -> Session:
@@ -164,7 +144,7 @@ class DebugHook(TransformHook):
             Unmodified session
         """
         print(f"{self.message} template_id: {session.get_current_template_id()}")
-        print(f"{self.message} metadata: {session.get_latest_metadata()}")
+        print(f"{self.message} metadata: {session.metadata}")
         return session
 
 
@@ -172,6 +152,7 @@ class ResetDataHook(TransformHook):
     """Hook that resets metadata in session."""
 
     def __init__(self, keys: Optional[str | List[str]] = None):
+        super().__init__()
         self.keys = (
             keys if isinstance(keys, list) else [keys] if keys is not None else []
         )
@@ -185,15 +166,14 @@ class ResetDataHook(TransformHook):
         Returns:
             Session with reset metadata
         """
-        metadata = session.get_latest_metadata()
         if self.keys:
             for key in self.keys:
                 try:
-                    metadata.pop(key)
+                    session.metadata.pop(key)
                 except KeyError:
                     logger.warning(f"Key {key} not found in metadata")
         else:
-            metadata.clear()
+            session.metadata.clear()
         return session
 
 
@@ -201,6 +181,7 @@ class UpdateHook(TransformHook):
     """Hook that updates a metadata value."""
 
     def __init__(self, key: str, value: Any):
+        super().__init__()
         self.key = key
         self.value = value
 
@@ -213,8 +194,7 @@ class UpdateHook(TransformHook):
         Returns:
             Session with updated metadata
         """
-        metadata = session.get_latest_metadata()
-        metadata[self.key] = self.value
+        session.metadata[self.key] = self.value
         return session
 
 
@@ -222,6 +202,7 @@ class IncrementHook(TransformHook):
     """Hook that increments a numeric metadata value."""
 
     def __init__(self, key: str, by: int = 1, initial: int = 0):
+        super().__init__()
         self.key = key
         self.increment = by
         self.initial = initial
@@ -235,7 +216,7 @@ class IncrementHook(TransformHook):
         Returns:
             Session with incremented metadata value
         """
-        metadata = session.get_latest_metadata()
+        metadata = session.metadata
         if self.key not in metadata:
             metadata[self.key] = self.initial
             return session

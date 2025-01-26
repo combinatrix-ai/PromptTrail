@@ -109,7 +109,7 @@ class SaveCommitMessageHook(TransformHook):
 
     def hook(self, session: Session) -> Session:
         commit_message = session.get_last_message().content
-        session.get_latest_metadata()["commit_message"] = commit_message
+        session.metadata["commit_message"] = commit_message
         return session
 
 
@@ -238,7 +238,7 @@ def main(
         return ""
 
     initial_session = Session(
-        initial_metadata={
+        metadata={
             "branch": git_info["branch"],
             "diff": git_info["diff"],
             "log": git_info["log"],
@@ -247,7 +247,7 @@ def main(
 
     session = runner.run(session=initial_session)
 
-    return session.get_latest_metadata()["commit_message"]
+    return session.metadata["commit_message"]
 
 
 if __name__ == "__main__":
