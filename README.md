@@ -203,9 +203,7 @@ template = LinearTemplate(
                 ),
                 check_end := AssistantTemplate(),  # Generates END or RETRY response
             ],
-            exit_condition=BooleanHook(
-                condition=lambda session: ("END" == session.get_last_message().content.strip())
-            ),
+            exit_condition=lambda session: ("END" == session.get_last_message().content.strip()),
         ),
     ],
 )

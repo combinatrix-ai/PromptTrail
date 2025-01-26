@@ -3,9 +3,12 @@ import subprocess
 import tempfile
 from typing import Optional
 
-from prompttrail.agent.hooks import BooleanHook
-from prompttrail.agent.hooks._core import ResetDataHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers._core import (
+    MetadataTransformer,
+    ResetData,
+    SessionTransformer,
+)
 from prompttrail.agent.templates import (
     AssistantTemplate,
     BreakTemplate,
@@ -17,18 +20,27 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Session
+from prompttrail.core import Metadata, Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 
-class RewriteMessageHook(TransformHook):
+class RewriteMessage(SessionTransformer):
     def __init__(self, index: int, new_content: str):
         self.index = index
         self.new_content = new_content
 
-    def hook(self, session: Session) -> Session:
+    def process(self, session: Session) -> Session:
         session.messages[self.index].content = self.new_content
         return session
+
+
+class SaveCommitMessage(MetadataTransformer):
+    """Hook to save the generated commit message in the state data."""
+
+    def process_metadata(self, metadata: Metadata, session: Session) -> Metadata:
+        commit_message = session.get_last_message().content
+        metadata["commit_message"] = commit_message
+        return metadata
 
 
 def get_git_info() -> dict:
@@ -104,15 +116,6 @@ def execute_git_commit(message: str) -> bool:
         return False
 
 
-class SaveCommitMessageHook(TransformHook):
-    """Hook to save the generated commit message in the state data."""
-
-    def hook(self, session: Session) -> Session:
-        commit_message = session.get_last_message().content
-        session.metadata["commit_message"] = commit_message
-        return session
-
-
 templates = LinearTemplate(
     [
         SystemTemplate(
@@ -142,13 +145,13 @@ Please generate a commit message based on the following information:
 3. Recent commit history:
 {{log}}
 """,
-            after_transform=ResetDataHook(),
+            after_transform=ResetData(),
         ),
         LoopTemplate(
             templates=[
                 AssistantTemplate(
                     template_id="generate_commit_message",
-                    after_transform=SaveCommitMessageHook(),
+                    after_transform=SaveCommitMessage(),
                 ),
                 UserTemplate(
                     template_id="get_feedback",
@@ -180,12 +183,11 @@ Examples:
                 IfTemplate(
                     true_template=BreakTemplate(),
                     false_template=AssistantTemplate(
-                        before_transform=RewriteMessageHook(-1, "RETRY"),
+                        before_transform=RewriteMessage(-1, "RETRY"),
                         content="Based on your feedback, I will regenerate the commit message.",
                     ),
-                    condition=BooleanHook(
-                        lambda session: "END" in session.get_last_message().content
-                    ),
+                    condition=lambda session: "END"
+                    in session.get_last_message().content,
                 ),
             ],
         ),

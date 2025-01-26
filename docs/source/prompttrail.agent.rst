@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   prompttrail.agent.hooks
+   prompttrail.agent.session_transformers
    prompttrail.agent.templates
 
 Submodules

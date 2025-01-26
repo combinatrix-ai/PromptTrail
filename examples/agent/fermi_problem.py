@@ -8,11 +8,10 @@ import logging
 import os
 from typing import cast
 
-from prompttrail.agent.hooks import (
-    BooleanHook,
+from prompttrail.agent.session_transformers import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
-    ResetDataHook,
+    ResetData,
 )
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -106,12 +105,10 @@ Calculation:
                         content="LLM seems to unable to estimate. Try different question! Starting over...",
                     ),
                     false_template=BreakTemplate(),
-                    condition=BooleanHook(
-                        lambda session: "answer" not in session.metadata
-                    ),
+                    condition=lambda session: "answer" not in session.metadata,
                 ),
             ],
-            before_transform=[ResetDataHook()],
+            before_transform=[ResetData()],
         ),
         AssistantTemplate(
             # You can also give assistant message without using model, as if the assistant said it
@@ -143,7 +140,7 @@ Calculation:
     # Then, we can decide to end the conversation or retry.
     # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
     # Check if the loop is finished, see exit_condition below.
-    exit_condition=BooleanHook(lambda session: session.get_last().content == "END"),
+    exit_condition=lambda session: session.get_last().content == "END",
 )
 
 # Then, let's run this agent!

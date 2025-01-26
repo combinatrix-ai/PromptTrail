@@ -5,11 +5,19 @@ import json
 import os
 import sys
 
-from prompttrail.agent.hooks._core import ResetDataHook
-from prompttrail.agent.templates._core import AssistantTemplate, SystemTemplate
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.templates import (
+    AssistantTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    UserTemplate,
+)
+from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 sys.path.append(os.path.abspath("."))
-
 
 from examples.dogfooding.dogfooding_tools import (
     CreateOrOverwriteFile,
@@ -17,11 +25,6 @@ from examples.dogfooding.dogfooding_tools import (
     ReadImportantFiles,
     RunTest,
 )
-from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate, UserTemplate
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
 parameter = AnthropicParam(
@@ -78,7 +81,7 @@ for path in paths:
     Files:
     {{important_files}}
     """,
-                after_transform=ResetDataHook("important_files"),
+                after_transform=ResetData("important_files"),
             ),
             UserTemplate(
                 content="{{content}}",

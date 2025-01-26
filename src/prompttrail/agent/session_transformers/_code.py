@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from typing import List
 
 from prompttrail.agent import Session
-from prompttrail.agent.hooks._core import TransformHook
+from prompttrail.agent.session_transformers._core import MetadataTransformer
+from prompttrail.core import Metadata
 
 
 @dataclass
@@ -28,7 +29,7 @@ def extract_code_blocks(markdown: str) -> List[CodeBlock]:
     return [CodeBlock(lang=m.group(1), code=m.group(2).strip()) for m in matches]
 
 
-class ExtractMarkdownCodeBlockHook(TransformHook):
+class ExtractMarkdownCodeBlockHook(MetadataTransformer):
     """A hook that extracts code blocks from markdown content."""
 
     def __init__(self, key: str, lang: str):
@@ -42,10 +43,11 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
         self.key = key
         self.lang = lang
 
-    def hook(self, session: Session) -> Session:
+    def process_metadata(self, metadata: Metadata, session: Session) -> Metadata:
         """Extract code block from last message content.
 
         Args:
+            metadata: Current metadata
             session: Current conversation session
 
         Returns:
@@ -59,20 +61,20 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
 
         if not code_blocks:
             self.warning("No code blocks found in message content: %s", message.content)
-            session.metadata[self.key] = None
-            return session
+            metadata[self.key] = None
+            return metadata
 
         if self.lang:
             code_blocks = [block for block in code_blocks if block.lang == self.lang]
             if not code_blocks:
-                session.metadata[self.key] = None
-                return session
+                metadata[self.key] = None
+                return metadata
 
-        session.metadata[self.key] = code_blocks[0].code
-        return session
+        metadata[self.key] = code_blocks[0].code
+        return metadata
 
 
-class EvaluatePythonCodeHook(TransformHook):
+class EvaluatePythonCodeHook(MetadataTransformer):
     """A hook that evaluates Python code blocks."""
 
     def __init__(self, key: str, code: str):
@@ -85,10 +87,11 @@ class EvaluatePythonCodeHook(TransformHook):
         self.key = key
         self.code_key = code
 
-    def hook(self, session: Session) -> Session:
+    def process_metadata(self, metadata: Metadata, session: Session) -> Metadata:
         """Evaluate Python code from metadata and store result.
 
         Args:
+            metadata: Current metadata
             session: Current conversation session
 
         Returns:
@@ -97,7 +100,6 @@ class EvaluatePythonCodeHook(TransformHook):
         Raises:
             KeyError: If code_key is not found in metadata
         """
-        metadata = session.metadata
         if self.code_key not in metadata:
             raise KeyError(f"Code key {self.code_key} not found in metadata")
 
@@ -116,5 +118,5 @@ class EvaluatePythonCodeHook(TransformHook):
             self.error(f"Failed to evaluate python code: {python_segment}")
             raise e
 
-        session.metadata[self.key] = answer
-        return session
+        metadata[self.key] = answer
+        return metadata

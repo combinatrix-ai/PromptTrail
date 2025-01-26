@@ -3,8 +3,17 @@
 import os
 import sys
 
-from prompttrail.agent.hooks._core import ResetDataHook
-from prompttrail.agent.templates import ToolingTemplate
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.templates import (
+    LinearTemplate,
+    LoopTemplate,
+    ToolingTemplate,
+    UserTemplate,
+)
+from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.core import Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 sys.path.append(os.path.abspath("."))
 
@@ -18,14 +27,6 @@ from examples.dogfooding.dogfooding_tools import (
     RunTest,
     TreeDirectory,
 )
-from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate, LoopTemplate, UserTemplate
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
-
-# logging.basicConfig(level=logging.DEBUG)
-# disable_noisy_loggers()
 
 tools_to_use = [
     ReadImportantFiles(),
@@ -60,7 +61,7 @@ Rules:
 # Project Rules:
 {{clinerules}}
 """,
-            after_transform=ResetDataHook(),
+            after_transform=ResetData(),
         ),
         LoopTemplate(
             [
