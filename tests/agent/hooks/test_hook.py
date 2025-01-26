@@ -2,42 +2,40 @@ import logging
 import unittest
 
 from prompttrail.agent import Session
-from prompttrail.agent.hooks import BooleanHook, GenerateChatHook, Hook, TransformHook
+from prompttrail.agent.session_transformers import (
+    MetadataTransformer,
+    SessionTransformer,
+)
+from prompttrail.core import Metadata
 
 logger = logging.getLogger(__name__)
 
 
-class TestHook(unittest.TestCase):
-    def test_hook(self):
+class TestSessionTransformer(unittest.TestCase):
+    def test_transform(self):
         session = Session()
-        hook = Hook()
+        hook = SessionTransformer()
         with self.assertRaises(NotImplementedError):
-            hook.hook(session)
+            hook.process(session)
 
 
-class TestTransformHook(unittest.TestCase):
-    def test_hook(self):
+class TestMetadataTransformer(unittest.TestCase):
+    def test_transform(self):
         session = Session()
-        transform_hook = TransformHook(lambda x: x)
-        result = transform_hook.hook(session)
-        self.assertEqual(result, session)
+        transform_hook = MetadataTransformer()
+        with self.assertRaises(NotImplementedError):
+            transform_hook.process_metadata(session.metadata, session)
 
+        class TestMetadataTransformer(MetadataTransformer):
+            def process_metadata(self, metadata, session) -> Metadata:
+                metadata["test_key"] = "test_value"
+                return metadata
 
-class TestBooleanHook(unittest.TestCase):
-    def test_hook(self):
-        session = Session()
-        boolean_hook = BooleanHook(lambda x: True)
-        result = boolean_hook.hook(session)
-        self.assertTrue(result)
-
-
-class TestGenerateChatHook(unittest.TestCase):
-    def test_hook(self):
-        session = Session()
-        key = "test_key"
-        generate_chat_hook = GenerateChatHook(key)
-        with self.assertRaises(ValueError):
-            generate_chat_hook.hook(session)
+        transform_hook = TestMetadataTransformer()
+        result_metadata = transform_hook.process_metadata(session.metadata, session)
+        self.assertEqual(result_metadata["test_key"], "test_value")
+        result = transform_hook.process(session)
+        self.assertEqual(result.metadata["test_key"], "test_value")
 
 
 if __name__ == "__main__":

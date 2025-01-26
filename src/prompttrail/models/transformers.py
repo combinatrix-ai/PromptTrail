@@ -15,15 +15,27 @@ from prompttrail.core.errors import ParameterValidationError
 logger = logging.getLogger(__name__)
 
 
-class TransformersModelConfiguration(Configuration):
+class TransformersConfig(Configuration):
+    """Configuration for TransformersModel.
+
+    Attributes:
+        device: Device to run model on (e.g. 'cpu', 'cuda'). Defaults to None.
+    """
+
     device: Optional[str] = None
 
 
-class TransformersModelParameters(Parameters):
+class TransformersParam(Parameters):
     """Parameters for TransformersModel.
 
-    Inherits common parameters from Parameters base class and adds specific parameters
-    for transformer models.
+    Parameters for controlling text generation with transformer models.
+
+    Attributes:
+        temperature: Sampling temperature between 0 and 1. Higher values mean more random outputs.
+        max_tokens: Maximum number of tokens to generate.
+        top_p: Nucleus sampling probability.
+        top_k: Top-k sampling.
+        repetition_penalty: Higher values penalize repeated tokens more strongly.
     """
 
     temperature: Optional[float] = 1.0
@@ -36,6 +48,14 @@ class TransformersModelParameters(Parameters):
 
 
 class TransformersModel(Model):
+    """Model class for running transformer models locally.
+
+    Args:
+        configuration: Model configuration.
+        model: Pre-trained transformer model.
+        tokenizer: Tokenizer for the model.
+    """
+
     model: Optional[AutoModelForCausalLM] = None
     tokenizer: Optional[AutoTokenizer] = None
 
@@ -43,7 +63,7 @@ class TransformersModel(Model):
 
     def __init__(
         self,
-        configuration: TransformersModelConfiguration,
+        configuration: TransformersConfig,
         model: "AutoModelForCausalLM",
         tokenizer: "AutoTokenizer",
     ):
@@ -58,11 +78,11 @@ class TransformersModel(Model):
 
     def _validate_and_prepare(
         self, parameters: Parameters
-    ) -> tuple[TransformersModelParameters, "AutoModelForCausalLM", "AutoTokenizer"]:
+    ) -> tuple[TransformersParam, "AutoModelForCausalLM", "AutoTokenizer"]:
         """Validate parameters and prepare model for generation."""
-        if not isinstance(parameters, TransformersModelParameters):
+        if not isinstance(parameters, TransformersParam):
             raise ParameterValidationError(
-                f"{TransformersModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{TransformersParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         if self.model is None or self.tokenizer is None:
@@ -70,7 +90,6 @@ class TransformersModel(Model):
                 "Model and tokenizer must be initialized before sending messages"
             )
 
-        # After the check above, we can assert these are not None
         assert self.model is not None  # for type checker
         assert self.tokenizer is not None  # for type checker
 
@@ -88,7 +107,7 @@ class TransformersModel(Model):
 
     def _create_generate_kwargs(
         self,
-        parameters: TransformersModelParameters,
+        parameters: TransformersParam,
         streamer: Optional["TextStreamer"] = None,
     ) -> dict:
         """Create generation kwargs for the model."""
@@ -105,6 +124,7 @@ class TransformersModel(Model):
         return kwargs
 
     def _send(self, parameters: Parameters, session: Session) -> Message:
+        """Generate text using the model."""
         params, model, tokenizer = self._validate_and_prepare(parameters)
         inputs = self._prepare_inputs(session, model, tokenizer)
         generate_kwargs = self._create_generate_kwargs(params)
@@ -112,7 +132,7 @@ class TransformersModel(Model):
         outputs = model.generate(**inputs, **generate_kwargs)
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        return Message(content=generated_text, sender="assistant")
+        return Message(content=generated_text, role="assistant")
 
     def _send_async(
         self,
@@ -120,21 +140,23 @@ class TransformersModel(Model):
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
+        """Generate text asynchronously with streaming output."""
         params, model, tokenizer = self._validate_and_prepare(parameters)
         inputs = self._prepare_inputs(session, model, tokenizer)
         streamer = self._create_streamer(yield_type)
         generate_kwargs = self._create_generate_kwargs(params, streamer)
 
-        model.generate(
-            **inputs, **generate_kwargs
-        )  # use validated model from _validate_and_prepare
+        model.generate(**inputs, **generate_kwargs)
         yield from self._streamer_messages
 
     def _create_streamer(self, yield_type: Literal["all", "new"]) -> "TextStreamer":
+        """Create a custom streamer for generating text incrementally."""
         from transformers import TextStreamer
 
         self._streamer_messages: List[Message] = []
         self._all_text = ""
+
+        outer_self = self
 
         class TransformersStreamer(TextStreamer):
             def __init__(self, tokenizer, *args, **kwargs):
@@ -143,13 +165,13 @@ class TransformersModel(Model):
 
             def on_finalized_text(self, text: str, stream_end: bool = False):
                 if self.yield_type == "new":
-                    self._streamer_messages.append(
-                        Message(content=text, sender="assistant")
+                    outer_self._streamer_messages.append(
+                        Message(content=text, role="assistant")
                     )
                 elif self.yield_type == "all":
-                    self._all_text += text
-                    self._streamer_messages.append(
-                        Message(content=self._all_text, sender="assistant")
+                    outer_self._all_text += text
+                    outer_self._streamer_messages.append(
+                        Message(content=outer_self._all_text, role="assistant")
                     )
 
         return TransformersStreamer(self.tokenizer)
@@ -160,9 +182,17 @@ class TransformersModel(Model):
 
     @staticmethod
     def _session_to_text(session: Session) -> str:
+        """Convert session messages to text input for the model."""
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
-        return "\n".join(f"{message.sender}: {message.content}" for message in messages)
+
+        for message in messages:
+            if message.role == "tool_result":
+                raise ParameterValidationError(
+                    "TransformersModel: Tool result messages are not supported"
+                )
+
+        return "\n".join(f"{message.role}: {message.content}" for message in messages)

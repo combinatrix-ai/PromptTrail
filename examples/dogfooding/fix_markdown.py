@@ -4,46 +4,39 @@
 import os
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
+from prompttrail.agent.templates import (
+    AssistantTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.core import Session
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        SystemTemplate(
             content="""
 You're an AI proofreader that help user to fix markdown.
 You're given markdown content by the user.
 You only emit the corrected markdown. No explanation, comments, or anything else is needed.
 Do not remove > in the code section, which represents the prompt.
 """,
-            role="system",
         ),
-        MessageTemplate(
+        UserTemplate(
             content="{{content}}",
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 
 MAX_TOKENS = 8000
-MODEL_NAME = "gpt-3.5-turbo-16k"
+MODEL_NAME = "gpt-4o-mini"
 
-configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIModelParameters(
-    model_name=MODEL_NAME, temperature=0.0, max_tokens=MAX_TOKENS
-)
-model = OpenAIChatCompletionModel(configuration=configuration)
+configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
+parameter = OpenAIParam(model_name=MODEL_NAME, temperature=0.0, max_tokens=MAX_TOKENS)
+model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
@@ -77,9 +70,7 @@ def main(
     corrected_splits: list[str] = []
     for split in splits:
         content = "\n".join(split)
-        initial_session = Session()
-        initial_session.append(Message(content="", metadata={"content": content}))
-        session = runner.run(session=initial_session)
+        session = runner.run(session=Session(metadata={"content": content}))
         last_message = session.get_last_message()
         content = last_message.content
         print(content)

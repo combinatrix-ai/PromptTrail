@@ -1,25 +1,47 @@
-# PromptTrail
+<div align="center">
 
-PromptTrail is a lightweight library to help you build something with LLM.
+# 🚂 PromptTrail
 
-PromptTrail provide:
+**A lightweight, developer-friendly framework for building robust LLM applications**
+
+[![PyPI version](https://badge.fury.io/py/prompttrail.svg)](https://badge.fury.io/py/prompttrail)
+[![Python Versions](https://img.shields.io/pypi/pyversions/prompttrail.svg)](https://pypi.org/project/prompttrail/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://readthedocs.org/projects/prompttrail/badge/?version=latest)](https://prompttrail.readthedocs.io/en/latest/?badge=latest)
+
+</div>
 
 <p align="center">
   <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/dd766b44-165e-4c55-98a3-f009334bbc1c" width="640px">
-  <br>
-  A unified interface to various LLMs
 </p>
-
 <p align="center">
   <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/ef50b481-1ef5-4807-b9c4-6e2ef32d5641" width="640px">
-  <br>
-  A simple and intuituve DSL for "Agent as Code"
 </p>
 
-And various "Developer Tools" to help you build LLM applications.
+
+PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
+
+🔌 **Unified LLM Interface** - A clean, consistent way to work with multiple LLM providers
+- OpenAI GPT-3.5/4
+- Anthropic Claude
+- Google Gemini
+- Local models via Transformers
+- Easy to add new providers
+
+🤖 **Agent-as-Code DSL** - A simple, intuitive way to build complex conversational agents
+- Natural template-based conversation flows
+- Built-in tools and hooks system
+- Type-safe function calling
+- Easy to test and debug
+
+🛠️ **Developer Tools** - Everything you need to build production-ready LLM apps
+- Mock providers for testing
+- Caching to reduce API costs
+- Streaming responses
+- Rich type hints and documentation
 
 - [PromptTrail](#prompttrail)
-  - [Qucikstart](#qucikstart)
+  - [Quickstart](#quickstart)
   - [Installation](#installation)
   - [What PromptTrail can do?](#what-prompttrail-can-do)
   - [Examples](#examples)
@@ -34,7 +56,7 @@ And various "Developer Tools" to help you build LLM applications.
     - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
   - [Showcase](#showcase)
 
-## Qucikstart
+## Quickstart
 
 - See [Quickstart](https://prompttrail.readthedocs.io/en/latest/quickstart.html) for more details.
 
@@ -54,30 +76,40 @@ pip install -e .
 
 ## What PromptTrail can do?
 
-- PromptTrail offers the following features:
-  - [Unified interface to various LLMs](#llm-api-call)
-    - OpenAI
-    - Google Cloud (Palm)
-      - [TODO] Gemini
-    - Anthropic Claude
-    - Local LLMs (via Transformers)
-  - [Developer Tools for prompt programming](#developer-tools)
-    - Mocking LLMs for testing
-    - [TODO] Logging
-    - [TODO] Debugging
-  - [Everything you need to do "Agent as Code"](#agent-as-code)
-    - Template
-    - Runner
-    - Hooks
-    - Calling other APIs other than LLMs (Tooling)
-      - Function Calling
-      - Built-in Tools
-        - [TODO] Code Execution
-        - [TODO] Vector Search
+- PromptTrail provides a comprehensive set of features for building LLM applications:
+
+### 🔌 Unified LLM Interface
+- **Multiple Providers**: OpenAI, Google Gemini, Anthropic Claude, and local models via Transformers
+- **Consistent API**: Same interface for all providers with full type hints
+- **Easy Extension**: Simple provider interface to add new LLM services
+
+### 🛠️ Developer Tools
+- **Testing**: Mock providers to test LLM interactions without API calls
+- **Cost Optimization**: Built-in caching to reduce API usage
+- **[Coming Soon]**: Advanced logging and debugging features
+
+### 🤖 Agent as Code Framework
+- **Intuitive Templates**: Natural way to define conversation flows
+- **Powerful Tooling**: Type-safe function calling and built-in utilities
+- **Extensible**: Hooks system for custom behaviors and integrations
+- **[Coming Soon]**: Code execution, vector search, and more built-in tools
 
 ## Examples
 
-You can find more examples in [examples](examples) directory.
+You can find more examples in [examples](examples) directory:
+
+- Agent Examples
+  - Fermi Problem Solver (examples/agent/fermi_problem.py)
+  - Math Teacher Bot (examples/agent/math_teacher.py)
+  - Weather Forecast Bot (examples/agent/weather_forecast.py)
+  - FAQ Bot (examples/agent/faq-bot/)
+
+- Developer Tools (Dogfooding)
+  - Auto-generated Commit Messages (examples/dogfooding/commit_with_auto_generated_comment.py)
+  - Docstring Generator (examples/dogfooding/create_docstring.py)
+  - Unit Test Generator (examples/dogfooding/create_unit_test.py)
+  - Comment Fixer (examples/dogfooding/fix_comment.py)
+  - Markdown Fixer (examples/dogfooding/fix_markdown.py)
 
 ### LLM API Call
 
@@ -86,20 +118,20 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 ```python
 > import os
 > from src.prompttrail.core import Session, Message
-> from src.prompttrail.models.openai import OpenAIChatCompletionModel, OpenAIModelConfiguration, OpenAIModelParameters
-> 
+> from src.prompttrail.models.openai import OpenAIModel, OpenAIConfiguration, OpenAIParam
+>
 > api_key = os.environ["OPENAI_API_KEY"]
-> config = OpenAIModelConfiguration(api_key=api_key)
-> parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
-> model = OpenAIChatCompletionModel(configuration=config)
+> config = OpenAIConfiguration(api_key=api_key)
+> parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
+> model = OpenAIModel(configuration=config)
 > session = Session(
 >   messages=[
->     Message(content="Hey", sender="user"),
+>     Message(content="Hey", role="user"),
 >   ]
 > )
 > message = model.send(parameters=parameters, session=session)
 
-Message(content="Hello! How can I assist you today?", sender="assistant")
+Message(content="Hello! How can I assist you today?", role="assistant")
 ```
 
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.
@@ -126,18 +158,18 @@ For example, you can mock LLMs for testing.
 >         conversation_table={
 >             "1+1": "1215973652716",
 >         },
->         sender="assistant",
+>         role="assistant",
 >     )
 > )
 > session = Session(
 >     messages=[
->         Message(content="1+1", sender="user"),
+>         Message(content="1+1", role="user"),
 >     ]
 > )
 > message = model.send(parameters=parameters, session=session)
 > print(message)
 
-TextMessage(content="1215973652716", sender="assistant")
+TextMessage(content="1215973652716", role="assistant")
 ```
 
 ### Agent as Code
@@ -153,17 +185,13 @@ template = LinearTemplate(
         ),
         LoopTemplate(
             [
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
-                GenerateTemplate(
-                    role="assistant",
-                ),
+                AssistantTemplate(),  # Generates response using LLM
                 MessageTemplate(role="assistant", content="Are you satisfied?"),
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Input:",
                     default="Yes.",
                 ),
@@ -173,24 +201,20 @@ template = LinearTemplate(
                     content="The user has stated their feedback."
                     + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`."
                 ),
-                check_end := GenerateTemplate(
-                    role="assistant",
-                ),
+                check_end := AssistantTemplate(),  # Generates END or RETRY response
             ],
-            exit_condition=BooleanHook(
-                condition=lambda session: ("END" == session.get_last_message().content.strip())
-            ),
+            exit_condition=lambda session: ("END" == session.get_last_message().content.strip()),
         ),
     ],
 )
 
 runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(
+    model=OpenAIModel(
+        configuration=OpenAIConfiguration(
             api_key=os.environ.get("OPENAI_API_KEY", "")
         )
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-4"),
+    parameters=OpenAIParam(model_name="gpt-4o"),
     template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
@@ -238,64 +262,75 @@ Go to [examples](examples) directory for more examples.
 
 ### Tooling
 
-You can use function calling!
-In function calling, you need to give LLM instructions to use the tool.
-Then, LLM give you the tool arguments and you need to give the result back to LLM.
-Therefore, you need:
+PromptTrail provides a powerful tool system for function calling that handles all the complexity of:
 
-- giving explanation by the way LLM can understand
-- handling of multiple turn conversations
-- validation of tool arguments given by LLM
-- executing the function and return the result to LLM
+- Type-safe argument validation
+- Automatic documentation generation from type hints
+- Function calling API formatting and execution
+- Result parsing and conversion
 
-PromptTrail handles all of these for you.
-You can define your own Tools to call and use them in your templates.
-Inherit `Tool`, `ToolArgument`, `ToolResult` and add type annotations.
-PromptTrail will automatically generate descriptions for LLM and let the LLM use the tool.
-Execution and validation is also handled by PromptTrail.
-Let's see a simple weather forecast tool as example:
+You can define your own tools using TypedDict for structured data and type annotations for safety:
 
 ```python
-class Place(ToolArgument):
-    description: str = "The location to get the weather forecast"
-    value: str
+from typing import Literal
+from typing_extensions import TypedDict
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 
-class TemperatureUnitEnum(enum.Enum):
-    Celsius = "Celsius"
-    Fahrenheit = "Fahrenheit"
+# Define the structure of tool output
+class WeatherData(TypedDict):
+    """Weather data structure"""
+    temperature: float
+    weather: Literal["sunny", "rainy", "cloudy", "snowy"]
 
-class TemperatureUnit(ToolArgument):
-    description: str = "The unit of temperature"
-    value: Optional[TemperatureUnitEnum]
-
+# Define the result wrapper
 class WeatherForecastResult(ToolResult):
-    temperature: int
-    weather: str
+    """Weather forecast result"""
+    content: WeatherData
 
-    def show(self) -> Dict[str, Any]:
-        return {"temperature": self.temperature, "weather": self.weather}
-
+# Implement the tool
 class WeatherForecastTool(Tool):
-    name = "get_weather_forecast"
-    description = "Get the current weather in a given location and date"
-    argument_types = [Place, TemperatureUnit]
-    result_type = WeatherForecastResult
+    """Weather forecast tool"""
+    name: str = "get_weather_forecast"
+    description: str = "Get the current weather in a given location"
+    
+    # Define arguments with type safety
+    arguments: Dict[str, ToolArgument[Any]] = {
+        "location": ToolArgument[str](
+            name="location",
+            description="The location to get the weather forecast",
+            value_type=str,
+            required=True
+        ),
+        "unit": ToolArgument[str](
+            name="unit",
+            description="Temperature unit (celsius or fahrenheit)",
+            value_type=str,
+            required=False
+        )
+    }
 
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        """Execute the weather forecast tool"""
         # Implement real API call here
-        return WeatherForecastResult(temperature=0, weather="sunny")
+        return WeatherForecastResult(
+            content={
+                "temperature": 20.5,
+                "weather": "sunny"
+            }
+        )
 
+# Use the tool in a template
 template = LinearTemplate(
     templates=[
         MessageTemplate(
-            role="system",
-            content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
+            content="You are a helpful weather assistant that provides weather forecasts.",
+            role="system"
         ),
         MessageTemplate(
             role="user",
-            content="What's the weather in Tokyo tomorrow?",
+            content="What's the weather in Tokyo?",
         ),
-        OpenAIGenerateWithFunctionCallingTemplate(
+        ToolingTemplate(
             role="assistant",
             functions=[WeatherForecastTool()],
         ),
@@ -308,19 +343,19 @@ The conversation will be like below:
 ```console
 ===== Start =====
 From: 📝 system
-message:  You're an AI weather forecast assistant that help your users to find the weather forecast.
+message:  You are a helpful weather assistant that provides weather forecasts.
 =================
 From: 👤 user
-message:  What's the weather in Tokyo tomorrow?
+message:  What's the weather in Tokyo?
 =================
 From: 🤖 assistant
-data:  {'function_call': {'name': 'get_weather_forecast', 'arguments': {'place': 'Tokyo', 'temperatureunit': 'Celsius'}}}
+data:  {'function_call': {'name': 'get_weather_forecast', 'arguments': {'location': 'Tokyo'}}}
 =================
 From: 🧮 function
-message:  {"temperature": 0, "weather": "sunny"}
+message:  {"content": {"temperature": 20.5, "weather": "sunny"}}
 =================
 From: 🤖 assistant
-message:  The weather in Tokyo tomorrow is expected to be sunny with a temperature of 0 degrees Celsius.
+message:  The weather in Tokyo is currently sunny with a temperature of 20.5°C.
 =================
 ====== End ======
 ```

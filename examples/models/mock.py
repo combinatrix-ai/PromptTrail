@@ -2,33 +2,26 @@ import os
 
 from prompttrail.core import Message, Session
 from prompttrail.core.mocks import OneTurnConversationMockProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 api_key = os.environ.get("OPENAI_API_KEY", "")
 
-config = OpenAIModelConfiguration(
+config = OpenAIConfig(
     api_key=api_key,
     mock_provider=OneTurnConversationMockProvider(
         conversation_table={
-            "1+1": Message(content="1215973652716", sender="assistant"),
+            "1+1": Message(content="1215973652716", role="assistant"),
         },
-        sender="assistant",
     ),
 )
-parameters = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo", max_tokens=1000, temperature=0
-)
+parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=1000, temperature=0)
 
-model = OpenAIChatCompletionModel(configuration=config)
+model = OpenAIModel(configuration=config)
 
 
 session = Session(
     messages=[
-        Message(content="1+1", sender="user"),
+        Message(content="1+1", role="user"),
     ]
 )
 
@@ -39,7 +32,7 @@ print(message)
 
 session = Session(
     messages=[
-        Message(content="1+2", sender="user"),
+        Message(content="1+2", role="user"),
     ]
 )
 

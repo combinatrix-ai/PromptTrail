@@ -2,13 +2,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 
 from prompttrail.core import Message, Session
 from prompttrail.models.transformers import (
+    TransformersConfig,
     TransformersModel,
-    TransformersModelConfiguration,
-    TransformersModelParameters,
+    TransformersParam,
 )
 
 # Configuration for a small language model to run on CPU
-config = TransformersModelConfiguration(device="cpu")
+config = TransformersConfig(device="cpu")
 
 # Load the pre-trained model and tokenizer
 model_name = "sshleifer/tiny-gpt2"
@@ -23,10 +23,10 @@ transformers_model = TransformersModel(
 )
 
 # Create a new session
-session = Session(messages=[Message(content="Hello", sender="user")])
+session = Session(messages=[Message(content="Hello", role="user")])
 
 # Set parameters for text generation
-params = TransformersModelParameters(max_tokens=5)
+params = TransformersParam(max_tokens=5)
 
 # Send the message to the model and get the response
 response = transformers_model.send(parameters=params, session=session)

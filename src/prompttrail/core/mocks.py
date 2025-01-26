@@ -1,3 +1,5 @@
+"""Mock providers for testing LLM interactions without calling actual APIs."""
+
 import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Dict
@@ -5,41 +7,69 @@ from typing import TYPE_CHECKING, Callable, Dict
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 
 if TYPE_CHECKING:
-    from prompttrail.core import Message, Session
+    from prompttrail.core import Message, MessageRoleType, Session
 
 logger = logging.getLogger(__name__)
 
 
 class MockProvider(ABC):
-    """A mock provider is an abstract class that should be inherited by any mock provider to ensure implementation of `call` method, which is used to actually define the response."""
+    """Abstract base class for mock providers.
+
+    Mock providers simulate LLM responses without making actual API calls.
+    Subclasses must implement the call() method to define response behavior.
+    """
 
     @abstractmethod
     def call(self, session: "Session") -> "Message":
-        ...
+        """Return a mock response for the given session.
+
+        Parameters
+        ----------
+        session : Session
+            The conversation session including all messages
+
+        Returns
+        -------
+        Message
+            The mocked response message
+        """
 
 
 class OneTurnConversationMockProvider(MockProvider):
-    """A mock provider that returns a predefined response based on the last message."""
+    """Mock provider that returns predefined responses based on the last message.
 
-    def __init__(self, conversation_table: Dict[str, "Message"], sender: str):
+    Parameters
+    ----------
+    conversation_table : Dict[str, Message]
+        Mapping of input messages to their predefined responses
+    """
+
+    def __init__(self, conversation_table: Dict[str, "Message"]):
         self.conversation_table = conversation_table
 
     def call(self, session: "Session") -> "Message":
         valid_messages = [
-            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
+            x for x in session.messages if x.role != CONTROL_TEMPLATE_ROLE
         ]
-        if len(valid_messages) == 0:
-            raise ValueError("No valid messages are passed to mock provider.")
+        if not valid_messages:
+            raise ValueError("No valid messages found in session")
+
         last_message = valid_messages[-1]
         if last_message.content in self.conversation_table:
             return self.conversation_table[last_message.content]
         else:
-            raise ValueError(
-                "Unexpected message is passed to mock provider: " + last_message.content
-            )
+            raise ValueError(f"Unexpected message content: {last_message.content}")
 
 
 class FunctionalMockProvider(MockProvider):
+    """Mock provider that generates responses using a custom function.
+
+    Parameters
+    ----------
+    func : Callable[[Session], Message]
+        Function that takes a session and returns a response message
+    """
+
     def __init__(self, func: Callable[["Session"], "Message"]):
         self.func = func
 
@@ -48,16 +78,18 @@ class FunctionalMockProvider(MockProvider):
 
 
 class EchoMockProvider(FunctionalMockProvider):
-    def __init__(self, sender: str):
-        # To avoid circular import
+    """Mock provider that echoes back the last message with a specified role.
+
+    Parameters
+    ----------
+    role : MessageRoleType
+        Role to assign to the echo response messages
+    """
+
+    def __init__(self, role: "MessageRoleType"):
         from prompttrail.core import Message
 
-        self.func: Callable[["Session"], "Message"] = lambda session: Message(
-            content=session.messages[-1].content, sender=sender
+        super().__init__(
+            lambda session: Message(content=session.messages[-1].content, role=role)
         )
-
-    def call(self, session: "Session") -> "Message":
-        # To avoid circular import
-        from prompttrail.core import Message
-
-        return Message(content=session.messages[-1].content)
+        self.role = role

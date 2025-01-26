@@ -1,6 +1,6 @@
 [project]
 name = "prompttrail"
-version = "0.1.0"
+version = "0.2.0"
 description = "A lightweight library for Prompt Programming: Agent as Code"
 authors = [
     { name = "hmirin", email = "hmirin@example.com" }
@@ -64,24 +64,34 @@ dev-dependencies = [
     "transformers>=4.44.2",
     "torch>=2.5.1",
     "accelerate>=1.2.1",
+    "tqdm>=4.67.1",
 ]
 
 [tool.rye.scripts]
 all = { chain = ["format", "lint", "test", "doc"] }
 format = { chain = ["format:black", "format:autoflake", "format:isort"] }
+format-check = { chain = ["format:black-check", "format:autoflake-check", "format:isort-check"] }
 "format:black" = "black src tests examples"
 "format:autoflake" = "pautoflake src tests examples"
 "format:isort" = "isort src tests examples"
+"format:black-check" = "black --check src tests examples"
+"format:autoflake-check" = "pautoflake --check src tests examples"
+"format:isort-check" = "isort --check src tests examples"
 lint = { chain = ["lint:flake8", "lint:mypy"] }
 "lint:mypy" = "mypy src tests examples"
 "lint:flake8" = "flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples"
-test = "pytest --log-cli-level=DEBUG --cov=src --cov-report=xml tests"
+test = "pytest --log-cli-level=DEBUG --cov=src --cov-report=xml tests examples"
 doc = { chain = ["doc:prep", "doc:rm", "doc:build"] }
 "doc:prep" = "sphinx-apidoc --implicit-namespaces -f -o docs/source src/prompttrail"
 "doc:rm" = "rm -rf docs/build docs/source/modules.rst"
 "doc:build" = "sphinx-build -b html docs/source docs/build"
 pyreverse = "pyreverse src.prompttrail -o png"
 "dogfooding:fix_markdown" = "python examples/dogfooding/fix_markdown.py"
+"dogfooding:commit" = "python examples/dogfooding/commit_with_auto_generated_comment.py"
+"see-all" = "python examples/dogfooding/utils/load_all_important_files.py"
+chat = "python examples/dogfooding/chat.py"
+agent = "python examples/dogfooding/coding_agent.py"
+commit = { chain = ["format-check", "all", "dogfooding:commit"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -106,3 +116,12 @@ remove-all-unused-imports = true
 ignore-init-module-imports = true
 remove-duplicate-keys = true
 remove-unused-variables = true
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
+testpaths = [
+    "tests",
+    "examples"
+]

@@ -1,10 +1,12 @@
 from logging import getLogger
 from pprint import pformat
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, cast
 
 import anthropic
-from pydantic import BaseModel, ConfigDict  # type: ignore
+from pydantic import ConfigDict
+from typing_extensions import TypedDict
 
+from prompttrail.agent.tools import Tool, ToolResult
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
@@ -12,22 +14,33 @@ from prompttrail.core.errors import ParameterValidationError
 logger = getLogger(__name__)
 
 
-class AnthropicClaudeModelConfiguration(Configuration):
-    """Configuration for AnthoropicClaudeModel."""
+AnthropicRole = Literal["user", "assistant", "system"]
+
+
+class AnthropicMessageDict(TypedDict):
+    role: AnthropicRole
+    content: str
+
+
+MessageDict = Dict[str, str]
+
+
+class AnthropicConfig(Configuration):
+    """Configuration for Anthropic Claude API."""
 
     api_key: str
     """API key for Anthropic API."""
 
 
-class AnthropicClaudeModelParameters(Parameters):
+class AnthropicParam(Parameters):
     """Parameters for Anthropic Claude models.
 
     Inherits common parameters from Parameters base class and adds Anthropic-specific parameters.
     For detailed description of each parameter, see https://github.com/anthropics/anthropic-sdk-python/blob/main/api.md
     """
 
-    model_name: str = "claude-3-opus-20240229"
-    """ Name of the model to use. use AnthoropicClaudeModel.list_models() to get the list of available models. """
+    model_name: str = "claude-3-opus-latest"
+    """ Name of the model to use. Use AnthoropicClaudeModel.list_models() to get the list of available models. """
     temperature: Optional[float] = 1.0
     """ Temperature for sampling. """
     max_tokens: int = 1024
@@ -40,10 +53,10 @@ class AnthropicClaudeModelParameters(Parameters):
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
 
-class AnthropicClaudeModel(Model):
-    """Model for Anthoropic Claude API."""
+class AnthropicModel(Model):
+    """Model for Anthropic Claude API."""
 
-    configuration: AnthropicClaudeModelConfiguration  # type: ignore
+    configuration: AnthropicConfig
     client: Optional[anthropic.Anthropic] = None
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
 
@@ -51,41 +64,120 @@ class AnthropicClaudeModel(Model):
         if self.client is None:
             self.client = anthropic.Anthropic(api_key=self.configuration.api_key)
 
+    def format_tool(self, tool: Tool) -> Dict[str, Any]:
+        """Convert tool to Anthropic format"""
+        schema = tool.to_schema()
+        properties = {}
+        for name, arg in tool.arguments.items():
+            properties[name] = {
+                "type": "string",  # Currently only supporting string type
+                "description": arg.description,
+            }
+
+        return {
+            "name": schema["name"],
+            "description": schema["description"],
+            "input_schema": {
+                "type": "object",
+                "properties": properties,
+                "required": [
+                    name for name, arg in tool.arguments.items() if arg.required
+                ],
+            },
+        }
+
+    def format_tool_result(self, result: ToolResult) -> Dict[str, Any]:
+        """Format result for Anthropic API"""
+        return {"type": "tool_result", "content": str(result.content)}
+
+    def validate_tools(self, tools: List[Tool]) -> None:
+        """Validate tools according to Anthropic API requirements"""
+        for tool in tools:
+            # Validate tool name
+            if not tool.name.replace("-", "").replace("_", "").isalnum():
+                raise ParameterValidationError(
+                    f"Tool name must be alphanumeric, hyphen, underscore: {tool.name}"
+                )
+            # Validate description
+            if not tool.description:
+                raise ParameterValidationError(
+                    f"Tool description is required: {tool.name}"
+                )
+            # Validate arguments
+            if not tool.arguments:
+                raise ParameterValidationError(
+                    f"Tool must have at least one argument: {tool.name}"
+                )
+
     def _send(self, parameters: Parameters, session: Session) -> Message:
         self._authenticate()
-        if not isinstance(parameters, AnthropicClaudeModelParameters):
+        if not isinstance(parameters, AnthropicParam):
             raise ParameterValidationError(
-                f"{AnthropicClaudeModelParameters.__name__} is expected, but {type(parameters).__name__} is given."
+                f"{AnthropicParam.__name__} is expected, but {type(parameters).__name__} is given."
             )
 
         messages, system_prompt = self._session_to_anthropic_messages(session)
 
-        additional_args = {}
+        # Convert AnthropicMessageDict to MessageDict for tool use check
+        [dict(msg) for msg in messages]
+
+        create_params = {
+            "model": parameters.model_name,
+            "max_tokens": parameters.max_tokens,
+            "messages": messages,
+        }
+
         if parameters.temperature is not None:
-            additional_args["temperature"] = parameters.temperature
+            create_params["temperature"] = parameters.temperature
         if parameters.top_p is not None:
-            additional_args["top_p"] = parameters.top_p
+            create_params["top_p"] = parameters.top_p
         if parameters.top_k is not None:
-            additional_args["top_k"] = parameters.top_k
+            create_params["top_k"] = parameters.top_k
         if system_prompt is not None:
-            additional_args["system"] = system_prompt  # type: ignore
-            # (TODO: Fix this mypy error: Incompatible types in assignment (expression has type "str", target has type "float")
+            create_params["system"] = system_prompt
 
-        response: anthropic.Message = self.client.messages.create(  # type: ignore
-            model=parameters.model_name,
-            max_tokens=parameters.max_tokens,
-            messages=messages,
-            **additional_args,
+        # Add tools if present
+        if parameters.tools:
+            create_params["tools"] = [
+                self.format_tool(tool) for tool in parameters.tools
+            ]
+
+        if self.client is None:
+            raise RuntimeError("Anthropic client not initialized")
+
+        response: anthropic.Message = self.client.messages.create(**create_params)  # type: ignore
+        self.debug("Response: %s", pformat(response))
+
+        # Handle response content
+        content = ""
+        tool_use_block = None
+
+        # Process all blocks
+        for block in response.content:
+            if hasattr(block, "text"):
+                content += block.text
+                self.debug("Added text content: %s", block.text)
+            elif hasattr(block, "type") and block.type == "tool_use":
+                tool_use_block = block
+                self.debug("Found tool use block: %s", pformat(tool_use_block))
+
+        # Create message with appropriate content and tool_use
+        tool_use = None
+        if tool_use_block:
+            tool_use = {
+                "name": cast(str, tool_use_block.name),
+                "input": cast(str, tool_use_block.input),
+            }
+            self.debug("Added tool use: %s", tool_use)
+
+        # Create message
+        message = Message(
+            content=content,
+            role="assistant",
+            tool_use=tool_use,
         )
-        logger.debug(pformat(object=response))  # type: ignore
-
-        # TODO: should handle non-text response in future
-        content = "".join([block.text for block in response.content])
-        # TODO: Change to error that can be retriable
-        if content == "":
-            raise ValueError("Response is empty.")
-
-        return Message(content=content, sender=response.role)
+        self.debug("Created final message: %s", message)
+        return message
 
     def validate_session(self, session: Session, is_async: bool) -> None:
         """Validate session for Anthropic Claude models.
@@ -103,82 +195,74 @@ class AnthropicClaudeModel(Model):
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
 
         non_system_messages = [
-            message for message in messages if message.sender != "system"
+            message for message in messages if message.role != "system"
         ]
         if len(non_system_messages) == 0:
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session must contain at least one non-system message."
             )
 
-        # Anthropic API allow zero or one system message at the beginning
-
-        # Anthropic-specific validation for system message
-        if (
-            messages[0].sender == "system"
-            and len([message for message in messages if message.sender == "system"]) > 1
-        ) or (
-            messages[0].sender != "system"
-            and len([message for message in messages if message.sender == "system"]) > 0
-        ):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should have at most one system message at the beginning. (Anthropic API restriction)"
-            )
-
-        # Anthropic-specific validation for allowed roles
-        if any(
-            [
-                message.sender not in ["user", "assistant", "system"]
-                for message in messages
-            ]
-        ):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender of 'user', 'assistant', or 'system'. (Anthropic API restriction)"
-            )
-        if any([not isinstance(message.content, str) for message in messages]):  # type: ignore
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-
         # Anthropic-specific validation for empty messages
         if any([message.content == "" for message in session.messages]):
             raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should not be empty string. (Anthoropic API restriction)"
+                f"{self.__class__.__name__}: Empty messages are not allowed. (Anthropic API restriction)"
             )
 
     @staticmethod
     def _session_to_anthropic_messages(
         session: Session,
-    ) -> Tuple[List[Dict[str, str]], Optional[str]]:
-        # TODO: decide what to do with MetaTemplate (role=prompttrail)
-        # TODO: can content be empty?
+    ) -> Tuple[List[AnthropicMessageDict], Optional[str]]:
+        """Convert session messages to Anthropic format and extract system prompt"""
         messages = [
             message
             for message in session.messages
-            if message.sender != CONTROL_TEMPLATE_ROLE
+            if message.role != CONTROL_TEMPLATE_ROLE
         ]
-        # if system message
-        if messages[0].sender == "system":
+
+        # Handle system message
+        if messages[0].role == "system":
             return (
                 [
-                    {"role": message.sender, "content": message.content}  # type: ignore
+                    AnthropicMessageDict(
+                        role=cast(
+                            AnthropicRole,
+                            "assistant"
+                            if message.role == "assistant"
+                            else "user"  # Convert tool_result to user
+                            if message.role == "tool_result"
+                            else message.role,
+                        ),
+                        content=str(message.content),
+                    )
                     for message in messages[1:]
-                ],  # type: ignore
-                messages[0].content,
+                ],
+                str(messages[0].content),
             )
         else:
             return (
                 [
-                    {"role": message.sender, "content": message.content}  # type: ignore
+                    AnthropicMessageDict(
+                        role=cast(
+                            AnthropicRole,
+                            "assistant"
+                            if message.role == "assistant"
+                            else "user"  # Convert tool_result to user
+                            if message.role == "tool_result"
+                            else message.role,
+                        ),
+                        content=str(message.content),
+                    )
                     for message in messages
                 ],
                 None,
-            )  # type: ignore
+            )
 
     def list_models(self) -> List[str]:
+        """List available Anthropic models"""
         self._authenticate()
         if self.client is None:
             raise RuntimeError("Failed to initialize Anthropic client")

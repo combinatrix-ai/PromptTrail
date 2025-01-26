@@ -1,45 +1,34 @@
 import logging
 import os
 
-from prompttrail.agent.hooks import BooleanHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
-    UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 logging.basicConfig(level=logging.INFO)
 
 template = LinearTemplate(
     [
-        MessageTemplate(
-            role="system",
+        SystemTemplate(
             content="You're a math teacher bot.",
         ),
         LoopTemplate(
             [
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
-                GenerateTemplate(
-                    role="assistant",
-                ),
+                AssistantTemplate(),
                 MessageTemplate(role="assistant", content="Are you satisfied?"),
-                UserInputTextTemplate(
-                    role="user",
+                UserTemplate(
                     description="Input:",
                     default="Yes.",
                 ),
@@ -49,12 +38,10 @@ template = LinearTemplate(
                     content="The user has stated their feedback."
                     + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`.",
                 ),
-                check_end := GenerateTemplate(
-                    role="assistant",
-                ),
+                check_end := AssistantTemplate(),
             ],
-            exit_condition=BooleanHook(
-                condition=lambda session: ("END" == session.get_last().content.strip())
+            exit_condition=lambda session: (
+                "END" == session.get_last().content.strip()
             ),
         ),
     ],
@@ -62,12 +49,10 @@ template = LinearTemplate(
 
 
 runner = CommandLineRunner(
-    model=OpenAIChatCompletionModel(
-        configuration=OpenAIModelConfiguration(
-            api_key=os.environ.get("OPENAI_API_KEY", "")
-        )
+    model=OpenAIModel(
+        configuration=OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
     ),
-    parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+    parameters=OpenAIParam(model_name="gpt-4o-mini"),
     template=template,
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
