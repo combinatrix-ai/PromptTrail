@@ -85,9 +85,9 @@ class Debuggable:
         else:
             func_name = frame.f_code.co_name
 
-        if self.logger is None:
+        if "logger" not in dir(self) or self.logger is None:
             raise RuntimeError(
-                "Incorrect initialization of the class inherits Debuggable"
+                "Incorrect initialization of the class inherits Debuggable. You may need to call super().__init__() in the __init__ method of the class."
             )
 
         self.logger.log(

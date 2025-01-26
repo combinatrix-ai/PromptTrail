@@ -70,7 +70,7 @@ def main(
     corrected_splits: list[str] = []
     for split in splits:
         content = "\n".join(split)
-        session = runner.run(session=Session(initial_metadata={"content": content}))
+        session = runner.run(session=Session(metadata={"content": content}))
         last_message = session.get_last_message()
         content = last_message.content
         print(content)

@@ -1,7 +1,31 @@
 import re
+from dataclasses import dataclass
+from typing import List
 
 from prompttrail.agent import Session
 from prompttrail.agent.hooks._core import TransformHook
+
+
+@dataclass
+class CodeBlock:
+    """A code block extracted from markdown."""
+
+    lang: str
+    code: str
+
+
+def extract_code_blocks(markdown: str) -> List[CodeBlock]:
+    """Extract code blocks from markdown content.
+
+    Args:
+        markdown: Markdown content to extract code blocks from
+
+    Returns:
+        List of extracted code blocks
+    """
+    pattern = r"```(\w+)\n(.*?)```"
+    matches = re.finditer(pattern, markdown, re.DOTALL)
+    return [CodeBlock(lang=m.group(1), code=m.group(2).strip()) for m in matches]
 
 
 class ExtractMarkdownCodeBlockHook(TransformHook):
@@ -14,6 +38,7 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
             key: Key to store the extracted code block in metadata
             lang: Programming language of the code block to extract
         """
+        super().__init__()
         self.key = key
         self.lang = lang
 
@@ -26,11 +51,24 @@ class ExtractMarkdownCodeBlockHook(TransformHook):
         Returns:
             Updated session with extracted code stored in metadata[key]
         """
-        markdown = session.get_last().content
-        pattern = f"```{self.lang}\n(.+?)```"
-        match = re.search(pattern, markdown, re.DOTALL)
-        code_block = match.group(1) if match else None
-        session.get_latest_metadata()[self.key] = code_block
+        if not session.messages:
+            raise KeyError("No messages in session")
+
+        message = session.get_last()
+        code_blocks = extract_code_blocks(message.content)
+
+        if not code_blocks:
+            self.warning("No code blocks found in message content: %s", message.content)
+            session.metadata[self.key] = None
+            return session
+
+        if self.lang:
+            code_blocks = [block for block in code_blocks if block.lang == self.lang]
+            if not code_blocks:
+                session.metadata[self.key] = None
+                return session
+
+        session.metadata[self.key] = code_blocks[0].code
         return session
 
 
@@ -59,7 +97,7 @@ class EvaluatePythonCodeHook(TransformHook):
         Raises:
             KeyError: If code_key is not found in metadata
         """
-        metadata = session.get_latest_metadata()
+        metadata = session.metadata
         if self.code_key not in metadata:
             raise KeyError(f"Code key {self.code_key} not found in metadata")
 
@@ -78,5 +116,5 @@ class EvaluatePythonCodeHook(TransformHook):
             self.error(f"Failed to evaluate python code: {python_segment}")
             raise e
 
-        metadata[self.key] = answer
+        session.metadata[self.key] = answer
         return session

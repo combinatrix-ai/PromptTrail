@@ -58,7 +58,7 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_session = Session(initial_metadata={"code": text})
+initial_session = Session(metadata={"code": text})
 session = runner.run(session=initial_session)
 last_message = session.get_last_message().content
 

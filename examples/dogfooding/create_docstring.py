@@ -64,7 +64,7 @@ def main(
     for readme_file in readme_files:
         readme_file_content += open(readme_file, "r").read() + "\n"
     initial_session = Session(
-        initial_metadata={
+        metadata={
             "code": load_file_content.read(),
             "readme": readme_file_content,
         }
