@@ -4,15 +4,16 @@ from typing import Dict, Optional, Set, cast
 
 from prompttrail.agent.templates import EndTemplate, Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.core import Model, Parameters, Session
+from prompttrail.core import MessageRoleType, Model, Parameters, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException
+from prompttrail.core.utils import Debuggable
 
 # Session is already imported from prompttrail.core
 
 logger = logging.getLogger(__name__)
 
 
-class Runner(metaclass=ABCMeta):
+class Runner(Debuggable, metaclass=ABCMeta):
     def __init__(
         self,
         model: Model,
@@ -20,6 +21,7 @@ class Runner(metaclass=ABCMeta):
         template: "Template",
         user_interaction_provider: UserInteractionProvider,
     ):
+        super().__init__()
         self.models = model
         self.parameters = parameters
         self.user_interaction_provider = user_interaction_provider
@@ -31,7 +33,7 @@ class Runner(metaclass=ABCMeta):
                 raise ValueError(
                     f"Template id {next_template.template_id} is duplicated."
                 )
-            self.template_dict[next_template.template_id] = next_template  # type: ignore
+            self.template_dict[next_template.template_id] = next_template
         """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
 
     @abstractmethod
@@ -54,19 +56,19 @@ class Runner(metaclass=ABCMeta):
         return self.template_dict[template_like]
 
 
-def cutify_sender(sender: Optional[str]):
-    """Cutify sender name based on OpenAI's naming convention."""
-    if sender == "system":
+def cutify_role(role: MessageRoleType) -> str:
+    """Cutify role name based on OpenAI's naming convention."""
+    if role == "system":
         return "📝 system"
-    if sender == "user":
+    if role == "user":
         return "👤 user"
-    if sender == "assistant":
+    if role == "assistant":
         return "🤖 assistant"
-    if sender == "function":
-        return "🧮 function"
-    if sender is None:
-        return "❓ None"
-    return sender
+    if role == "function":
+        return "🛠️ function"
+    if role == "tool_result":
+        return "📊 tool_result"
+    return role
 
 
 class CommandLineRunner(Runner):
@@ -97,9 +99,6 @@ class CommandLineRunner(Runner):
             )
         else:
             if session.runner is None or session.runner != self:
-                logger.warning(
-                    f"Given session has different runner {session.runner} from the runner {self}. Overriding the session.",
-                )
                 session.runner = self
             session.debug_mode = debug_mode or session.debug_mode
 
@@ -121,8 +120,9 @@ class CommandLineRunner(Runner):
             try:
                 message = next(gen)
             except ReachedEndTemplateException:
-                logger.warning(
-                    f"End template {EndTemplate.template_id} is reached. Flow is forced to stop."
+                self.warning(
+                    "End template %s is reached. Flow is forced to stop.",
+                    EndTemplate.template_id,
                 )
                 break
             except JumpException as e:
@@ -139,18 +139,24 @@ class CommandLineRunner(Runner):
                 session_ = cast(Session, e.value)
                 break
             if message:
-                print("From: " + cutify_sender(message.sender))
+                print("From: " + cutify_role(message.role))
                 if message.content:
                     print("message: ", message.content)
-                elif message.metadata:
-                    print("metadata: ", end=" ")
-                    print(message.metadata)
-                else:
-                    print("Empty message!")
+                if message.metadata and any(
+                    key != "template_id" for key in message.metadata
+                ):
+                    # Filter out template_id from metadata
+                    metadata = {
+                        k: v for k, v in message.metadata.items() if k != "template_id"
+                    }
+                    if metadata:
+                        print("metadata: ", metadata)
+                if message.tool_use:
+                    print("tool_use: ", message.tool_use)
                 n_messages += 1
             if max_messages and n_messages >= max_messages:
-                logger.warning(
-                    f"Max messages {max_messages} is reached. Flow is forced to stop."
+                self.warning(
+                    "Max messages %s is reached. Flow is forced to stop.", max_messages
                 )
                 break
             print("=================")

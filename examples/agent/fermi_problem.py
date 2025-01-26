@@ -6,22 +6,21 @@
 
 import logging
 import os
+from typing import cast
 
-from prompttrail.agent.hooks import (
-    BooleanHook,
+from prompttrail.agent.session_transformers import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
-    ResetDataHook,
+    ResetData,
 )
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
     IfTemplate,
     LoopTemplate,
     MessageTemplate,
-    UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import (
     OneTurnConversationUserInteractionTextMockProvider,
@@ -35,11 +34,10 @@ logging.basicConfig(level=logging.INFO)
 
 agent_template = LoopTemplate(
     [
-        MessageTemplate(
+        SystemTemplate(
             # First, let's give an instruction to the API
             # In OpenAI API, system is a special role that gives instruction to the API
             template_id="instruction",
-            role="system",
             content="""
 You're a helpful assistant to solve Fermi Problem.
 Answer the equation to estimate the answer to the user's query.
@@ -70,22 +68,19 @@ Calculation:
             templates=[
                 # Then, we can start the conversation with user
                 # First, we ask user for their question
-                # UserInputTextTemplate is a template that ask user for their input.
+                # UserTemplate in interactive mode (when content is None) asks user for their input.
                 # As we see later, we use CLIRunner to run this model in CLI, so the input is given via console.
-                first := UserInputTextTemplate(
+                first := UserTemplate(
                     template_id="ask_question",
                     # Note: we can refer to this template later, so we give it a name: "first" with walrus operator.
                     # You can also use template_id to refer to a template.
-                    role="user",
                     description="Input:",
                     default="How many elephants in Japan?",
                 ),
-                GenerateTemplate(
+                AssistantTemplate(
                     template_id="generate_answer",
-                    role="assistant",
                     # Now we have the user's question, we can ask the API to generate the answer
-                    # Let's use GenerateTemplate to do this
-                    # GenerateTemplate make the content of the message using the model.
+                    # AssistantTemplate will generate the content using the model when no content is provided
                     # Previous message is used as context, so the model can generate the answer based on the question.
                     after_transform=[
                         # This is where things get interesting!
@@ -106,52 +101,46 @@ Calculation:
                     ],
                 ),
                 IfTemplate(
-                    true_template=MessageTemplate(
-                        role="assistant",
+                    true_template=AssistantTemplate(
                         content="LLM seems to unable to estimate. Try different question! Starting over...",
                     ),
                     false_template=BreakTemplate(),
-                    condition=BooleanHook(
-                        lambda session: "answer" not in session.get_latest_metadata()
-                    ),
+                    condition=lambda session: "answer" not in session.metadata,
                 ),
             ],
-            before_transform=[ResetDataHook()],
+            before_transform=[ResetData()],
         ),
-        MessageTemplate(
+        AssistantTemplate(
             # You can also give assistant message without using model, as if the assistant said it
             # In this case, we want to ask user if the answer is satisfied or not
             # Analysing the user response is always hard, so we let the API to decide
             # First, we must ask user for their feedback
             # Let's ask user for question!
+            # If cotent is given, AssistantTemplate will just return the content as assistant message
             template_id="gather_feedback",
-            role="assistant",
             content="The answer is {{ answer }} . Satisfied?",
         ),
-        UserInputTextTemplate(
+        UserTemplate(
             # Here is where we ask user for their feedback
             template_id="get_feedback",
-            role="user",
             description="Input:",
             default="Yes, I'm satisfied.",
         ),
-        MessageTemplate(
+        AssistantTemplate(
             # Based on the feedback, we can decide to retry or end the conversation
             # Ask the API to analyze the user's sentiment
             template_id="instruction_sentiment",
-            role="assistant",
             content="The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.",
         ),
-        check_end := GenerateTemplate(
+        check_end := AssistantTemplate(
             template_id="analyze_sentiment",
-            role="assistant",
             # API will return END or RETRY (mostly!)
         ),
     ],
     # Then, we can decide to end the conversation or retry.
     # We use LoopTemplate, so if we don't exit the conversation, we will go to top of loop.
     # Check if the loop is finished, see exit_condition below.
-    exit_condition=BooleanHook(lambda session: session.get_last().content == "END"),
+    exit_condition=lambda session: session.get_last().content == "END",
 )
 
 # Then, let's run this agent!
@@ -162,9 +151,9 @@ from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
 from prompttrail.models.openai import (  # noqa: E402
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
+    OpenAIConfig,
+    OpenAIModel,
+    OpenAIParam,
 )
 
 # We will provide other runner, which will enable you to input/output via HTTP, etc... in the future.
@@ -177,12 +166,10 @@ if not is_in_test_env():
     # First, let's see how the agent works in CLI (without mocking)!
     # Just set up the runner and run it!
     runner = CommandLineRunner(
-        model=OpenAIChatCompletionModel(
-            configuration=OpenAIModelConfiguration(
-                api_key=os.environ.get("OPENAI_API_KEY", "")
-            )
+        model=OpenAIModel(
+            configuration=OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+        parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
         user_interaction_provider=UserInteractionTextCLIProvider(),
     )
@@ -196,8 +183,8 @@ else:
     # If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
     runner = CommandLineRunner(
         # Use mock model in CI or DEBUG
-        model=OpenAIChatCompletionModel(
-            configuration=OpenAIModelConfiguration(
+        model=OpenAIModel(
+            configuration=OpenAIConfig(
                 # Of course, same arguments as OpenAIChatCompletionModel can be used
                 api_key=os.environ.get("OPENAI_API_KEY", ""),
                 # You can define the behaviour of the mock model using mock_provider
@@ -210,24 +197,25 @@ else:
         5300000 * 0.49 * 2.1
         ```
         """,
-                            sender="assistant",
+                            role="assistant",
                         ),
                         "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
-                            content="END", sender="assistant"
+                            content="END", role="assistant"
                         ),
                     },
-                    sender="assistant",
                 ),
             ),
         ),
         user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
             conversation_table={
                 # 5300000 * 0.49 * 2.1 = 5453700.0
-                agent_template.templates[0].content: "How many cats in Japan?",  # type: ignore
+                cast(
+                    str, cast(MessageTemplate, agent_template.templates[0]).content
+                ): "How many cats in Japan?",
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),
-        parameters=OpenAIModelParameters(model_name="gpt-4o-mini"),
+        parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
     )
     if __name__ == "__main__":

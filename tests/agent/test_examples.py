@@ -6,7 +6,7 @@ import sys
 # Import examples as module
 path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(path)
-from examples.agent import fermi_problem  # type: ignore # noqa: E402
+from examples.agent import fermi_problem  # noqa: E402
 
 
 def test_fermi_problem():

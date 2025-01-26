@@ -4,11 +4,12 @@ from typing import Dict, Optional
 
 from prompttrail.agent import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
 
-class UserInteractionProvider:
+class UserInteractionProvider(Debuggable):
     @abstractmethod
     def ask(
         self,
@@ -51,12 +52,12 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         raw = input(description).strip()
         while 1:
             if (not raw) and default is not None:
-                logger.info(f"No input. Using default value: {default}")
+                self.info("No input. Using default value: %s", default)
                 raw = default
             if raw:
                 break
             else:
-                logger.warning(
+                self.warning(
                     "You must input something or set default value for template. Please try again."
                 )
                 raw = input(description).strip()
@@ -64,7 +65,24 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
 
 
 class UserInteractionMockProvider(UserInteractionProvider):
-    ...
+    def ask(
+        self,
+        session: Session,
+        description: Optional[str] = None,
+        default: Optional[str] = None,
+    ) -> str:
+        """
+        Base mock provider that returns an empty string.
+
+        Args:
+            session: The current session of the conversation.
+            description: The description of the input prompt.
+            default: The default value for the input prompt.
+
+        Returns:
+            An empty string.
+        """
+        return ""
 
 
 class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProvider):
@@ -89,7 +107,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
             The pre-defined response based on the conversation history.
         """
         valid_messages = [
-            x for x in session.messages if x.sender != CONTROL_TEMPLATE_ROLE
+            x for x in session.messages if x.role != CONTROL_TEMPLATE_ROLE
         ]
         last_message = valid_messages[-1].content
         if last_message not in self.conversation_table:
@@ -116,3 +134,21 @@ class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
             The last message as the user's input.
         """
         return session.get_last().content
+
+
+class DefaultEchoMockProvider(UserInteractionMockProvider):
+    def ask(
+        self,
+        session: Session,
+        description: Optional[str] = None,
+        default: Optional[str] = None,
+    ) -> str:
+        prompt = description if description else "Enter your message"
+        if default:
+            prompt += f" (default: {default})"
+        prompt += ": "
+
+        user_input = input(prompt)
+        if not user_input and default:
+            return default
+        return user_input

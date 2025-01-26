@@ -2,45 +2,34 @@ from typing import Any
 
 
 class ParameterValidationError(Exception):
-    """Raised when a parameter is invalid."""
-
-    ...
+    """Raised when a parameter validation fails."""
 
 
 class ConfigurationValidationError(Exception):
-    """Raised when a configuration is invalid."""
-
-    ...
+    """Raised when a configuration validation fails."""
 
 
 class ProviderResponseError(Exception):
-    """Raised when a provider returns an error."""
+    """Raised when a provider returns an error response."""
 
     def __init__(self, message: str, response: Any) -> None:
-        """
-        Initialize ProviderResponseError.
+        """Initialize ProviderResponseError.
 
         Args:
-            message (str): The error message.
-            response (Any): The response from the provider.
+            message: The error message
+            response: The raw response from the provider
         """
         super().__init__(message)
         self.response = response
 
 
 class RenderingError(Exception):
-    """Raised when a template rendering fails."""
-
-    ...
+    """Raised when template rendering fails."""
 
 
 class HookError(Exception):
-    """Raised when a hook fails."""
-
-    ...
+    """Raised when a hook execution fails."""
 
 
 class TemplateNotFoundError(Exception):
-    """Raised when a template is not found."""
-
-    ...
+    """Raised when a referenced template cannot be found."""

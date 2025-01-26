@@ -1,53 +1,44 @@
 # simple meta templates
 from prompttrail.agent import Session
-from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers._core import LambdaSessionTransformer
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
     EndTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate,
-    OpenAISystemTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
+from prompttrail.core import Metadata
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 # Run various templates
 
 # TODO: Add tests for all templates
 
 # Echo mock model
-echo_mock_model = OpenAIChatCompletionModel(
-    configuration=OpenAIModelConfiguration(
-        api_key="", mock_provider=EchoMockProvider(sender="assistant")
+echo_mock_model = OpenAIModel(
+    configuration=OpenAIConfig(
+        api_key="", mock_provider=EchoMockProvider(role="assistant")
     ),
 )
-parameters = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo",
+parameters = OpenAIParam(
+    model_name="gpt-4o-mini",
 )
 
 
 def test_linear_template():
     template = LinearTemplate(
         templates=[
-            OpenAISystemTemplate(content="Repeat what the user said."),
-            MessageTemplate(
-                content="Lazy fox jumps over the brown dog.",
-                role="user",
-            ),
-            OpenAIGenerateTemplate(
-                role="assistant",
-            ),
+            SystemTemplate(content="Repeat what the user said."),
+            UserTemplate(content="Lazy fox jumps over the brown dog."),
+            AssistantTemplate(),
         ]
     )
     runner = CommandLineRunner(
@@ -80,9 +71,7 @@ def test_if_template():
                     content="False",
                     role="assistant",
                 ),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
         ]
     )
@@ -92,14 +81,14 @@ def test_if_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 2  # system message + True/False message
     assert session.messages[0].content == "TRUE"
     assert session.messages[1].content == "True"
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     print(session.messages)
     assert len(session.messages) == 2
@@ -110,12 +99,12 @@ def test_if_template():
 def test_loop_template():
     loop_count = 0
 
-    def update_loop_count(session: Session) -> Session:
+    def update_loop_count(session: Session) -> Metadata:
         nonlocal loop_count
         loop_count += 1
-        for message in session.messages:
-            message.metadata["loop_count"] = loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["loop_count"] = loop_count
+        return metadata
 
     def mock_exit_condition(session: Session) -> bool:
         # For the purpose of the test, let's exit after 3 iterations
@@ -128,10 +117,10 @@ def test_loop_template():
                 role="assistant",
                 # loop_count is 1,2,3... as before_transform is called before the message is rendered
                 content="This is loop iteration {{ loop_count }}.",
-                before_transform=[TransformHook(update_loop_count)],
+                before_transform=[LambdaSessionTransformer(update_loop_count)],
             )
         ],
-        exit_condition=BooleanHook(condition=mock_exit_condition),
+        exit_condition=mock_exit_condition,
     )
 
     runner = CommandLineRunner(
@@ -140,7 +129,7 @@ def test_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    session = Session(initial_metadata={"loop_count": 1})
+    session = Session(metadata={"loop_count": 1})
     session = runner.run(session=session, max_messages=10)
 
     # Check if it looped 3 times
@@ -156,22 +145,22 @@ def test_nested_loop_template():
     outer_loop_count = 0
     inner_loop_count = 0
 
-    def update_outer_loop_count(session: Session) -> Session:
+    def update_outer_loop_count(session: Session) -> Metadata:
         nonlocal inner_loop_count
         nonlocal outer_loop_count
         inner_loop_count = 0
         outer_loop_count += 1
-        for message in session.messages:
-            message.metadata["inner_loop_count"] = 0
-            message.metadata["outer_loop_count"] = outer_loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["inner_loop_count"] = 0
+        metadata["outer_loop_count"] = outer_loop_count
+        return metadata
 
-    def update_inner_loop_count(session: Session) -> Session:
+    def update_inner_loop_count(session: Session) -> Metadata:
         nonlocal inner_loop_count
         inner_loop_count += 1
-        for message in session.messages:
-            message.metadata["inner_loop_count"] = inner_loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["inner_loop_count"] = inner_loop_count
+        return metadata
 
     def mock_outer_exit_condition(session: Session) -> bool:
         nonlocal outer_loop_count
@@ -186,20 +175,23 @@ def test_nested_loop_template():
             MessageTemplate(
                 role="assistant",
                 content="Outer Loop: {{ outer_loop_count }}",
-                before_transform=[TransformHook(update_outer_loop_count)],
+                before_transform=[LambdaSessionTransformer(update_outer_loop_count)],
             ),
             LoopTemplate(
                 templates=[
                     MessageTemplate(
                         role="assistant",
                         content="  Inner Loop: {{ inner_loop_count }}",
-                        before_transform=[TransformHook(update_inner_loop_count)],
+                        before_transform=[
+                            LambdaSessionTransformer(update_inner_loop_count)
+                        ],
                     )
                 ],
-                exit_condition=BooleanHook(condition=mock_inner_exit_condition),
+                # Use a mock exit condition for the inner loop
+                exit_condition=mock_inner_exit_condition,
             ),
         ],
-        exit_condition=BooleanHook(condition=mock_outer_exit_condition),
+        exit_condition=mock_outer_exit_condition,
     )
 
     runner = CommandLineRunner(
@@ -208,7 +200,7 @@ def test_nested_loop_template():
         template=template,
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
     )
-    session = Session(initial_metadata={"outer_loop_count": 1, "inner_loop_count": 1})
+    session = Session(metadata={"outer_loop_count": 1, "inner_loop_count": 1})
     session = runner.run(session=session, max_messages=10)
 
     # Validate the generated messages
@@ -242,9 +234,7 @@ def test_end_template():
                     role="assistant",
                 ),
                 false_template=EndTemplate(),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
             MessageTemplate(
                 role="assistant",
@@ -258,7 +248,7 @@ def test_end_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 3  # system message + True message + final message
@@ -269,7 +259,7 @@ def test_end_template():
         == "This is rendered if the previous message was TRUE"
     )
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     assert len(session.messages) == 1
     assert session.messages[0].content == "FALSE"
@@ -288,9 +278,7 @@ def test_break_template():
                     role="assistant",
                 ),
                 false_template=BreakTemplate(),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
             MessageTemplate(
                 role="assistant",
@@ -304,7 +292,7 @@ def test_break_template():
         user_interaction_provider=EchoUserInteractionTextMockProvider(),
         template=template,
     )
-    session = Session(initial_metadata={"content": "TRUE"})
+    session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
 
     assert len(session.messages) == 3  # system message + True message + final message
@@ -315,47 +303,184 @@ def test_break_template():
         == "This is rendered if the previous message was TRUE"
     )
 
-    session = Session(initial_metadata={"content": "FALSE"})
+    session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
     assert len(session.messages) == 1
     assert session.messages[0].content == "FALSE"
+
+
+def test_system_template():
+    """Test SystemTemplate with static content."""
+    template = LinearTemplate(
+        templates=[
+            SystemTemplate(
+                content="You are a helpful assistant.",
+            ),
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 3
+    assert session.messages[0].role == "system"
+    assert session.messages[0].content == "You are a helpful assistant."
+    assert session.messages[1].role == "user"
+    assert session.messages[1].content == "Hello!"
+    assert session.messages[2].role == "assistant"
+    assert session.messages[2].content == "Hello!"
+
+
+def test_user_template():
+    """Test UserTemplate in both static and interactive modes."""
+    # Test static mode
+    static_template = LinearTemplate(
+        templates=[
+            UserTemplate(
+                content="Hello, assistant!",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=static_template,
+    )
+    session = runner.run(session=Session(), max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello, assistant!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "Hello, assistant!"
+
+    # Test interactive mode
+    interactive_template = LinearTemplate(
+        templates=[
+            SystemTemplate(
+                content="You are a helpful assistant.",
+            ),
+            UserTemplate(
+                description="Enter your message:",
+                default="Hello from user!",
+            ),
+            AssistantTemplate(),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=interactive_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 3
+    assert session.messages[0].role == "system"
+    assert session.messages[0].content == "You are a helpful assistant."
+    assert session.messages[1].role == "user"
+    # Because we are using the echo mock provider, the user's message is echoed back
+    assert session.messages[1].content == "You are a helpful assistant."
+    assert session.messages[2].role == "assistant"
+    assert session.messages[2].content == "You are a helpful assistant."
+
+
+def test_assistant_template():
+    """Test AssistantTemplate in both static and generate modes."""
+    # Test static mode
+    static_template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(
+                content="I'm here to help!",
+            ),
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=static_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "I'm here to help!"
+
+    # Test generate mode
+    generate_template = LinearTemplate(
+        templates=[
+            MessageTemplate(
+                content="Hello!",
+                role="user",
+            ),
+            AssistantTemplate(),  # No content = generate mode
+        ]
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        parameters=parameters,
+        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        template=generate_template,
+    )
+    session = runner.run(max_messages=10)
+
+    assert len(session.messages) == 2
+    assert session.messages[0].role == "user"
+    assert session.messages[0].content == "Hello!"
+    assert session.messages[1].role == "assistant"
+    assert session.messages[1].content == "Hello!"  # Echo mock returns user's message
 
 
 def test_nested_loop_with_break_template():
     outer_loop_counter = 0
     inner_loop_counter = 0
 
-    def update_outer_loop_counter(session: Session) -> Session:
+    def update_outer_loop_counter(session: Session) -> Metadata:
         nonlocal outer_loop_counter
         outer_loop_counter += 1
-        metadata = session.get_latest_metadata()
+        metadata = Metadata(session.metadata)
         metadata["outer_loop_counter"] = outer_loop_counter
         metadata["inner_loop_counter"] = 0  # Reset inner loop counter
         # reset inner loop counter
         nonlocal inner_loop_counter
         inner_loop_counter = 0
-        return session
+        return metadata
 
-    def update_inner_loop_counter(session: Session) -> Session:
+    def update_inner_loop_counter(session: Session) -> Metadata:
         nonlocal inner_loop_counter
         inner_loop_counter = (inner_loop_counter + 1) % 5  # Reset after 5 iterations
-        metadata = session.get_latest_metadata()
+        metadata = Metadata(session.metadata)
         metadata["inner_loop_counter"] = inner_loop_counter
-        return session
+        return metadata
 
     inner_loop_template = LoopTemplate(
         templates=[
             IfTemplate(
-                before_transform=[TransformHook(update_inner_loop_counter)],
+                before_transform=[LambdaSessionTransformer(update_inner_loop_counter)],
                 true_template=BreakTemplate(),
                 false_template=MessageTemplate(
                     role="assistant",
                     content="Inner loop iteration {{ inner_loop_counter }} of outer iteration {{ outer_loop_counter }}",
                 ),
-                condition=BooleanHook(
-                    lambda session: session.get_latest_metadata()["inner_loop_counter"]
-                    > 2
-                ),
+                condition=lambda session: session.metadata["inner_loop_counter"] > 2,
             ),
         ],
     )
@@ -363,18 +488,13 @@ def test_nested_loop_with_break_template():
     outer_loop_template = LoopTemplate(
         templates=[
             MessageTemplate(
-                before_transform=[TransformHook(update_outer_loop_counter)],
+                before_transform=[LambdaSessionTransformer(update_outer_loop_counter)],
                 role="assistant",
                 content="Starting outer loop iteration {{ outer_loop_counter }}",
             ),
             inner_loop_template,
         ],
-        exit_condition=BooleanHook(
-            condition=lambda session: session.get_latest_metadata()[
-                "outer_loop_counter"
-            ]
-            >= 3
-        ),
+        exit_condition=lambda session: session.metadata["outer_loop_counter"] >= 3,
     )
 
     runner = CommandLineRunner(
@@ -385,9 +505,7 @@ def test_nested_loop_with_break_template():
     )
 
     # We'll break the inner loop on the 3rd iteration
-    session = Session(
-        initial_metadata={"outer_loop_counter": 1, "inner_loop_counter": 1}
-    )
+    session = Session(metadata={"outer_loop_counter": 1, "inner_loop_counter": 1})
     session = runner.run(
         session=session,
         max_messages=10,

@@ -3,27 +3,44 @@ import subprocess
 import tempfile
 from typing import Optional
 
-from prompttrail.agent.hooks import BooleanHook, ResetDataHook
-from prompttrail.agent.hooks._core import TransformHook
 from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers._core import (
+    MetadataTransformer,
+    ResetData,
+    SessionTransformer,
+)
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     BreakTemplate,
     IfTemplate,
     LinearTemplate,
     LoopTemplate,
     MessageTemplate,
-    UserInputTextTemplate,
-)
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.core import Metadata, Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+
+
+class RewriteMessage(SessionTransformer):
+    def __init__(self, index: int, new_content: str):
+        self.index = index
+        self.new_content = new_content
+
+    def process(self, session: Session) -> Session:
+        session.messages[self.index].content = self.new_content
+        return session
+
+
+class SaveCommitMessage(MetadataTransformer):
+    """Hook to save the generated commit message in the state data."""
+
+    def process_metadata(self, metadata: Metadata, session: Session) -> Metadata:
+        commit_message = session.get_last_message().content
+        metadata["commit_message"] = commit_message
+        return metadata
 
 
 def get_git_info() -> dict:
@@ -99,20 +116,10 @@ def execute_git_commit(message: str) -> bool:
         return False
 
 
-class SaveCommitMessageHook(TransformHook):
-    """Hook to save the generated commit message in the state data."""
-
-    def hook(self, session: Session) -> Session:
-        commit_message = session.get_last_message().content
-        session.get_latest_metadata()["commit_message"] = commit_message
-        return session
-
-
 templates = LinearTemplate(
     [
-        MessageTemplate(
+        SystemTemplate(
             template_id="instruction",
-            role="system",
             content="""
 You are an expert at crafting Git commit messages.
 Your task is to analyze the provided Git repository information and generate an appropriate commit message.
@@ -121,6 +128,7 @@ Commit message format:
 - Line 1: Summary of changes (maximum 50 characters)
 - Line 2: Blank line
 - Line 3+: Detailed explanation of changes (when necessary)
+- Final line: (This commit message is auto-generated with examples/dogfooding/commit_with_auto_generated_comment.py)
 
 Provide only the commit message without any additional commentary or formatting.
 """,
@@ -137,17 +145,16 @@ Please generate a commit message based on the following information:
 3. Recent commit history:
 {{log}}
 """,
+            after_transform=ResetData(),
         ),
         LoopTemplate(
-            [
-                GenerateTemplate(
+            templates=[
+                AssistantTemplate(
                     template_id="generate_commit_message",
-                    role="assistant",
-                    after_transform=[SaveCommitMessageHook()],
+                    after_transform=SaveCommitMessage(),
                 ),
-                UserInputTextTemplate(
+                UserTemplate(
                     template_id="get_feedback",
-                    role="user",
                     description="Please provide your feedback:",
                     default="Looks good!",
                 ),
@@ -166,39 +173,23 @@ END
 ** Response must be either "RETRY" or "END" based on the feedback analysis. **
 
 Examples:
-- Respond with "RETRY" for:
-    - "not good"
-    - "Good, but add an emoji"
-    - "Great, but it would be better with xxx"
-- Respond with "END" for:
-    - "Perfect!"
-    - "OK"
-    - "Thanks"
+- Respond with "RETRY" for repsonses like "not good", "Good, but add an emoji", "Great, but it would be better with xxx"
+- Respond with "END" for responses like "Perfect!", "OK", "Thanks"
 """,
                 ),
-                GenerateTemplate(
+                AssistantTemplate(
                     template_id="feedback_decision",
-                    role="assistant",
                 ),
                 IfTemplate(
                     true_template=BreakTemplate(),
-                    false_template=MessageTemplate(
-                        role="assistant",
-                        content="Generating a new message based on your feedback...",
+                    false_template=AssistantTemplate(
+                        before_transform=RewriteMessage(-1, "RETRY"),
+                        content="Based on your feedback, I will regenerate the commit message.",
                     ),
-                    condition=BooleanHook(
-                        lambda session: session.get_last_message()
-                        .content.strip()
-                        .startswith("END")
-                    ),
+                    condition=lambda session: "END"
+                    in session.get_last_message().content,
                 ),
             ],
-            exit_condition=BooleanHook(
-                lambda session: session.get_last_message()
-                .content.strip()
-                .startswith("END")
-            ),
-            before_transform=[ResetDataHook()],
         ),
     ]
 )
@@ -228,13 +219,13 @@ def main(
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable is required")
 
-    configuration = AnthropicClaudeModelConfiguration(api_key=api_key)
-    parameter = AnthropicClaudeModelParameters(
-        model_name="claude-3-5-sonnet-20241022",
+    configuration = AnthropicConfig(api_key=api_key)
+    parameter = AnthropicParam(
+        model_name="claude-3-5-sonnet-latest",
         temperature=0.7,
         max_tokens=1000,
     )
-    model = AnthropicClaudeModel(configuration=configuration)
+    model = AnthropicModel(configuration=configuration)
 
     runner = CommandLineRunner(
         model=model,
@@ -248,21 +239,17 @@ def main(
         print("Warning: No Git information found. Are you in a Git repository?")
         return ""
 
-    initial_session = Session()
-    initial_session.append(
-        Message(
-            content="",
-            metadata={
-                "branch": git_info["branch"],
-                "diff": git_info["diff"],
-                "log": git_info["log"],
-            },
-        )
+    initial_session = Session(
+        metadata={
+            "branch": git_info["branch"],
+            "diff": git_info["diff"],
+            "log": git_info["log"],
+        }
     )
 
     session = runner.run(session=initial_session)
 
-    return session.get_latest_metadata()["commit_message"]
+    return session.metadata["commit_message"]
 
 
 if __name__ == "__main__":

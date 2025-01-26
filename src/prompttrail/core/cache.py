@@ -8,22 +8,22 @@ if TYPE_CHECKING:
 
 
 class CacheProvider(metaclass=ABCMeta):
-    """
-    Abstract base class for cache providers.
+    """Abstract base class for cache providers.
 
     Cache providers are responsible for storing and retrieving messages from a cache.
-    Cache providers implement the `add` and `search` methods.
+    Each provider must implement add() and search() methods.
     """
 
     @abstractmethod
     def add(self, session: "Session", message: "Message") -> None:
-        # TODO: Cache must see `Parameters` as well!
-        """
-        Add a message to the cache based on the session and parameters.
+        """Add a message to the cache.
 
         Args:
-            session: The session associated with the message.
-            message: The message to be added to the cache.
+            session: Session associated with the message
+            message: Message to cache
+
+        Note:
+            Cache should also consider Parameters when storing messages
         """
         raise NotImplementedError("add method is not implemented")
 
@@ -31,56 +31,51 @@ class CacheProvider(metaclass=ABCMeta):
     def search(
         self, parameters: "Parameters", session: "Session"
     ) -> Optional["Message"]:
-        """
-        Search for a message in the cache.
+        """Search for a cached message.
 
         Args:
-            parameters: The parameters associated with the message.
-            session: The session associated with the message.
+            parameters: Parameters associated with the message
+            session: Session to search for
 
         Returns:
-            The message found in the cache, or None if no message is found.
+            Cached message if found, None otherwise
         """
         raise NotImplementedError("search method is not implemented")
 
 
 class LRUCacheProvider(CacheProvider):
-    """
-    Cache provider implementation using an LRU (Least Recently Used) cache.
+    """LRU (Least Recently Used) cache implementation.
 
-    This cache provider stores messages in an LRU cache with a fixed number of items.
+    Caches messages in an LRU cache with a fixed maximum size.
     """
 
     def __init__(self, n_items: int = 10000):
-        """
-        Initialize the LRUCacheProvider.
+        """Initialize LRU cache.
 
         Args:
-            n_items: The maximum number of items to store in the cache.
+            n_items: Maximum number of items in cache (default: 10000)
         """
         self.cache: LRUCache["Session", "Message"] = LRUCache(n_items)
 
-    def add(self, session: "Session", message: "Message"):
-        """
-        Add a message to the cache.
+    def add(self, session: "Session", message: "Message") -> None:
+        """Add message to cache.
 
         Args:
-            session: The session associated with the message.
-            message: The message to be added to the cache.
+            session: Session associated with the message
+            message: Message to cache
         """
         self.cache[session] = message
 
     def search(
         self, parameters: "Parameters", session: "Session"
     ) -> Optional["Message"]:
-        """
-        Search for a message in the cache.
+        """Search for cached message.
 
         Args:
-            parameters: The parameters associated with the message.
-            session: The session associated with the message.
+            parameters: Parameters associated with the message
+            session: Session to search for
 
         Returns:
-            The message found in the cache, or None if no message is found.
+            Cached message if found, None otherwise
         """
         return self.cache[session]

@@ -12,24 +12,24 @@ See [agents](#agents) section for more details.
 ## Make an API Call
 
 PromptTrail implement many LLM models under `models`.
-Let's call OpenAI's GPT-3 model. (You need to set `API_KEY` environment variable with your OpenAI API key.)
+Let's call OpenAI's GPT models. (You need to set `OPENAI_API_KEY` environment variable with your API key.)
 
 ```python
 import os
 from prompttrail.core import Session, Message
 from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters
+    OpenAIModel,
+    OpenAIConfiguration,
+    OpenAIParam
 )
 
 api_key = os.environ["OPENAI_API_KEY"]
-config = OpenAIModelConfiguration(api_key=api_key)
-parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
-model = OpenAIChatCompletionModel(configuration=config)
+config = OpenAIConfiguration(api_key=api_key)
+parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
+model = OpenAIModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 model.send(parameters=parameters, session=session)
@@ -38,10 +38,10 @@ model.send(parameters=parameters, session=session)
 You can see the response from the model like this:
 
 ```python
-Message(content="Hello! How can I assist you today?", sender="assistant")
+Message(content="Hello! How can I assist you today?", role="assistant")
 ```
 
-Yay! You have successfully called OpenAI's GPT-3.5 model.
+Yay! You have successfully called an OpenAI GPT model.
 
 ## Core Concepts
 
@@ -51,15 +51,15 @@ You can skip the following sections if you're already familiar with other LLM li
 ### Message
 
 ```python
-Message(content="Hello! How can I assist you today?", sender="assistant", metadata={})
+Message(content="Hello! How can I assist you today?", role="assistant", metadata={})
 ```
 
 Message represents a single message in a conversation.
 It has the following attributes:
 
 - `content: str`: the content of the message (text)
-- `sender: str`: the sender of the message
-  - OpenAI's API expect one of `system`, `user`, `assistant` as the sender.
+- `role: str`: the role of the message
+  - OpenAI's API expect one of `system`, `user`, `assistant` as the role.
   - Other providers have different rules.
 - `metadata`: additional metadata for the message (used for templates, hooks, and other features)
 
@@ -68,7 +68,7 @@ It has the following attributes:
 ```python
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 ```
@@ -116,7 +116,7 @@ Things won't change course of the conversation (e.g. API key) are passed here.
 ### Parameters
 
 ```python
-parameters = OpenAIModelParameters(model_name="gpt-3.5-turbo", max_tokens=100, temperature=0)
+parameters = OpenAIModelParameters(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
 ...
 message = model.send(parameters=parameters, session=session)
 ```
@@ -127,27 +127,27 @@ For example, you may want to GPT-3.5 for the first message, and if the conversat
 
 ## Try different API
 
-### Google Cloud
+### Google
 
-If you want to call Google's Palm model, you can do it by changing some lines.
+If you want to call Google's Gemini model, you can do it by changing some lines.
 
 ```python
 import os
 from prompttrail.core import Session, Message
-from prompttrail.models.google_cloud import (
-    GoogleCloudChatModel, # Change Model
-    GoogleCloudChatModelParameters, # Change Parameters
-    GoogleCloudChatModelConfiguration, # Change Configuration
+from prompttrail.models.google import (
+    GoogleModel, # Change Model
+    GoogleParam, # Change Parameters
+    GoogleConfig, # Change Configuration
 )
 
 api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
-config = GoogleCloudChatModelConfiguration(api_key=api_key)
+config = GoogleConfig(api_key=api_key)
 # Change model name, of course Google's model name is different from OpenAI's
-parameters = GoogleCloudChatModelParameters(model_name="models/chat-bison-001", max_tokens=100, temperature=0)
-model = GoogleCloudChatModel(configuration=config)
+parameters = GoogleParam(model_name="models/gemini-1.5-flash", max_tokens=100, temperature=0)
+model = GoogleModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 message = model.send(parameters=parameters, session=session)
@@ -156,10 +156,10 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hey there! How can I help you today?', sender='1', metadata={})
+Message(content='Hey there! How can I help you today?', role='1', metadata={})
 ```
 
-You may notice the sender system is different from OpenAI's!
+You may notice the role system is different from OpenAI's!
 We're successfully using Google's model!
 
 The code is almost the same as the OpenAI example. Just change the `Model`, `Configuration` and `Parameters` to Google's.
@@ -180,18 +180,18 @@ Anthropic's Claude is also available:
 import os
 from prompttrail.core import Session, Message
 from prompttrail.models.anthropic import (
-    AnthropicClaudeModel, # Change Model
-    AnthropicClaudeModelParameters, # Change Parameters
-    AnthropicClaudeModelConfiguration, # Change Configuration
+    AnthropicModel, # Change Model
+    AnthropicParam, # Change Parameters
+    AnthropicConfig, # Change Configuration
 )
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
-config = AnthropicClaudeModelConfiguration(api_key=api_key)
-parameters = AnthropicClaudeModelParameters(model_name="claude-3-haiku-20240307", max_tokens=100, temperature=0)
-model = AnthropicClaudeModel(configuration=config)
+config = AnthropicConfig(api_key=api_key)
+parameters = AnthropicParam(model_name="claude-3-5-haiku-latest", max_tokens=100, temperature=0)
+model = AnthropicModel(configuration=config)
 session = Session(
   messages=[
-    Message(content="Hey", sender="user"),
+    Message(content="Hey", role="user"),
   ]
 )
 message = model.send(parameters=parameters, session=session)
@@ -200,7 +200,7 @@ message = model.send(parameters=parameters, session=session)
 You will get the following response:
 
 ```python
-Message(content='Hello! How can I assist you today?', sender='assistant', metadata={})
+Message(content='Hello! How can I assist you today?', role='assistant', metadata={})
 ```
 
 ## Try local LLMs
@@ -216,8 +216,8 @@ Then you can use it like this:
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompttrail.models.transformers import (
     TransformersModel,
-    TransformersModelConfiguration,
-    TransformersModelParameters
+    TransformersConfig,
+    TransformersParam
 )
 from prompttrail.core import Session, Message
 
@@ -228,7 +228,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Create TransformersModel instance
 llm = TransformersModel(
-    configuration=TransformersModelConfiguration(
+    configuration=TransformersConfig(
         device="cuda"  # Use "cpu" if you don't have GPU
     ),
     model=model,
@@ -237,14 +237,14 @@ llm = TransformersModel(
 
 session = Session(
     messages=[
-        Message(content="What is machine learning?", sender="user")
+        Message(content="What is machine learning?", role="user")
     ]
 )
 
 # Generate response with custom parameters
 response = llm.send(
     session=session,
-    parameters=TransformersModelParameters(
+    parameters=TransformersParam(
         temperature=0.7,
         max_tokens=100,
         top_p=0.9,
@@ -285,6 +285,6 @@ For Transformers models, you can use streaming in the same way:
 ```python
 for partial_response in llm.send_async(
     session=session,
-    parameters=TransformersModelParameters(temperature=0.7)
+    parameters=TransformersParam(temperature=0.7)
 ):
     print(partial_response.content, end="", flush=True)

@@ -1,212 +1,133 @@
 import enum
-from typing import Any, Dict, Optional, Sequence
+import json
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, Generator, TypedDict
 
 import pytest
 
-from prompttrail.agent import Session
-from prompttrail.agent.tools import (
-    FunctionCallingPartialProperty,
-    FunctionCallingProperty,
-    Tool,
-    ToolArgument,
-    ToolResult,
-    convert_property_to_api_call_parts,
-    function_calling_type_to_partial_property,
-)
+from examples.dogfooding.dogfooding_tools import EditFile
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
+from prompttrail.core.errors import ParameterValidationError
 
 
-class ToolResult1(ToolResult):
-    key: str
-
-    def show(self) -> Dict[str, Any]:
-        return {"key": self.key}
+class TestResultData(TypedDict):
+    result: str
 
 
-class ToolArgument1(ToolArgument):
-    description: str = "test description"
-    value: int
+class TestResult(ToolResult):
+    def __init__(self, result: str):
+        super().__init__(content=json.dumps({"result": result}))
 
 
-class ToolArgument2(ToolArgument):
-    description: str = "test description2"
-    value: Optional[int]
+class TestEnumType(enum.Enum):
+    A = "a"
+    B = "b"
 
 
-class ToolArgumentEnumType(enum.Enum):
-    A = "A"
-    B = "B"
+class TestTool(Tool):
+    name: str = "test_tool"
+    description: str = "test tool"
+    arguments: dict[str, ToolArgument[Any]] = {
+        "arg1": ToolArgument(
+            name="arg1",
+            description="arg1",
+            value_type=str,
+            required=True,
+        ),
+        "arg2": ToolArgument(
+            name="arg2",
+            description="arg2",
+            value_type=int,
+            required=False,
+        ),
+        "arg3": ToolArgument(
+            name="arg3",
+            description="arg3",
+            value_type=TestEnumType,
+            required=False,
+        ),
+    }
+
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        return TestResult(result="test")
 
 
-class ToolArgumentEnum(ToolArgument):
-    description: str = "test description3"
-    value: ToolArgumentEnumType
+@pytest.fixture
+def test_file() -> Generator[Path, None, None]:
+    """Create a temporary test file"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        file_path = Path(tmp_dir) / "test.txt"
+        content = "Hello World!\nThis is a test file."
+        file_path.write_text(content)
+        yield file_path
 
 
-class MyTool(Tool):
-    name = "mytool"
-    description = "A test tool"
-    argument_types = [ToolArgument1]
-    result_type = ToolResult1
+def test_tool_validation():
+    """Test tool validation"""
+    tool = TestTool()
 
-    def _call(self, args: Sequence[ToolArgument], session: Session) -> ToolResult:
-        return ToolResult1(key="key")
+    # Test required argument
+    with pytest.raises(
+        ParameterValidationError, match="Missing required argument: arg1"
+    ):
+        tool.execute()
+
+    # Test invalid argument type
+    with pytest.raises(
+        ParameterValidationError, match="Invalid type for argument arg2"
+    ):
+        tool.execute(arg1="test", arg2="invalid")
+
+    # Test invalid enum value
+    with pytest.raises(
+        ParameterValidationError, match="Invalid type for argument arg3"
+    ):
+        tool.execute(arg1="test", arg3="invalid")
+
+    # Test valid arguments
+    result = tool.execute(arg1="test", arg2=1, arg3=TestEnumType.A)
+    assert isinstance(result, ToolResult)
+    assert isinstance(result.content, str)
+
+    result_dict = json.loads(result.content)
+    assert isinstance(result_dict, dict)
+    assert "result" in result_dict
+    assert result_dict["result"] == "test"
 
 
-def test_show_method():
-    result = ToolResult1(key="value")
-    assert result.show() == {"key": "value"}
+def test_edit_file_with_diff(test_file: Path):
+    """Test EditFile tool with diff format"""
+    tool = EditFile()
 
-
-def test_function_calling_type_to_partial_property():
-    # x vs Optional[x]
-    assert function_calling_type_to_partial_property(
-        str
-    ) == FunctionCallingPartialProperty(type="string", required=True)
-    assert function_calling_type_to_partial_property(
-        Optional[str]
-    ) == FunctionCallingPartialProperty(type="string", required=False)
-    # enum
-    assert function_calling_type_to_partial_property(
-        ToolArgumentEnumType
-    ) == FunctionCallingPartialProperty(type="string", required=True, enum=["A", "B"])
-    assert function_calling_type_to_partial_property(
-        Optional[ToolArgumentEnumType]
-    ) == FunctionCallingPartialProperty(type="string", required=False, enum=["A", "B"])
-
-
-def test_convert_property_to_api_call_parts():
-    prop = FunctionCallingProperty(
-        type="string", required=True, name="name", description="description"
+    # Test successful diff application
+    result = tool.execute(
+        path=str(test_file),
+        diff="""<<<<<<< SEARCH
+Hello World!
+=======
+Hi Universe!
+>>>>>>> REPLACE""",
     )
-    assert convert_property_to_api_call_parts(prop=prop) == {
-        "type": "string",
-        "description": "description",
-    }
-    prop = FunctionCallingProperty(
-        type="int", required=False, name="name", description="description"
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "success"
+    assert "Hi Universe!" in test_file.read_text()
+
+    # Test invalid diff format
+    result = tool.execute(path=str(test_file), diff="Invalid diff format")
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "error"
+    assert "Invalid diff format" in result_dict["reason"]
+
+    # Test non-matching search block
+    result = tool.execute(
+        path=str(test_file),
+        diff="""<<<<<<< SEARCH
+This text does not exist
+=======
+Something else
+>>>>>>> REPLACE""",
     )
-    assert convert_property_to_api_call_parts(prop) == {
-        "type": "int",
-        "description": "description",
-    }
-    prop = FunctionCallingProperty(
-        type="string",
-        required=True,
-        name="name",
-        description="description",
-        enum=["a", "b"],
-    )
-    assert convert_property_to_api_call_parts(prop) == {
-        "type": "string",
-        "description": "description",
-        "enum": ["a", "b"],
-    }
-
-
-def test_tool_argument_class():
-    assert ToolArgument1.get_name() == "toolargument1"
-    assert ToolArgument1.is_required()
-    assert ToolArgument1.get_value_type() == int
-    assert ToolArgument1.get_description() == "test description"
-    with pytest.raises(AttributeError):
-        # Value itself cannot be accessed when it is not instantiated
-        ToolArgument1.value
-
-    # Optional
-    assert ToolArgument2.get_name() == "toolargument2"
-    # assert not toolargument2.is_required()
-    assert ToolArgument2.get_value_type() == Optional[int]
-    assert ToolArgument2.get_description() == "test description2"
-    with pytest.raises(AttributeError):
-        # Value itself cannot be accessed when it is not instantiated
-        ToolArgument2.value
-
-
-def test_tool_argument_instance():
-    arg = ToolArgument1(value=5)
-    assert arg.get_name() == "toolargument1"
-    assert arg.is_required()
-    assert arg.get_value_type() == int
-    assert arg.get_description() == "test description"
-    assert arg.value == 5
-
-    # Optional
-    arg = ToolArgument2(value=None)
-    assert arg.get_name() == "toolargument2"
-    # assert not arg.is_required()
-    assert arg.get_value_type() == Optional[int]
-    assert arg.get_description() == "test description2"
-    assert arg.value is None
-
-    # Enum
-    arg = ToolArgumentEnum(value=ToolArgumentEnumType.A)
-    assert arg.get_name() == "toolargumentenum"
-    assert arg.is_required()
-    assert arg.get_value_type() == ToolArgumentEnumType
-    assert arg.get_description() == "test description3"
-    assert arg.value == ToolArgumentEnumType.A
-
-
-def test_tool():
-    tool = MyTool()
-    args = [ToolArgument1(value=5)]
-    result = tool.call(args=args, session=Session())
-    assert isinstance(result, ToolResult1)
-    assert tool.show() == {
-        "name": "mytool",
-        "description": "A test tool",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "toolargument1": {"type": "int", "description": "test description"}
-            },
-            "required": ["toolargument1"],
-        },
-    }
-
-
-# TODO: Make Test Scenario: Cake chain store
-
-# class Place(ToolArgument):
-#     description: str = "The city to search"
-#     value: str
-
-
-# class CackTypeType(enum.Enum):
-#     Chocolate = "Chocolate"
-#     Strawberry = "Strawberry"
-#     Cheese = "Cheese"
-
-
-# class CakeType(ToolArgument):
-#     # No description
-#     value: CackTypeType
-
-
-# class LowerPrice(ToolArgument):
-#     value: int
-
-
-# class UpperPrice(ToolArgument):
-#     value: int
-
-
-# class SpecialMessage(ToolArgument):
-#     description: str = "The special message to write on the cake if any"
-#     # Optional
-#     value: Optional[str]
-
-
-# class Cake(BaseModel):
-#     name: str
-#     price: int
-
-
-# class CakeSearchResult(ToolResult):
-#     # No description
-#     cakes: List[Cake]
-
-#     def show(self) -> Dict[str, List[Dict[str, Any]]]:
-#         return {
-#             "cakes": [{"name": cake.name, "price": cake.price} for cake in self.cakes]
-#         }
+    result_dict = eval(result.content)
+    assert result_dict["status"] == "error"
+    assert "does not match anything in the file" in result_dict["reason"]

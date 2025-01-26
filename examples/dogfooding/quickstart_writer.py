@@ -4,22 +4,14 @@ import os
 from tqdm import tqdm
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
-)
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
+from prompttrail.agent.templates import AssistantTemplate, LinearTemplate, UserTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
-from prompttrail.models.anthropic import (
-    AnthropicClaudeModel,
-    AnthropicClaudeModelConfiguration,
-    AnthropicClaudeModelParameters,
-)
+from prompttrail.core import Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        UserTemplate(
             content="""
 You're given examples and test scripts and documents for a library, PromptTrail.
 Write a quickstart document for user to coding on this library. The document should be written in markdown format.
@@ -27,21 +19,18 @@ Show plenty of self-contained code examples with comments.
 
 {{code}}
 """,
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 
-configuration = AnthropicClaudeModelConfiguration(
-    api_key=os.environ["ANTHROPIC_API_KEY"]
-)
-parameter = AnthropicClaudeModelParameters(
-    model_name="claude-3-5-sonnet-20241022",
+configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+parameter = AnthropicParam(
+    model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=8192,
 )
-model = AnthropicClaudeModel(configuration=configuration)
+model = AnthropicModel(configuration=configuration)
 
 # load all files in examples and tests with its name in text
 text = ""
@@ -69,8 +58,7 @@ runner = CommandLineRunner(
     user_interaction_provider=UserInteractionTextCLIProvider(),
 )
 
-initial_session = Session()
-initial_session.append(Message(content="", metadata={"code": text}))
+initial_session = Session(metadata={"code": text})
 session = runner.run(session=initial_session)
 last_message = session.get_last_message().content
 

@@ -2,15 +2,20 @@ import logging
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    AbstractSet,
     Any,
+    Callable,
     Dict,
     Generator,
+    ItemsView,
+    KeysView,
     List,
     Literal,
     Optional,
-    Sequence,
     Tuple,
     TypeAlias,
+    Union,
+    ValuesView,
 )
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -18,47 +23,146 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 if TYPE_CHECKING:
     from prompttrail.agent.runners import Runner
     from prompttrail.agent.templates import Stack
+    from prompttrail.agent.tools import Tool, ToolResult
 else:
     Runner = Any  # type: ignore
     Stack = Any  # type: ignore
+    Tool = Any  # type: ignore
+    ToolResult = Any  # type: ignore
 
 from prompttrail.core.cache import CacheProvider
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.mocks import MockProvider
-from prompttrail.core.utils import logger_multiline
+from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
+
+
+# Define standard message roles
+MessageRoleType = Literal["system", "user", "assistant", "tool_result", "control"]
+
+
+def truncate_string(s: str, max_length: int = 100) -> str:
+    """Truncate string to max_length."""
+    if len(s) > max_length:
+        return s[: max_length - 3] + "..."
+    return s
+
+
+class Metadata(Dict[str, Any]):
+    """型安全なメタデータを提供するベースクラス"""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__()
+        if len(args) == 1:
+            if isinstance(args[0], (dict, Metadata)):
+                self.update(dict(args[0]))
+        elif kwargs:
+            self.update(kwargs)
+
+    def copy(self) -> "Metadata":
+        return self.__class__(dict(self))
+
+    def model_copy(self, *args: Any, **kwargs: Any) -> "Metadata":
+        return self.copy()
+
+    def dict(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        return dict(self)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: Any,
+        _handler: Any,
+    ) -> Any:
+        from pydantic_core.core_schema import (
+            dict_schema,
+            no_info_after_validator_function,
+            union_schema,
+        )
+
+        def validate_dict(value: Any) -> "Metadata":
+            if isinstance(value, cls):
+                return cls(dict(value))
+            if isinstance(value, dict):
+                return cls(value)
+            if value is None:
+                return cls()
+            try:
+                return cls(dict(value))
+            except (TypeError, ValueError):
+                raise ValueError(f"Cannot convert {type(value)} to Metadata")
+
+        def after_validate(value: Any) -> "Metadata":
+            if isinstance(value, dict):
+                return cls(value)
+            return value
+
+        return union_schema(
+            [
+                no_info_after_validator_function(after_validate, dict_schema()),
+                no_info_after_validator_function(validate_dict, dict_schema()),
+            ]
+        )
+
+    def __str__(self) -> str:
+        return str(dict(self))
 
 
 class Message(BaseModel):
     """A message represents a single message from a user, model, or API etc..."""
 
-    # We may soon get non-textual messages maybe, so we should prepare for that.
+    # TODO: Non-text content
     content: str
-    sender: Optional[str] = None
+    role: MessageRoleType
+    tool_use: Optional[Dict[str, Any]] = Field(default=None)
+    metadata: Metadata = Field(default_factory=Metadata, validate_default=True)
 
-    # Store metadata in dict
-    metadata: Dict[str, Any] = {}
+    def __init__(
+        self,
+        content: str,
+        role: MessageRoleType,
+        metadata: Optional[Dict[str, Any] | Metadata] = None,
+        tool_use: Optional[Dict[str, Any]] = None,
+    ):
+        metadata = (
+            # Message save the snapshot of metadata, so we need to copy it.
+            metadata.copy()
+            if isinstance(metadata, Metadata)
+            else Metadata(metadata)
+            if isinstance(metadata, dict)
+            else Metadata()
+        )
+
+        super().__init__(
+            content=content, role=role, metadata=metadata, tool_use=tool_use
+        )
 
     def __hash__(self) -> int:
-        return hash((self.content, self.sender))
+        return hash((self.content, self.role))
 
     def __str__(self) -> str:
-        if "\n" in self.content:
-            content_part = 'content="""\n' + self.content + '\n"""'
+        parts = []
+
+        # Handle content with proper quoting
+        content = truncate_string(self.content)
+        if "\n" in content:
+            parts.append(f'content="""\n{content}\n"""')
         else:
-            content_part = 'content="' + self.content + '"'
-        if self.sender is None:
-            return "Message(" + content_part + '")'
-        return "Message(" + content_part + ', sender="' + self.sender + '")'
+            parts.append(f'content="{content}"')
+
+        parts.append(f'role="{self.role}"')
+
+        if self.metadata:
+            parts.append(f"metadata={truncate_string(str(self.metadata))}")
+        if self.tool_use:
+            parts.append(f"tool_use={truncate_string(str(self.tool_use))}")
+
+        return f"Message({', '.join(parts)})"
 
 
 class Configuration(BaseModel):
     """A configuration represents a set of data that is used to configure model."""
-
-    # Configuration is a set of data that is used to configure model.
-    # The name is following the naming convention of openai.
-    # Configuration does not have parameters that define the behavior of the model.
 
     cache_provider: Optional["CacheProvider"] = None
     """Cache provider to cache the response from the model."""
@@ -79,7 +183,8 @@ class Parameters(BaseModel):
     """A parameters represents a set of data that is used to define the behavior of the model at runtime."""
 
     # Parameters is a set of data that is used to define the behavior of the model.
-    ...
+    tools: Optional[List["Tool"]] = None
+    """Optional list of tools that can be used by the model."""
 
 
 class Session(BaseModel):
@@ -91,13 +196,40 @@ class Session(BaseModel):
 
     # Session is a list of messages with some metadata
     messages: List[Message] = Field(default_factory=list)
-    initial_metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Metadata = Field(
+        default_factory=lambda: Metadata(), validate_default=True
+    )
 
     # Runner and template related fields
     runner: Optional["Runner"] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
     jump_to_id: Optional[str] = Field(default=None)
+
+    def __init__(
+        self,
+        messages: List[Message] = [],
+        metadata: Optional[Dict[str, Any] | Metadata] = None,
+        runner: Optional["Runner"] = None,
+        debug_mode: bool = False,
+        stack: List["Stack"] = [],
+        jump_to_id: Optional[str] = None,
+    ) -> None:
+        metadata = (
+            metadata
+            if isinstance(metadata, Metadata)
+            else Metadata(metadata)
+            if isinstance(metadata, dict)
+            else Metadata()
+        )
+        super().__init__(
+            messages=messages,
+            metadata=metadata,
+            runner=runner,
+            debug_mode=debug_mode,
+            stack=stack,
+            jump_to_id=jump_to_id,
+        )
 
     def __hash__(self) -> int:
         return hash(tuple(self.messages))
@@ -113,12 +245,6 @@ class Session(BaseModel):
         if not self.messages:
             raise IndexError("Session has no messages")
         return self.messages[-1]
-
-    def get_latest_metadata(self) -> Dict[str, Any]:
-        """Get metadata from the last message or initial metadata if no messages exist."""
-        if not self.messages:
-            return self.initial_metadata.copy()
-        return self.messages[-1].metadata
 
     def get_last_message(self) -> Message:
         """Alias for get_last()."""
@@ -174,10 +300,19 @@ UpdatedParameters: TypeAlias = Parameters
 UpdatedMessage: TypeAlias = Message
 
 
-class Model(BaseModel, ABC):
+class Model(BaseModel, ABC, Debuggable):
     """A model define an interface to interact with LLM models."""
 
     configuration: Configuration
+    # To meet the Pydantic BaseModel requirements,
+    # we need to define the logger attribute as a class attribute.
+    logger: Optional[logging.Logger] = None
+    enable_logging: bool = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def model_post_init(self, *args, **kwargs):
+        super().model_post_init(*args, **kwargs)
+        self.setup_logger_for_pydantic()
 
     def is_mocked(self) -> bool:
         """is_mocked method returns True if the model is mocked."""
@@ -189,19 +324,39 @@ class Model(BaseModel, ABC):
 
     @abstractmethod
     def _send(self, parameters: Parameters, session: Session) -> Message:
-        """A model should implement _send method to send a message to the model. You must implement this method to create a new model."""
+        """A model should implement _send method to send a message to the model."""
         raise NotImplementedError("Any model should implement _send method.")
+
+    def format_tool(self, tool: "Tool") -> Dict[str, Any]:
+        """Convert tool to model-specific format"""
+        raise NotImplementedError(
+            "Any model should implement format_tool method if it can use tools."
+        )
+
+    def format_tool_result(self, result: "ToolResult") -> Dict[str, Any]:
+        """Convert tool result to model-specific format"""
+        raise NotImplementedError(
+            "Any model should implement format_tool_result method if it can use tools."
+        )
+
+    def validate_tools(self, tools: List["Tool"]) -> None:
+        """Validate tools according to model-specific requirements"""
+        raise NotImplementedError(
+            "Any model should implement validate_tools method if it can use tools."
+        )
 
     def prepare(
         self, parameters: Parameters, session: Optional[Session], is_async: bool
     ) -> Tuple[UpdatedParameters, Session]:
-        """prepare method defines the standard procedure to pre/post-process parameters and session. You dont need to override this method usually."""
+        """prepare method defines the standard procedure to pre/post-process parameters and session."""
         if session is None:
             session = Session()
 
         self.validate_configuration(self.configuration, False)
         self.validate_parameters(parameters, False)
         self.validate_session(session, False)
+        if parameters.tools:
+            self.validate_tools(parameters.tools)
         self.vaidate_other(parameters, session, False)
         configuration_, parameters_, session_ = self.before_send(
             parameters, session, False
@@ -215,18 +370,25 @@ class Model(BaseModel, ABC):
         return parameters, session
 
     def send(self, parameters: Parameters, session: Session) -> Message:
-        """send method defines the standard procedure to send a message to the model. You dont need to override this method usually."""
+        """send method defines the standard procedure to send a message to the model."""
+        if self.configuration.mock_provider is not None:
+            # Even with mock provider, we still need to validate
+            self.validate_configuration(self.configuration, False)
+            self.validate_parameters(parameters, False)
+            self.validate_session(session, False)
+            if parameters.tools:
+                self.validate_tools(parameters.tools)
+            return self.configuration.mock_provider.call(session)
+
+        parameters, session = self.prepare(parameters, session, False)
+        self.debug("Communications %s", session)
+
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
             if message is not None:
                 return message
-        if self.configuration.mock_provider is not None:
-            # TODO: Should mock also process parameters?
-            return self.configuration.mock_provider.call(session)
 
-        parameters, session = self.prepare(parameters, session, False)
         message = self._send(parameters, session)
-        logger_multiline(logger, f"Message from Provider: {message}", logging.DEBUG)
         return self.after_send(parameters, session, message, False)
 
     def _send_async(
@@ -235,7 +397,7 @@ class Model(BaseModel, ABC):
         session: Session,
         yiled_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """A model should implement _send_async method to receive response asynchronously. You must implement this method to create a new model if you need async feature."""
+        """A model should implement _send_async method to receive response asynchronously."""
         raise NotImplementedError("Async method is not implemented for this model.")
 
     def send_async(
@@ -244,22 +406,21 @@ class Model(BaseModel, ABC):
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """send_async method defines the standard procedure to send a message to the model asynchronously. You dont need to override this method usually."""
+        """send_async method defines the standard procedure to send a message to the model asynchronously."""
         message: Optional[Message] = None
         if self.configuration.cache_provider is not None:
             message = self.configuration.cache_provider.search(parameters, session)
         if self.configuration.mock_provider is not None:
             message = self.configuration.mock_provider.call(session)
         if message is not None:
-            # character by character yield
             if yield_type == "all":
                 seq = ""
                 for char in message.content:
                     seq = seq + char
-                    yield Message(content=seq, sender=message.sender)
+                    yield Message(content=seq, role=message.role)
             else:
                 for char in message.content:
-                    yield Message(content=char, sender=message.sender)
+                    yield Message(content=char, role=message.role)
             return
         parameters, session = self.prepare(parameters, session, True)
         messages = self._send_async(parameters, session, yield_type)
@@ -269,23 +430,15 @@ class Model(BaseModel, ABC):
     def validate_configuration(
         self, configuration: Configuration, is_async: bool
     ) -> None:
-        """validate_configuration method define the concrete procedure to validate configuration. You can override this method to add validation logic."""
+        """validate_configuration method define the concrete procedure to validate configuration."""
         ...
 
     def validate_parameters(self, parameters: Parameters, is_async: bool) -> None:
-        """validate_parameters method define the concrete procedure to validate parameters. You can override this method to add validation logic."""
+        """validate_parameters method define the concrete procedure to validate parameters."""
         ...
 
     def validate_session(self, session: Session, is_async: bool) -> None:
-        """validate_session method defines the basic validation procedure for sessions.
-
-        Validates:
-        - Session must have at least one message
-        - All messages must have string content
-        - All messages must have a sender
-
-        You can override this method to add model-specific validation logic.
-        """
+        """validate_session method defines the basic validation procedure for sessions."""
         if len(session.messages) == 0:
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
@@ -294,15 +447,28 @@ class Model(BaseModel, ABC):
             raise ParameterValidationError(
                 f"{self.__class__.__name__}: All message in a session should be string."
             )
-        if any([message.sender is None for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should have sender."
-            )
+
+        # Filter out control template messages for validation
+        messages = [
+            message for message in session.messages if message.role != "control"
+        ]
+
+        # Check for system messages
+        system_messages = [msg for msg in messages if msg.role == "system"]
+        if system_messages:
+            if len(system_messages) > 1:
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: Only one system message is allowed in a session."
+                )
+            if messages[0].role != "system":
+                raise ParameterValidationError(
+                    f"{self.__class__.__name__}: System message must be at the beginning of the session."
+                )
 
     def vaidate_other(
         self, parameters: Parameters, session: Session, is_async: bool
     ) -> None:
-        """vaidate_other method define the concrete procedure to validate other parameters and session. You can override this method to add validation logic."""
+        """vaidate_other method define the concrete procedure to validate other parameters and session."""
         ...
 
     def before_send(
@@ -312,7 +478,7 @@ class Model(BaseModel, ABC):
         Optional[UpdatedParameters],
         Optional[Session],
     ]:
-        """before_send method define the concrete procedure to pre-process parameters and session. You can override this method to add pre-processing logic."""
+        """before_send method define the concrete procedure to pre-process parameters and session."""
         return (None, None, None)
 
     def after_send(
@@ -322,9 +488,9 @@ class Model(BaseModel, ABC):
         message: Message,
         is_async: bool,
     ) -> UpdatedMessage:
-        """after_send method define the concrete procedure to post-process parameters, session, and message. You can override this method to add post-processing logic."""
+        """after_send method define the concrete procedure to post-process parameters, session, and message."""
         return message
 
     def list_models(self) -> List[str]:
-        """list_models method define the concrete procedure to list models. You can override this method to add list_models logic."""
+        """list_models method define the concrete procedure to list models."""
         raise NotImplementedError("List models is not implemented for this model.")

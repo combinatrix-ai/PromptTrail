@@ -5,43 +5,36 @@ import os
 import click
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import LinearTemplate
-from prompttrail.agent.templates.openai import (
-    OpenAIGenerateTemplate as GenerateTemplate,
+from prompttrail.agent.templates import (
+    AssistantTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    UserTemplate,
 )
-from prompttrail.agent.templates.openai import OpenAIMessageTemplate as MessageTemplate
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message, Session
-from prompttrail.models.openai import (
-    OpenAIChatCompletionModel,
-    OpenAIModelConfiguration,
-    OpenAIModelParameters,
-)
+from prompttrail.core import Session
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(
     templates=[
-        MessageTemplate(
+        SystemTemplate(
             content="""
 You're an AI proofreader that help user to fix markdown.
 You're given python script content by the user.
 You must fix the missspellings in the comments.
 You only emit the corrected python script. No explanation is needed.
 """,
-            role="system",
         ),
-        MessageTemplate(
+        UserTemplate(
             content="{{content}}",
-            role="user",
         ),
-        GenerateTemplate(role="assistant"),
+        AssistantTemplate(),
     ],
 )
 
-configuration = OpenAIModelConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIModelParameters(
-    model_name="gpt-3.5-turbo-16k", temperature=0.0, max_tokens=8000
-)
-model = OpenAIChatCompletionModel(configuration=configuration)
+configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
+parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=8000)
+model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
@@ -62,14 +55,10 @@ def main(
     logging.basicConfig(level=logging.INFO)
 
     load_file_content = open(load_file, "r")
-    initial_session = Session()
-    initial_session.append(
-        Message(
-            content="",
-            metadata={
-                "content": load_file_content.read(),
-            },
-        )
+    initial_session = Session(
+        metadata={
+            "content": load_file_content.read(),
+        }
     )
     session = runner.run(session=initial_session)
     last_message = session.get_last_message()

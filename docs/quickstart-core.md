@@ -1,7 +1,38 @@
-# `core`: Developer Tools for LLM
+# `core`: Developer Tools for LLMs
 
-`core` module is unified with other modules.
-Therefore, you should read other quickstart sections first.
+The `core` module provides foundational functionality used by other modules.
+We recommend reading the other quickstart sections before this one.
+
+## Metadata
+
+The `Metadata` class provides a type-safe, dictionary-like interface for managing metadata in sessions and messages. It supports all common dictionary operations while ensuring type safety and proper data handling.
+
+```python
+from prompttrail.core import Metadata, Session, Message
+
+# Creating metadata
+metadata = Metadata()
+metadata["key"] = "value"
+metadata.update({"another_key": 42})
+
+# Using with Session
+session = Session(metadata={"user_id": "123"})
+session.metadata["language"] = "ja"
+
+# Using with Message
+message = Message(
+    content="Hello",
+    role="user",
+    metadata={"timestamp": "2024-01-26"}
+)
+```
+
+Key features of `Metadata`:
+- Dictionary-like operations (get, set, update)
+- Support for complex value types (strings, numbers, lists, dictionaries)
+- Copy operations that maintain independence
+- Type safety and proper data handling
+
 
 (cache)=
 ## Cache
@@ -14,14 +45,14 @@ Let's see an example:
 
 ```python
 from prompttrail.core.cache import LRUCacheProvider
-from prompttrail.models.openai import OpenAIModelConfiguration
+from prompttrail.models.openai import OpenAIConfiguration
 
-config = OpenAIModelConfiguration(
+config = OpenAIConfiguration(
     api_key=api_key,
     # Just pass a cache provider to the configuration
     cache_provider=LRUCacheProvider()
 )
-model = OpenAIChatCompletionModel(config)
+model = OpenAIModel(config)
 ```
 
 We passed a `LRUCacheProvider` to the configuration. And the configuration is passed to the model.
@@ -30,10 +61,10 @@ Just call `send` method as usual. If you pass the same `session` and `parameter`
 
 ```python
 from prompttrail.core import Session, Message
-from prompttrail.models.openai import OpenAIModelParameters
-parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
+from prompttrail.models.openai import OpenAIParam
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-4o-mini")
 session = Session(
-    messages = [Message(content="Hello, I'm a human.", sender="user")]
+    messages = [Message(content="Hello, I'm a human.", role="user")]
 )
 # This time, the model calls the API
 message_1 = model.send(parameters=parameters, session=session)
@@ -65,27 +96,27 @@ Let's see an example of `OneTurnConversationMockProvider`, which returns a messa
 ```python
 from prompttrail.core import Message
 from prompttrail.core.mock import OneTurnConversationMockProvider
-from prompttrail.models.openai import OpenAIModelConfiguration
+from prompttrail.models.openai import OpenAIConfiguration
 # First, you need to define a table to define how the mock return response based on last message
-sender = "assistant"
+role = "assistant"
 conversation_table = {
-    "Hello": Message(content="Hi", sender=sender),
+    "Hello": Message(content="Hi", role=role),
 }
 # Then, you can pass the table to the mock provider and pass the mock provider to the configuration
-config = OpenAIModelConfiguration(
+config = OpenAIConfiguration(
     api_key=api_key,
     mock_provider= OneTurnConversationMockProvider(conversation_table)
 )
-model = OpenAIChatCompletionModel(config)
+model = OpenAIModel(config)
 ```
 
 Let's call the model:
 ```python
 from prompttrail.core import Session, Message
-from prompttrail.models.openai import OpenAIModelParameters
-parameter = OpenAIModelParameters(max_tokens=100, model_name="gpt-3.5-turbo")
+from prompttrail.models.openai import OpenAIParam
+parameter = OpenAIParam(max_tokens=100, model_name="gpt-4o-mini")
 session = Session(
-    messages = [Message(content="Hello", sender="user")]
+    messages = [Message(content="Hello", role="user")]
 )
 message = model.send(parameters=parameters, session=session)
 assert message.content == "Hi"
