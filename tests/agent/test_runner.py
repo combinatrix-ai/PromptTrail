@@ -1,7 +1,7 @@
 # simple meta templates
 from prompttrail.agent import Session
-from prompttrail.agent.hooks import BooleanHook, TransformHook
 from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.session_transformers._core import LambdaSessionTransformer
 from prompttrail.agent.templates import (
     AssistantTemplate,
     BreakTemplate,
@@ -14,6 +14,7 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
+from prompttrail.core import Metadata
 from prompttrail.core.mocks import EchoMockProvider
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
@@ -70,9 +71,7 @@ def test_if_template():
                     content="False",
                     role="assistant",
                 ),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
         ]
     )
@@ -100,11 +99,12 @@ def test_if_template():
 def test_loop_template():
     loop_count = 0
 
-    def update_loop_count(session: Session) -> Session:
+    def update_loop_count(session: Session) -> Metadata:
         nonlocal loop_count
         loop_count += 1
-        session.metadata["loop_count"] = loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["loop_count"] = loop_count
+        return metadata
 
     def mock_exit_condition(session: Session) -> bool:
         # For the purpose of the test, let's exit after 3 iterations
@@ -117,10 +117,10 @@ def test_loop_template():
                 role="assistant",
                 # loop_count is 1,2,3... as before_transform is called before the message is rendered
                 content="This is loop iteration {{ loop_count }}.",
-                before_transform=[TransformHook(update_loop_count)],
+                before_transform=[LambdaSessionTransformer(update_loop_count)],
             )
         ],
-        exit_condition=BooleanHook(condition=mock_exit_condition),
+        exit_condition=mock_exit_condition,
     )
 
     runner = CommandLineRunner(
@@ -145,20 +145,22 @@ def test_nested_loop_template():
     outer_loop_count = 0
     inner_loop_count = 0
 
-    def update_outer_loop_count(session: Session) -> Session:
+    def update_outer_loop_count(session: Session) -> Metadata:
         nonlocal inner_loop_count
         nonlocal outer_loop_count
         inner_loop_count = 0
         outer_loop_count += 1
-        session.metadata["inner_loop_count"] = 0
-        session.metadata["outer_loop_count"] = outer_loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["inner_loop_count"] = 0
+        metadata["outer_loop_count"] = outer_loop_count
+        return metadata
 
-    def update_inner_loop_count(session: Session) -> Session:
+    def update_inner_loop_count(session: Session) -> Metadata:
         nonlocal inner_loop_count
         inner_loop_count += 1
-        session.metadata["inner_loop_count"] = inner_loop_count
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["inner_loop_count"] = inner_loop_count
+        return metadata
 
     def mock_outer_exit_condition(session: Session) -> bool:
         nonlocal outer_loop_count
@@ -173,20 +175,23 @@ def test_nested_loop_template():
             MessageTemplate(
                 role="assistant",
                 content="Outer Loop: {{ outer_loop_count }}",
-                before_transform=[TransformHook(update_outer_loop_count)],
+                before_transform=[LambdaSessionTransformer(update_outer_loop_count)],
             ),
             LoopTemplate(
                 templates=[
                     MessageTemplate(
                         role="assistant",
                         content="  Inner Loop: {{ inner_loop_count }}",
-                        before_transform=[TransformHook(update_inner_loop_count)],
+                        before_transform=[
+                            LambdaSessionTransformer(update_inner_loop_count)
+                        ],
                     )
                 ],
-                exit_condition=BooleanHook(condition=mock_inner_exit_condition),
+                # Use a mock exit condition for the inner loop
+                exit_condition=mock_inner_exit_condition,
             ),
         ],
-        exit_condition=BooleanHook(condition=mock_outer_exit_condition),
+        exit_condition=mock_outer_exit_condition,
     )
 
     runner = CommandLineRunner(
@@ -229,9 +234,7 @@ def test_end_template():
                     role="assistant",
                 ),
                 false_template=EndTemplate(),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
             MessageTemplate(
                 role="assistant",
@@ -275,9 +278,7 @@ def test_break_template():
                     role="assistant",
                 ),
                 false_template=BreakTemplate(),
-                condition=BooleanHook(
-                    lambda session: session.messages[-1].content == "TRUE"
-                ),
+                condition=lambda session: session.messages[-1].content == "TRUE",
             ),
             MessageTemplate(
                 role="assistant",
@@ -452,34 +453,34 @@ def test_nested_loop_with_break_template():
     outer_loop_counter = 0
     inner_loop_counter = 0
 
-    def update_outer_loop_counter(session: Session) -> Session:
+    def update_outer_loop_counter(session: Session) -> Metadata:
         nonlocal outer_loop_counter
         outer_loop_counter += 1
-        session.metadata["outer_loop_counter"] = outer_loop_counter
-        session.metadata["inner_loop_counter"] = 0  # Reset inner loop counter
+        metadata = Metadata(session.metadata)
+        metadata["outer_loop_counter"] = outer_loop_counter
+        metadata["inner_loop_counter"] = 0  # Reset inner loop counter
         # reset inner loop counter
         nonlocal inner_loop_counter
         inner_loop_counter = 0
-        return session
+        return metadata
 
-    def update_inner_loop_counter(session: Session) -> Session:
+    def update_inner_loop_counter(session: Session) -> Metadata:
         nonlocal inner_loop_counter
         inner_loop_counter = (inner_loop_counter + 1) % 5  # Reset after 5 iterations
-        session.metadata["inner_loop_counter"] = inner_loop_counter
-        return session
+        metadata = Metadata(session.metadata)
+        metadata["inner_loop_counter"] = inner_loop_counter
+        return metadata
 
     inner_loop_template = LoopTemplate(
         templates=[
             IfTemplate(
-                before_transform=[TransformHook(update_inner_loop_counter)],
+                before_transform=[LambdaSessionTransformer(update_inner_loop_counter)],
                 true_template=BreakTemplate(),
                 false_template=MessageTemplate(
                     role="assistant",
                     content="Inner loop iteration {{ inner_loop_counter }} of outer iteration {{ outer_loop_counter }}",
                 ),
-                condition=BooleanHook(
-                    lambda session: session.metadata["inner_loop_counter"] > 2
-                ),
+                condition=lambda session: session.metadata["inner_loop_counter"] > 2,
             ),
         ],
     )
@@ -487,15 +488,13 @@ def test_nested_loop_with_break_template():
     outer_loop_template = LoopTemplate(
         templates=[
             MessageTemplate(
-                before_transform=[TransformHook(update_outer_loop_counter)],
+                before_transform=[LambdaSessionTransformer(update_outer_loop_counter)],
                 role="assistant",
                 content="Starting outer loop iteration {{ outer_loop_counter }}",
             ),
             inner_loop_template,
         ],
-        exit_condition=BooleanHook(
-            condition=lambda session: session.metadata["outer_loop_counter"] >= 3
-        ),
+        exit_condition=lambda session: session.metadata["outer_loop_counter"] >= 3,
     )
 
     runner = CommandLineRunner(

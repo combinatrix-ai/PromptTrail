@@ -289,7 +289,39 @@ Other attributes can also be accessed:
 
 - `stack`: You can access the template stack. This is used for template control flow.
 
-- `jump_to_id`: You can set this to jump to another template. For example, this is used by `IfJumpHook` to jump to another template.
+- `jump_to_id`: You can set this to jump to another template. This is used by control flow templates like `JumpTemplate`.
+
+## Control Flow
+
+PromptTrail provides several templates for controlling the flow of conversation:
+
+- `LoopTemplate`: Repeats a sequence of templates until an exit condition is met or maximum iterations reached
+  ```python
+  LoopTemplate(
+      templates=[...],
+      exit_condition=lambda session: session.get_last().content == "END",
+      exit_loop_count=10  # Optional: maximum number of iterations
+  )
+  ```
+
+- `IfTemplate`: Conditionally executes templates based on a condition
+  ```python
+  IfTemplate(
+      condition=lambda session: "answer" in session.metadata,
+      true_template=AssistantTemplate(...),
+      false_template=BreakTemplate()
+  )
+  ```
+
+- `JumpTemplate`: Jumps to another template when a condition is met
+  ```python
+  JumpTemplate(
+      jump_to="template_id",
+      condition=lambda session: session.metadata["should_jump"]
+  )
+  ```
+
+The conditions are defined as lambda functions that take a Session object and return a boolean value.
 
 ## Tool (Function Calling)
 

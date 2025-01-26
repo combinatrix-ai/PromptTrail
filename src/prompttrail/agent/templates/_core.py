@@ -7,7 +7,7 @@ from uuid import uuid4
 import jinja2
 from pydantic import BaseModel
 
-from prompttrail.agent.hooks import TransformHook
+from prompttrail.agent.session_transformers._core import SessionTransformer
 from prompttrail.core import Message, MessageRoleType, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
@@ -44,8 +44,12 @@ class Template(Debuggable, metaclass=ABCMeta):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         super().__init__()
@@ -56,8 +60,8 @@ class Template(Debuggable, metaclass=ABCMeta):
         self.enable_logging = enable_logging
 
     def _hooks_to_list(
-        self, hooks: Optional[Union[List[TransformHook], TransformHook]]
-    ) -> List[TransformHook]:
+        self, hooks: Optional[Union[List[SessionTransformer], SessionTransformer]]
+    ) -> List[SessionTransformer]:
         """Convert hook(s) to list format."""
         if hooks is None:
             return []
@@ -69,10 +73,10 @@ class Template(Debuggable, metaclass=ABCMeta):
         session.push_stack(self.create_stack(session))
         try:
             for hook in self.before_transform:
-                session = hook.hook(session)
+                session = hook.process(session)
             res = yield from self._render(session)
             for hook in self.after_transform:
-                session = hook.hook(session)
+                session = hook.process(session)
         except (BreakException, ReachedEndTemplateException, JumpException) as e:
             raise e
         except Exception as e:
@@ -119,8 +123,12 @@ class MessageTemplate(Template):
         content: str,
         role: MessageRoleType,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         super().__init__(
@@ -174,8 +182,12 @@ class GenerateTemplate(MessageTemplate):
         self,
         role: MessageRoleType,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging=True,
     ):
         super().__init__(
@@ -209,8 +221,12 @@ class SystemTemplate(MessageTemplate):
         self,
         content: str,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging=True,
     ):
         super().__init__(
@@ -231,8 +247,12 @@ class UserTemplate(MessageTemplate):
         description: Optional[str] = None,
         default: Optional[str] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         super().__init__(
@@ -276,8 +296,12 @@ class AssistantTemplate(MessageTemplate):
         self,
         content: Optional[str] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         super().__init__(

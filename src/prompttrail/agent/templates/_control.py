@@ -1,8 +1,8 @@
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Generator, List, Optional, Sequence, Set, TypeAlias, Union
+from typing import Callable, Generator, List, Optional, Sequence, Set, TypeAlias, Union
 
-from prompttrail.agent.hooks import BooleanHook, TransformHook
+from prompttrail.agent.session_transformers._core import SessionTransformer
 from prompttrail.agent.templates._core import Stack, Template
 from prompttrail.core import Message, Session
 from prompttrail.core.const import (
@@ -26,8 +26,12 @@ class ControlTemplate(Template, metaclass=ABCMeta):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         super().__init__(
@@ -107,18 +111,22 @@ class LoopTemplate(ControlTemplate):
     def __init__(
         self,
         templates: Sequence[Template],
-        exit_condition: Optional[BooleanHook] = None,
+        exit_condition: Optional[Callable[[Session], bool]] = None,
         template_id: Optional[str] = None,
         exit_loop_count: Optional[int] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         """A template for a loop control flow. Unlike `LinearTemplate`, this template loops over the child templates until the exit condition is met.
 
         Args:
             templates (Sequence[Template]): Templates to be looped. Execution order is the same as the order of the list.
-            exit_condition (Optional[BooleanHook], optional): If set, the loop is broken when the condition is met. Defaults to None (Infinite loop).
+            exit_condition (Optional[Condition], optional): If set, the loop is broken when the condition is met. Defaults to None (Infinite loop).
             template_id (Optional[str], optional): Template ID of this template. Defaults to None.
             exit_loop_count (Optional[int], optional): If set, the loop is broken when the loop count is over this number. Defaults to None (Infinite loop).
             before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
@@ -147,7 +155,7 @@ class LoopTemplate(ControlTemplate):
             except BreakException:
                 # Break the loop if a BreakException is raised.
                 break
-            if self.exit_condition and self.exit_condition.hook(session):
+            if self.exit_condition and self.exit_condition(session):
                 # Break the loop if the exit condition is met.
                 break
             stack.next()
@@ -183,18 +191,22 @@ class LoopTemplate(ControlTemplate):
 class IfTemplate(ControlTemplate):
     def __init__(
         self,
-        condition: BooleanHook,
+        condition: Callable[[Session], bool],
         true_template: Template,
         false_template: Optional[Template] = None,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         """A template for a conditional control flow.
 
         Args:
-            condition (BooleanHook): Condition to be checked.
+            condition (Condition): Condition to be checked.
             true_template (Template): Template to be rendered if the condition is met.
             false_template (Optional[Template], optional): Template to be rendered if the condition is not met. Defaults to None. If None, this template return no message.
             template_id (Optional[str], optional): Template ID of this template. Defaults to None.
@@ -213,7 +225,7 @@ class IfTemplate(ControlTemplate):
         self.condition = condition
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        if self.condition.hook(session):
+        if self.condition(session):
             session = yield from self.true_template.render(session)
         else:
             if self.false_template is None:
@@ -251,8 +263,12 @@ class LinearTemplate(ControlTemplate):
         self,
         templates: Sequence[Template],
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
-        after_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
+        after_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
         enable_logging: bool = True,
     ):
         """A template for a linear control flow. Unlike `LoopTemplate`, this template exits after rendering all the child templates.
@@ -334,9 +350,11 @@ class JumpTemplate(ControlTemplate):
     def __init__(
         self,
         jump_to: Template | TemplateId,
-        condition: BooleanHook,
+        condition: Callable[[Session], bool],
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
     ):
         """A template for jumping to another template.
 
@@ -344,7 +362,7 @@ class JumpTemplate(ControlTemplate):
 
         Args:
             jump_to (Template | TemplateId): Template or template ID to jump to. When passed a TemplateId and the runner cannot find the template, it raises an error.
-            condition (BooleanHook): Condition to be checked. If the condition is met, the jump is executed. Otherwise, this template exits without jumping.
+            condition (Condition): Condition to be checked. If the condition is met, the jump is executed. Otherwise, this template exits without jumping.
             template_id (Optional[str], optional): Template ID of this template. Defaults to None.
             before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
         """
@@ -383,7 +401,9 @@ class BreakTemplate(ControlTemplate):
     def __init__(
         self,
         template_id: Optional[str] = None,
-        before_transform: Optional[Union[List[TransformHook], TransformHook]] = None,
+        before_transform: Optional[
+            Union[List[SessionTransformer], SessionTransformer]
+        ] = None,
     ):
         """A template for breaking the loop.
 

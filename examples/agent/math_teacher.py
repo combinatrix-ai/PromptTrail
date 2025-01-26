@@ -1,7 +1,6 @@
 import logging
 import os
 
-from prompttrail.agent.hooks import BooleanHook
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -41,8 +40,8 @@ template = LinearTemplate(
                 ),
                 check_end := AssistantTemplate(),
             ],
-            exit_condition=BooleanHook(
-                condition=lambda session: ("END" == session.get_last().content.strip())
+            exit_condition=lambda session: (
+                "END" == session.get_last().content.strip()
             ),
         ),
     ],
