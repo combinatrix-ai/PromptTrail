@@ -190,6 +190,114 @@ Here we have reviewed the core concepts of `prompttrail.agent`.
 
 You may start using `prompttrail.agent` to build your own agent now!
 
+## Subroutines
+
+Subroutines allow you to execute templates in an isolated session context with flexible strategies for session initialization and message handling. This is particularly useful when you want to:
+
+- Break down complex tasks into smaller, manageable pieces
+- Isolate certain parts of the conversation
+- Reuse template logic across different agents
+- Control message inheritance and propagation
+
+### Session Initialization Strategies
+
+When executing a subroutine, you can control how the session is initialized using various strategies:
+
+```python
+from prompttrail.agent.session_init_strategy import (
+    CleanSessionStrategy,
+    InheritSystemStrategy,
+    LastNMessagesStrategy,
+    FilteredInheritStrategy,
+)
+
+# Start with a clean session
+clean_strategy = CleanSessionStrategy()
+
+# Inherit only system messages
+system_strategy = InheritSystemStrategy()
+
+# Keep last N messages from parent
+last_n_strategy = LastNMessagesStrategy(n=3)
+
+# Custom filtering of messages
+def is_important(msg):
+    return msg.metadata.get("importance", 0) > 0.5
+filtered_strategy = FilteredInheritStrategy(filter_fn=is_important)
+```
+
+### Message Squashing Strategies
+
+After subroutine execution, you can control which messages are propagated back to the parent session:
+
+```python
+from prompttrail.agent.squash_strategy import (
+    LastMessageStrategy,
+    FilterByRoleStrategy,
+)
+
+# Keep only the last message
+last_message = LastMessageStrategy()
+
+# Keep messages with specific roles
+assistant_only = FilterByRoleStrategy(roles=["assistant"])
+```
+
+### Using SubroutineTemplate
+
+Here's an example of using subroutines to solve math problems:
+
+```python
+from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.templates import Template, LinearTemplate
+
+class CalculationTemplate(Template):
+    """Template for performing calculations"""
+    def _render(self, session):
+        yield Message(role="assistant", content="Let me solve this step by step:")
+        yield Message(role="assistant", content="1. First let's identify the key numbers...")
+        yield Message(role="assistant", content="The result is 42")
+        return session
+
+class MathProblemTemplate(Template):
+    """Template for solving math problems using subroutines"""
+    def __init__(self):
+        super().__init__()
+        # Create calculation subroutine
+        calculation = CalculationTemplate()
+        self.calculation_subroutine = SubroutineTemplate(
+            template=calculation,
+            session_init_strategy=InheritSystemStrategy(),
+            squash_strategy=FilterByRoleStrategy(roles=["assistant"]),
+        )
+
+    def _render(self, session):
+        # Main problem-solving flow
+        yield Message(role="assistant", content="I'll help solve this math problem")
+        
+        # Execute calculation subroutine
+        for message in self.calculation_subroutine.render(session):
+            yield message
+            
+        yield Message(role="assistant", content="Problem solved!")
+        return session
+
+# Use in a linear template
+template = LinearTemplate([
+    SystemTemplate(content="You are a math teacher."),
+    UserTemplate(content="What is 6 x 7?"),
+    MathProblemTemplate(),
+])
+```
+
+This example demonstrates:
+1. Isolated execution of the calculation logic
+2. Inheritance of system context
+3. Filtering of messages to keep only assistant responses
+4. Clean separation of concerns between problem setup and calculation
+
+See [examples/agent/subroutine_example.py](examples/agent/subroutine_example.py) for a complete working example.
+
 ## Hooks
 
 Hooks are used to enhance the template.
