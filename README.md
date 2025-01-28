@@ -92,6 +92,7 @@ pip install -e .
 - **Intuitive Templates**: Natural way to define conversation flows
 - **Powerful Tooling**: Type-safe function calling and built-in utilities
 - **Extensible**: Hooks system for custom behaviors and integrations
+- **Subroutines**: Isolated execution contexts with flexible session management
 - **[Coming Soon]**: Code execution, vector search, and more built-in tools
 
 ## Examples
@@ -257,8 +258,32 @@ message:  END
 =================
 ====== End ======
 ````
-
 Go to [examples](examples) directory for more examples.
+
+You can also use subroutines to break down complex tasks into manageable pieces:
+
+```python
+from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.session_init_strategy import InheritSystemStrategy
+from prompttrail.agent.squash_strategy import FilterByRoleStrategy
+
+# Define a calculation subroutine
+calculation = CalculationTemplate()  # Your calculation logic here
+subroutine = SubroutineTemplate(
+    template=calculation,
+    session_init_strategy=InheritSystemStrategy(),  # Inherit system messages
+    squash_strategy=FilterByRoleStrategy(roles=["assistant"])  # Keep only assistant messages
+)
+
+# Use in main template
+template = LinearTemplate([
+    SystemTemplate(content="You are a math teacher."),
+    UserTemplate(content="What is 6 x 7?"),
+    subroutine,  # Execute calculation in isolated context
+])
+```
+
+See [examples/agent/subroutine_example.py](examples/agent/subroutine_example.py) for a complete example.
 
 ### Tooling
 
