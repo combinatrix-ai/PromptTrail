@@ -3,11 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from prompttrail.core import Message, Session
-from prompttrail.models.transformers import (
-    TransformersConfig,
-    TransformersModel,
-    TransformersParam,
-)
+from prompttrail.models.transformers import TransformersConfig, TransformersModel
 from tests.models.test_utils import (
     run_basic_message_test,
     run_malformed_sessions_test,
@@ -17,7 +13,9 @@ from tests.models.test_utils import (
 
 @pytest.fixture
 def mock_model():
-    config = TransformersConfig(device="cpu")
+    config = TransformersConfig(
+        device="cpu", model_name="mock-model", temperature=0.0, max_tokens=100
+    )
     model = MagicMock()
     tokenizer = MagicMock()
     tokenizer.decode.return_value = "mock response"
@@ -32,20 +30,20 @@ def mock_model():
 def test_validate_session(mock_model):
     # Test malformed sessions
     run_malformed_sessions_test(
-        mock_model, TransformersParam(), supports_tool_result=False
+        mock_model, mock_model.configuration, supports_tool_result=False
     )
 
 
 def test_basic_message(mock_model):
     # Basic message handling
-    run_basic_message_test(mock_model, TransformersParam(), "mock response")
+    run_basic_message_test(mock_model, mock_model.configuration, "mock response")
 
 
 def test_system_message(mock_model):
     # System message handling
     run_system_message_test(
         mock_model,
-        TransformersParam(),
+        mock_model.configuration,
         "mock response",
         user_message="Calculate 14+13",
     )

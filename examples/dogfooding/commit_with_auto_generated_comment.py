@@ -19,9 +19,9 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Metadata, Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 
 class RewriteMessage(SessionTransformer):
@@ -148,7 +148,7 @@ Please generate a commit message based on the following information:
             after_transform=ResetMetadata(),
         ),
         LoopTemplate(
-            templates=[
+            [
                 AssistantTemplate(
                     template_id="generate_commit_message",
                     after_transform=SaveCommitMessage(),
@@ -219,8 +219,8 @@ def main(
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable is required")
 
-    configuration = AnthropicConfig(api_key=api_key)
-    parameter = AnthropicParam(
+    configuration = AnthropicConfig(
+        api_key=api_key,
         model_name="claude-3-5-sonnet-latest",
         temperature=0.7,
         max_tokens=1000,
@@ -229,9 +229,8 @@ def main(
 
     runner = CommandLineRunner(
         model=model,
-        parameters=parameter,
         template=templates,
-        user_interaction_provider=UserInteractionTextCLIProvider(),
+        user_interface=CLIInterface(),
     )
 
     git_info = get_git_info()

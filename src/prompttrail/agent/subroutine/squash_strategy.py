@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from prompttrail.core import Message, Model, Session
-from prompttrail.models.openai import OpenAIParam
 
 
 class SquashStrategy(ABC):
@@ -75,8 +74,7 @@ class LLMFilteringStrategy(SquashStrategy):
 
         # Get filtering decision from LLM
         response = self.model.send(
-            OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=100),
-            Session(messages=[Message(role="user", content=formatted_prompt)]),
+            Session(messages=[Message(role="user", content=formatted_prompt)])
         )
 
         # Parse response to determine which messages to keep
@@ -122,8 +120,7 @@ class LLMSummarizingStrategy(SquashStrategy):
 
         # Get summary from LLM
         response = self.model.send(
-            OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=100),
-            Session(messages=[Message(role="user", content=formatted_prompt)]),
+            Session(messages=[Message(role="user", content=formatted_prompt)])
         )
 
         # Create a new message with the summary

@@ -176,7 +176,7 @@ Selected indices (0-based):
 
     # Verify mock calls
     mock_model.send.assert_called_once()
-    call_args = mock_model.send.call_args[0][1].messages[0].content
+    call_args = mock_model.send.call_args[0][0].messages[0].content
     assert "conversation" in prompt
     assert "Hello" in call_args
     assert "What's the weather today?" in call_args
@@ -217,7 +217,7 @@ Summary:
 
     # Verify mock calls
     mock_model.send.assert_called_once()
-    call_args = mock_model.send.call_args[0][1].messages[0].content
+    call_args = mock_model.send.call_args[0][0].messages[0].content
     assert "conversation" in prompt
     assert "Hello" in call_args
     assert "What's the weather today?" in call_args

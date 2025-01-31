@@ -22,9 +22,9 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import (
-    OneTurnConversationUserInteractionTextMockProvider,
-    UserInteractionTextCLIProvider,
+from prompttrail.agent.user_interface import (
+    CLIInterface,
+    SingleTurnResponseMockInterface,
 )
 from prompttrail.core import Message
 from prompttrail.core.mocks import OneTurnConversationMockProvider
@@ -150,11 +150,7 @@ from prompttrail.agent.runners import CommandLineRunner  # noqa: E402
 
 # Import some classes to interact with OpenAI API
 # You can just use these classes if you directly use OpenAI API. See examples/model/openai.py for more details.
-from prompttrail.models.openai import (  # noqa: E402
-    OpenAIConfig,
-    OpenAIModel,
-    OpenAIParam,
-)
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel  # noqa: E402
 
 # We will provide other runner, which will enable you to input/output via HTTP, etc... in the future.
 
@@ -165,13 +161,13 @@ from prompttrail.models.openai import (  # noqa: E402
 if not is_in_test_env():
     # First, let's see how the agent works in CLI (without mocking)!
     # Just set up the runner and run it!
+    config = OpenAIConfig(
+        api_key=os.environ.get("OPENAI_API_KEY", ""), model_name="gpt-4o-mini"
+    )
     runner = CommandLineRunner(
-        model=OpenAIModel(
-            configuration=OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
-        ),
-        parameters=OpenAIParam(model_name="gpt-4o-mini"),
+        model=OpenAIModel(configuration=config),
         template=agent_template,
-        user_interaction_provider=UserInteractionTextCLIProvider(),
+        user_interface=CLIInterface(),
     )
     if __name__ == "__main__":
         conversation = runner.run()
@@ -181,32 +177,30 @@ if not is_in_test_env():
 else:
     # Here, we will run the agent in automatically for testing!
     # If you want to see how the automatic agent works, you can run the agent manually with setting environment variable CI=true or DEBUG=true!
-    runner = CommandLineRunner(
-        # Use mock model in CI or DEBUG
-        model=OpenAIModel(
-            configuration=OpenAIConfig(
-                # Of course, same arguments as OpenAIChatCompletionModel can be used
-                api_key=os.environ.get("OPENAI_API_KEY", ""),
-                # You can define the behaviour of the mock model using mock_provider
-                mock_provider=OneTurnConversationMockProvider(
-                    conversation_table={
-                        "How many cats in Japan?": Message(
-                            content="""Thoughts: ...
+    config = OpenAIConfig(
+        api_key=os.environ.get("OPENAI_API_KEY", ""),
+        model_name="gpt-4o-mini",
+        # You can define the behaviour of the mock model using mock_provider
+        mock_provider=OneTurnConversationMockProvider(
+            conversation_table={
+                "How many cats in Japan?": Message(
+                    content="""Thoughts: ...
         Calculation:
         ```python
         5300000 * 0.49 * 2.1
         ```
         """,
-                            role="assistant",
-                        ),
-                        "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
-                            content="END", role="assistant"
-                        ),
-                    },
+                    role="assistant",
                 ),
-            ),
+                "The user has stated their feedback. If you think the user is satisified, you must answer `END`. Otherwise, you must answer `RETRY`.": Message(
+                    content="END", role="assistant"
+                ),
+            },
         ),
-        user_interaction_provider=OneTurnConversationUserInteractionTextMockProvider(
+    )
+    runner = CommandLineRunner(
+        model=OpenAIModel(configuration=config),
+        user_interface=SingleTurnResponseMockInterface(
             conversation_table={
                 # 5300000 * 0.49 * 2.1 = 5453700.0
                 cast(
@@ -215,7 +209,6 @@ else:
                 "The answer is 5453700.0 . Satisfied?": "OK",
             }
         ),
-        parameters=OpenAIParam(model_name="gpt-4o-mini"),
         template=agent_template,
     )
     if __name__ == "__main__":

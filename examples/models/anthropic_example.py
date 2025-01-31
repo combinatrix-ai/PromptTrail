@@ -8,8 +8,8 @@ from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import SystemTemplate, ToolingTemplate, UserTemplate
 from prompttrail.agent.templates._control import LinearTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
-from prompttrail.agent.user_interaction import DefaultEchoMockProvider
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+from prompttrail.agent.user_interface import DefaultOrEchoMockInterface
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 
 class WeatherData(TypedDict):
@@ -80,20 +80,18 @@ def main():
         raise ValueError("ANTHROPIC_API_KEY environment variable is required")
 
     # Initialize components
-    config = AnthropicConfig(api_key=api_key)
-    model = AnthropicModel(configuration=config)
     weather_tool = WeatherForecastTool()
-
-    # Create parameters with tools
-    parameters = AnthropicParam(
+    config = AnthropicConfig(
+        api_key=api_key,
         model_name="claude-3-opus-latest",
         temperature=0,
-        tools=[weather_tool],  # Set tools in parameters
+        tools=[weather_tool],  # Set tools in configuration
     )
+    model = AnthropicModel(configuration=config)
 
     # Create template with tools
     template = LinearTemplate(
-        templates=[
+        [
             SystemTemplate(
                 content="""You are a helpful weather assistant.""",
             ),
@@ -109,9 +107,8 @@ def main():
     # Create runner
     runner = CommandLineRunner(
         model=model,
-        parameters=parameters,
         template=template,
-        user_interaction_provider=DefaultEchoMockProvider(),
+        user_interface=DefaultOrEchoMockInterface(),
     )
 
     # Run the conversation

@@ -6,26 +6,26 @@ from typing import Any, Dict, Generator, TypedDict
 
 import pytest
 
-from examples.dogfooding.dogfooding_tools import EditFile
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
+from prompttrail.agent.tools.builtin import EditFile
 from prompttrail.core.errors import ParameterValidationError
 
 
-class TestResultData(TypedDict):
+class SampleResultData(TypedDict):
     result: str
 
 
-class TestResult(ToolResult):
+class SampleResult(ToolResult):
     def __init__(self, result: str):
         super().__init__(content=json.dumps({"result": result}))
 
 
-class TestEnumType(enum.Enum):
+class SampleEnumType(enum.Enum):
     A = "a"
     B = "b"
 
 
-class TestTool(Tool):
+class SampleTool(Tool):
     name: str = "test_tool"
     description: str = "test tool"
     arguments: dict[str, ToolArgument[Any]] = {
@@ -44,13 +44,13 @@ class TestTool(Tool):
         "arg3": ToolArgument(
             name="arg3",
             description="arg3",
-            value_type=TestEnumType,
+            value_type=SampleEnumType,
             required=False,
         ),
     }
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
-        return TestResult(result="test")
+        return SampleResult(result="test")
 
 
 @pytest.fixture
@@ -65,7 +65,7 @@ def test_file() -> Generator[Path, None, None]:
 
 def test_tool_validation():
     """Test tool validation"""
-    tool = TestTool()
+    tool = SampleTool()
 
     # Test required argument
     with pytest.raises(
@@ -86,7 +86,7 @@ def test_tool_validation():
         tool.execute(arg1="test", arg3="invalid")
 
     # Test valid arguments
-    result = tool.execute(arg1="test", arg2=1, arg3=TestEnumType.A)
+    result = tool.execute(arg1="test", arg2=1, arg3=SampleEnumType.A)
     assert isinstance(result, ToolResult)
     assert isinstance(result.content, str)
 

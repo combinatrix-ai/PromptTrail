@@ -13,12 +13,12 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Session
-from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 templates = LinearTemplate(
-    templates=[
+    [
         SystemTemplate(
             content="""
 You're an AI assistant that help user to annotate docstring for given Python code.
@@ -37,15 +37,18 @@ For your information, README is given below.
     ],
 )
 
-configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=5000)
+configuration = OpenAIConfig(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    model_name="gpt-4o-mini",
+    temperature=0.0,
+    max_tokens=5000,
+)
 model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
     template=templates,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 
