@@ -4,8 +4,8 @@ from typing import Dict, Optional, Set, cast
 
 from prompttrail.agent.templates._control import EndTemplate
 from prompttrail.agent.templates._core import Template
-from prompttrail.agent.user_interaction import UserInteractionProvider
-from prompttrail.core import MessageRoleType, Model, Parameters, Session
+from prompttrail.agent.user_interface import UserInterface
+from prompttrail.core import MessageRoleType, Model, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException
 from prompttrail.core.utils import Debuggable
 
@@ -18,14 +18,13 @@ class Runner(Debuggable, metaclass=ABCMeta):
     def __init__(
         self,
         model: Model,
-        parameters: Parameters,
         template: "Template",
-        user_interaction_provider: UserInteractionProvider,
+        user_interface: UserInterface,
     ):
+        """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
         super().__init__()
         self.models = model
-        self.parameters = parameters
-        self.user_interaction_provider = user_interaction_provider
+        self.user_interface = user_interface
         self.template = template
         self.template_dict: Dict[str, Template] = {}
         visited_templates: Set[Template] = set()
@@ -35,7 +34,6 @@ class Runner(Debuggable, metaclass=ABCMeta):
                     f"Template id {next_template.template_id} is duplicated."
                 )
             self.template_dict[next_template.template_id] = next_template
-        """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
 
     @abstractmethod
     def run(

@@ -17,22 +17,22 @@ Let's call OpenAI's GPT models. (You need to set `OPENAI_API_KEY` environment va
 ```python
 import os
 from prompttrail.core import Session, Message
-from prompttrail.models.openai import (
-    OpenAIModel,
-    OpenAIConfiguration,
-    OpenAIParam
-)
+from prompttrail.models.openai import OpenAIModel, OpenAIConfig
 
 api_key = os.environ["OPENAI_API_KEY"]
-config = OpenAIConfiguration(api_key=api_key)
-parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
+config = OpenAIConfig(
+    api_key=api_key,
+    model_name="gpt-4o-mini",
+    max_tokens=100,
+    temperature=0
+)
 model = OpenAIModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-model.send(parameters=parameters, session=session)
+model.send(session=session)
 ```
 
 You can see the response from the model like this:
@@ -80,10 +80,12 @@ Session is just a collection of messages.
 If you want to use non-chat models as traditional language models, you can just pass a session with a single message.
 ```
 
-### Model
+### Model and Configuration
 
 ```python
-message = model.send(parameters=parameters, session=session)
+config = OpenAIConfig(api_key=api_key, model_name="gpt-4o-mini")
+model = OpenAIModel(configuration=config)
+message = model.send(session=session)
 ```
 
 We call the interface to access LLM models `Model`.
@@ -93,37 +95,14 @@ Conversation with LLM is a simple process:
 - Pass a `Session` to the LLM
 - Get a new `Message` from the LLM
 
-Therefore, `Model` is simple. You only need to remeber one method:
-
-- `send(session: Session) -> Message`: send a session to the model and get the response
-
-### Configuration
-
-```python
-config = OpenAIModelConfiguration(api_key=api_key)
-...
-model = OpenAIChatCompletionModel(configuration=config)
-```
-
-On initialization of the model, you need to pass a `Configuration` object.
-Each provider has different configuration parameters.
-Things won't change course of the conversation (e.g. API key) are passed here.
+Each provider has its own configuration class that inherits from `Config`. This configuration includes:
+- Static settings (e.g., API keys, organization IDs)
+- Model parameters (e.g., model name, temperature, max tokens)
+- Optional providers (cache provider, mock provider)
 
 ```{Note}
-`CacheProvider` is also passed as a configuration parameter. PromptTrail has a built-in cache  mechanism to reduce the number of API calls. See `Cache` section for more details.
+`CacheProvider` can be passed as a configuration parameter. PromptTrail has a built-in cache mechanism to reduce the number of API calls. See `Cache` section for more details.
 ```
-
-### Parameters
-
-```python
-parameters = OpenAIModelParameters(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
-...
-message = model.send(parameters=parameters, session=session)
-```
-
-Different from `Configuration`, `Parameters` are passed on every API call.
-Things that can change course of the conversation (e.g. model name, temperature) are passed here.
-For example, you may want to GPT-3.5 for the first message, and if the conversation is not going well, you may want to switch to GPT-4.
 
 ## Try different API
 
@@ -134,23 +113,22 @@ If you want to call Google's Gemini model, you can do it by changing some lines.
 ```python
 import os
 from prompttrail.core import Session, Message
-from prompttrail.models.google import (
-    GoogleModel, # Change Model
-    GoogleParam, # Change Parameters
-    GoogleConfig, # Change Configuration
-)
+from prompttrail.models.google import GoogleModel, GoogleConfig
 
 api_key = os.environ["GOOGLE_CLOUD_API_KEY"]
-config = GoogleConfig(api_key=api_key)
-# Change model name, of course Google's model name is different from OpenAI's
-parameters = GoogleParam(model_name="models/gemini-1.5-flash", max_tokens=100, temperature=0)
+config = GoogleConfig(
+    api_key=api_key,
+    model_name="models/gemini-1.5-flash",
+    max_tokens=100,
+    temperature=0
+)
 model = GoogleModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(parameters=parameters, session=session)
+message = model.send(session=session)
 ```
 
 You will get the following response:
@@ -162,9 +140,9 @@ Message(content='Hey there! How can I help you today?', role='1', metadata={})
 You may notice the role system is different from OpenAI's!
 We're successfully using Google's model!
 
-The code is almost the same as the OpenAI example. Just change the `Model`, `Configuration` and `Parameters` to Google's.
+The code is almost the same as the OpenAI example. Just change the `Model` and `Config` to Google's.
 
-You will get plenty type hints for every model and parameters. So you may not need to view documentation for every provider.
+You will get plenty type hints for every model and configuration. So you may not need to view documentation for every provider.
 
 ```{Note}
 PromptTrail is fully typed. Therefore we recommend you to write code with VSCode or PyCharm.
@@ -179,22 +157,22 @@ Anthropic's Claude is also available:
 ```python
 import os
 from prompttrail.core import Session, Message
-from prompttrail.models.anthropic import (
-    AnthropicModel, # Change Model
-    AnthropicParam, # Change Parameters
-    AnthropicConfig, # Change Configuration
-)
+from prompttrail.models.anthropic import AnthropicModel, AnthropicConfig
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
-config = AnthropicConfig(api_key=api_key)
-parameters = AnthropicParam(model_name="claude-3-5-haiku-latest", max_tokens=100, temperature=0)
+config = AnthropicConfig(
+    api_key=api_key,
+    model_name="claude-3-5-haiku-latest",
+    max_tokens=100,
+    temperature=0
+)
 model = AnthropicModel(configuration=config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(parameters=parameters, session=session)
+message = model.send(session=session)
 ```
 
 You will get the following response:
@@ -214,11 +192,7 @@ Then you can use it like this:
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from prompttrail.models.transformers import (
-    TransformersModel,
-    TransformersConfig,
-    TransformersParam
-)
+from prompttrail.models.transformers import TransformersModel, TransformersConfig
 from prompttrail.core import Session, Message
 
 # Load model and tokenizer from HuggingFace Hub
@@ -229,7 +203,13 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 # Create TransformersModel instance
 llm = TransformersModel(
     configuration=TransformersConfig(
-        device="cuda"  # Use "cpu" if you don't have GPU
+        device="cuda",  # Use "cpu" if you don't have GPU
+        model_name=model_name,
+        temperature=0.7,
+        max_tokens=100,
+        top_p=0.9,
+        top_k=50,
+        repetition_penalty=1.2
     ),
     model=model,
     tokenizer=tokenizer
@@ -241,20 +221,11 @@ session = Session(
     ]
 )
 
-# Generate response with custom parameters
-response = llm.send(
-    session=session,
-    parameters=TransformersParam(
-        temperature=0.7,
-        max_tokens=100,
-        top_p=0.9,
-        top_k=50,
-        repetition_penalty=1.2
-    )
-)
+# Generate response
+response = llm.send(session=session)
 ```
 
-The TransformersModel supports various generation parameters:
+The TransformersConfig supports various generation parameters:
 - `temperature`: Controls randomness in generation (default: 1.0)
 - `max_tokens`: Maximum number of tokens to generate (default: 1024)
 - `top_p`: Nucleus sampling parameter (default: 1.0)
@@ -267,7 +238,7 @@ Streaming output is supported for OpenAI's API and local Transformers models.
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.
 
 ```python
-message_generator = model.send_async(parameters=parameters, session=session)
+message_generator = model.send_async(session=session)
 for message in message_generator:
     print(message.content, sep="", flush=True)
 ```
@@ -283,8 +254,5 @@ Hello! How can # text is incrementally typed
 For Transformers models, you can use streaming in the same way:
 
 ```python
-for partial_response in llm.send_async(
-    session=session,
-    parameters=TransformersParam(temperature=0.7)
-):
+for partial_response in llm.send_async(session=session):
     print(partial_response.content, end="", flush=True)

@@ -34,7 +34,7 @@ See [examples/dogfooding/fix_markdown.py](https://github.com/combinatrix-ai/Prom
 from prompttrail.agent.templates import LinearTemplate, AssistantTemplate, MessageTemplate, SystemTemplate, UserTemplate
 
 templates = LinearTemplate(
-    templates=[
+    [
         SystemTemplate(
             content="""
 You're an AI proofreader that helps users fix markdown.
@@ -86,7 +86,7 @@ Let's run the agent above on CLI. Use OpenAI's gpt-4o-mini. The user is interact
 import os
 from prompttrail.core import Session
 from prompttrail.agent.runner import CommandLineRunner
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.models.openai import (
     OpenAIModel,
     OpenAIConfiguration,
@@ -95,18 +95,19 @@ from prompttrail.models.openai import (
 
 # Setup LLM model
 # Don't forget to set OPENAI_API_KEY environment variable
-configuration = OpenAIConfiguration(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIParam(
-    model_name="gpt-4o-mini", temperature=0.0, max_tokens=8000
+config = OpenAIConfig(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    model_name="gpt-4o-mini",
+    temperature=0.0,
+    max_tokens=8000
 )
-model = OpenAIModel(configuration=configuration)
+model = OpenAIModel(configuration=config)
 
 # Define runner
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
-    templates=[templates],
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    template=templates,
+    user_interface=CLIInterface(),
 )
 ```
 
@@ -359,7 +360,7 @@ For `MessageTemplate`, it simply renders the template with the message's metadat
 
 For `GenerateTemplate`, it calls the LLM and returns the result as a message.
 
-For `InputTemplate`, it asks for user input using `user_interaction_provider` and returns the result as a message.
+For `InputTemplate`, it asks for user input using `user_interface` and returns the result as a message.
 
 You can also add your own template. See [template.py] for more details.
 
@@ -533,7 +534,7 @@ from prompttrail.agent.templates import (
 )
 
 template = LinearTemplate(
-    templates=[
+    [
         MessageTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
             role="system"
@@ -561,6 +562,56 @@ The tool system handles all the complexity of function calling for you:
 - Automatic documentation generation from type hints and docstrings
 - Function calling API formatting and execution
 - Result parsing and conversion
+
+### Subroutine Tool
+
+In addition to regular tools, PromptTrail provides `SubroutineTool` that allows you to execute templates as tools. This is particularly useful when you want to:
+
+- Execute complex conversation flows as tools
+- Reuse existing templates in function calling context
+- Maintain isolation between main conversation and tool execution
+
+Here's an example of using SubroutineTool:
+
+```python
+from prompttrail.agent.tools import SubroutineTool
+from prompttrail.agent.templates import Template
+
+class WeatherTemplate(Template):
+    """Template for weather forecasting"""
+    def _render(self, session):
+        yield Message(
+            role="assistant",
+            content="Let me check the weather forecast..."
+        )
+        yield Message(
+            role="assistant",
+            content="Based on the data, it will be sunny with 25°C."
+        )
+        return session
+
+# Create weather tool from template
+weather_tool = SubroutineTool(
+    name="get_weather",
+    description="Get weather forecast for a location",
+    template=WeatherTemplate(),
+)
+
+# Use like any other tool in ToolingTemplate
+template = LinearTemplate([
+    SystemTemplate(content="You are a weather assistant."),
+    UserTemplate(content="What's the weather?"),
+    ToolingTemplate(tools=[weather_tool])
+])
+```
+
+The SubroutineTool provides:
+- Isolated execution context for templates
+- Automatic message handling and result formatting
+- Integration with function calling flow
+- Access to all template features (hooks, control flow, etc.)
+
+See [examples/agent/subroutine_tool_example.py](examples/agent/subroutine_tool_example.py) for a complete working example.
 
 This allows you to focus on implementing the actual tool functionality rather than dealing with API integration details.
 Isn't it great?

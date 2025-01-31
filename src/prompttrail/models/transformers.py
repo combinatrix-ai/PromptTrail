@@ -1,5 +1,5 @@
 import logging
-from typing import Generator, List, Literal, Optional, Tuple
+from typing import Generator, List, Literal, Optional
 
 from pydantic import ConfigDict
 from transformers import (  # type: ignore
@@ -8,43 +8,54 @@ from transformers import (  # type: ignore
     TextStreamer,
 )
 
-from prompttrail.core import Configuration, Message, Model, Parameters, Session
+from prompttrail.core import Config, Message, Model, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
 
 logger = logging.getLogger(__name__)
 
 
-class TransformersConfig(Configuration):
-    """Configuration for TransformersModel.
+class TransformersConfig(Config):
+    """Integration configuration class for Transformers models.
 
-    Attributes:
-        device: Device to run model on (e.g. 'cpu', 'cuda'). Defaults to None.
+    Manages authentication credentials and model parameters in a centralized way.
     """
 
+    # Device settings
     device: Optional[str] = None
+    """Device to run model on (e.g. 'cpu', 'cuda')."""
 
-
-class TransformersParam(Parameters):
-    """Parameters for TransformersModel.
-
-    Parameters for controlling text generation with transformer models.
-
-    Attributes:
-        temperature: Sampling temperature between 0 and 1. Higher values mean more random outputs.
-        max_tokens: Maximum number of tokens to generate.
-        top_p: Nucleus sampling probability.
-        top_k: Top-k sampling.
-        repetition_penalty: Higher values penalize repeated tokens more strongly.
-    """
-
+    # Model parameters (inherited and overridden)
+    model_name: str
+    """Name of the model to use."""
     temperature: Optional[float] = 1.0
-    max_tokens: int = 1024
+    """Sampling temperature between 0 and 1."""
+    max_tokens: Optional[int] = 1024
+    """Maximum number of tokens to generate."""
+
+    # Transformers-specific parameters
     top_p: Optional[float] = 1.0
+    """Nucleus sampling probability."""
     top_k: Optional[int] = None
+    """Top-k sampling."""
     repetition_penalty: Optional[float] = 1.0
+    """Higher values penalize repeated tokens more strongly."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
+
+    def _validate_model_settings(self) -> None:
+        """Transformers-specific configuration validation"""
+        super()._validate_model_settings()
+        if self.temperature is not None and (
+            self.temperature < 0 or self.temperature > 1
+        ):
+            raise ValueError("temperature must be between 0 and 1")
+        if self.top_p is not None and (self.top_p <= 0 or self.top_p > 1):
+            raise ValueError("top_p must be between 0 and 1")
+        if self.top_k is not None and self.top_k <= 0:
+            raise ValueError("top_k must be greater than 0")
+        if self.repetition_penalty is not None and self.repetition_penalty < 1:
+            raise ValueError("repetition_penalty must be greater than or equal to 1")
 
 
 class TransformersModel(Model):
@@ -72,19 +83,15 @@ class TransformersModel(Model):
         self.tokenizer = tokenizer
 
     def before_send(
-        self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[Optional[Configuration], Optional[Parameters], Optional[Session]]:
-        return (None, None, None)
+        self, session: Optional[Session], is_async: bool
+    ) -> Optional[Session]:
+        """Perform pre-send processing."""
+        return None
 
     def _validate_and_prepare(
-        self, parameters: Parameters
-    ) -> tuple[TransformersParam, "AutoModelForCausalLM", "AutoTokenizer"]:
-        """Validate parameters and prepare model for generation."""
-        if not isinstance(parameters, TransformersParam):
-            raise ParameterValidationError(
-                f"{TransformersParam.__name__} is expected, but {type(parameters).__name__} is given."
-            )
-
+        self,
+    ) -> tuple["AutoModelForCausalLM", "AutoTokenizer"]:
+        """Prepare the model and tokenizer."""
         if self.model is None or self.tokenizer is None:
             raise RuntimeError(
                 "Model and tokenizer must be initialized before sending messages"
@@ -93,7 +100,7 @@ class TransformersModel(Model):
         assert self.model is not None  # for type checker
         assert self.tokenizer is not None  # for type checker
 
-        return parameters, self.model, self.tokenizer
+        return self.model, self.tokenizer
 
     def _prepare_inputs(
         self,
@@ -101,33 +108,32 @@ class TransformersModel(Model):
         model: "AutoModelForCausalLM",
         tokenizer: "AutoTokenizer",
     ):
-        """Prepare inputs for the model."""
+        """Prepare input for the model."""
         input_text = self._session_to_text(session)
         return tokenizer(input_text, return_tensors="pt").to(model.device)
 
     def _create_generate_kwargs(
         self,
-        parameters: TransformersParam,
         streamer: Optional["TextStreamer"] = None,
     ) -> dict:
-        """Create generation kwargs for the model."""
+        """Create parameters for text generation."""
         kwargs = {
-            "max_new_tokens": parameters.max_tokens,
-            "temperature": parameters.temperature,
-            "top_p": parameters.top_p,
-            "top_k": parameters.top_k,
-            "repetition_penalty": parameters.repetition_penalty,
+            "max_new_tokens": self.configuration.max_tokens,
+            "temperature": self.configuration.temperature,
+            "top_p": self.configuration.top_p,
+            "top_k": self.configuration.top_k,
+            "repetition_penalty": self.configuration.repetition_penalty,
             "do_sample": True,
         }
         if streamer is not None:
             kwargs["streamer"] = streamer
         return kwargs
 
-    def _send(self, parameters: Parameters, session: Session) -> Message:
-        """Generate text using the model."""
-        params, model, tokenizer = self._validate_and_prepare(parameters)
+    def _send(self, session: Session) -> Message:
+        """Generate text."""
+        model, tokenizer = self._validate_and_prepare()
         inputs = self._prepare_inputs(session, model, tokenizer)
-        generate_kwargs = self._create_generate_kwargs(params)
+        generate_kwargs = self._create_generate_kwargs()
 
         outputs = model.generate(**inputs, **generate_kwargs)
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -136,15 +142,14 @@ class TransformersModel(Model):
 
     def _send_async(
         self,
-        parameters: Parameters,
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """Generate text asynchronously with streaming output."""
-        params, model, tokenizer = self._validate_and_prepare(parameters)
+        """Generate text asynchronously."""
+        model, tokenizer = self._validate_and_prepare()
         inputs = self._prepare_inputs(session, model, tokenizer)
         streamer = self._create_streamer(yield_type)
-        generate_kwargs = self._create_generate_kwargs(params, streamer)
+        generate_kwargs = self._create_generate_kwargs(streamer)
 
         model.generate(**inputs, **generate_kwargs)
         yield from self._streamer_messages
@@ -176,7 +181,7 @@ class TransformersModel(Model):
 
         return TransformersStreamer(self.tokenizer)
 
-    def validate_session(self, session: Session, is_async: bool) -> None:
+    def validate_session(self, session: Session, is_async: bool = False) -> None:
         """Validate session for transformer models."""
         super().validate_session(session, is_async)
 

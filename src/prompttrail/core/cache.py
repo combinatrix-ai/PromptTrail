@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from cachetools import LRUCache
 
 if TYPE_CHECKING:
-    from prompttrail.core import Message, Parameters, Session
+    from prompttrail.core import Config, Message, Session
 
 
 class CacheProvider(metaclass=ABCMeta):
@@ -28,13 +28,11 @@ class CacheProvider(metaclass=ABCMeta):
         raise NotImplementedError("add method is not implemented")
 
     @abstractmethod
-    def search(
-        self, parameters: "Parameters", session: "Session"
-    ) -> Optional["Message"]:
+    def search(self, config: "Config", session: "Session") -> Optional["Message"]:
         """Search for a cached message.
 
         Args:
-            parameters: Parameters associated with the message
+            config: Config associated with the message
             session: Session to search for
 
         Returns:
@@ -66,13 +64,11 @@ class LRUCacheProvider(CacheProvider):
         """
         self.cache[session] = message
 
-    def search(
-        self, parameters: "Parameters", session: "Session"
-    ) -> Optional["Message"]:
+    def search(self, parameters: "Config", session: "Session") -> Optional["Message"]:
         """Search for cached message.
 
         Args:
-            parameters: Parameters associated with the message
+            config: Config associated with the message
             session: Session to search for
 
         Returns:

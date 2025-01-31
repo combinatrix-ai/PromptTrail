@@ -23,10 +23,10 @@ prompttrail.agent.runners module
    :undoc-members:
    :show-inheritance:
 
-prompttrail.agent.user\_interaction module
-------------------------------------------
+prompttrail.agent.user\_interface module
+----------------------------------------
 
-.. automodule:: prompttrail.agent.user_interaction
+.. automodule:: prompttrail.agent.user_interface
    :members:
    :undoc-members:
    :show-inheritance:

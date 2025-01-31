@@ -13,21 +13,17 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.tools.builtin import CreateOrOverwriteFile, ReadFile
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 sys.path.append(os.path.abspath("."))
 
-from examples.dogfooding.dogfooding_tools import (
-    CreateOrOverwriteFile,
-    ReadFile,
-    ReadImportantFiles,
-    RunTest,
-)
+from examples.dogfooding.dogfooding_tools import ReadImportantFiles, RunTest
 
-configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
-parameter = AnthropicParam(
+configuration = AnthropicConfig(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
     model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=4096,
@@ -39,7 +35,7 @@ paths = list(glob.glob("src/**/*.py", recursive=True))
 
 for path in paths:
     templates = LinearTemplate(
-        templates=[
+        [
             SystemTemplate(
                 content="""
     Please help the user improve a LLM library, PromptTrail. 
@@ -91,9 +87,8 @@ for path in paths:
     )
     runner = CommandLineRunner(
         model=model,
-        parameters=parameter,
         template=templates,
-        user_interaction_provider=UserInteractionTextCLIProvider(),
+        user_interface=CLIInterface(),
     )
 
     initial_session = Session(

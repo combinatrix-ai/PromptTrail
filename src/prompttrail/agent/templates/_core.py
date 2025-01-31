@@ -200,7 +200,7 @@ class GenerateTemplate(MessageTemplate):
         self.info(
             "Generating content with %s...", session.runner.models.__class__.__name__
         )
-        response = session.runner.models.send(session.runner.parameters, session)
+        response = session.runner.models.send(session)
         if self.role:
             response.role = self.role
         session.append(response)
@@ -267,7 +267,7 @@ class UserTemplate(MessageTemplate):
         if self.is_interactive:
             if not session.runner:
                 raise ValueError("Runner must be given to use interactive mode")
-            rendered_content = session.runner.user_interaction_provider.ask(
+            rendered_content = session.runner.user_interface.ask(
                 session, self.description, self.default
             )
         else:
@@ -319,7 +319,7 @@ class AssistantTemplate(MessageTemplate):
                 "Generating content with %s...",
                 session.runner.models.__class__.__name__,
             )
-            response = session.runner.models.send(session.runner.parameters, session)
+            response = session.runner.models.send(session)
             rendered_content = response.content
         else:
             rendered_content = self.jinja_template.render(**metadata)

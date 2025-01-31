@@ -5,12 +5,12 @@ from tqdm import tqdm
 
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import AssistantTemplate, LinearTemplate, UserTemplate
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 templates = LinearTemplate(
-    templates=[
+    [
         UserTemplate(
             content="""
 You're given examples and test scripts and documents for a library, PromptTrail.
@@ -24,8 +24,8 @@ Show plenty of self-contained code examples with comments.
     ],
 )
 
-configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
-parameter = AnthropicParam(
+configuration = AnthropicConfig(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
     model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=8192,
@@ -53,9 +53,8 @@ for file in tqdm(list(glob.glob("docs/*.md", recursive=False))):
 
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
     template=templates,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 initial_session = Session(metadata={"code": text})

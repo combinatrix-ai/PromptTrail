@@ -1,12 +1,12 @@
 import json
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union
 
 from prompttrail.agent.templates._core import GenerateTemplate
 from prompttrail.core import Message, MessageRoleType, Session
 from prompttrail.models.anthropic import AnthropicModel
-from prompttrail.models.openai import OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIModel
 
 if TYPE_CHECKING:
     from prompttrail.agent.tools import Tool, ToolResult
@@ -287,14 +287,10 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 "Function calling can only be used with OpenAIChatCompletionModel."
             )
 
-        # Update parameters with tools
-        temporary_parameters = cast(OpenAIParam, runner.parameters.model_copy())
-        temporary_parameters.tools = list(self.tools.values())
-
         # Generate initial message with function calling capability
-        rendered_message = runner.models.send(temporary_parameters, session)
+        rendered_message = runner.models.send(session)
         message = Message(
-            content=rendered_message.content,
+            content=rendered_message.content or "Processing your request...",
             role=self.role,
             metadata={"template_id": self.template_id, **rendered_message.metadata},
         )
@@ -319,9 +315,10 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 yield result_message
 
                 # Generate final response
-                second_response = runner.models.send(runner.parameters, session)
+                second_response = runner.models.send(session)
                 message = Message(
-                    content=second_response.content,
+                    content=second_response.content
+                    or "Here's the result of your request.",
                     role=second_response.role,
                     metadata={"template_id": self.template_id},
                 )

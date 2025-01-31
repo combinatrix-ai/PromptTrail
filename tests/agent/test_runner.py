@@ -12,29 +12,27 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
+from prompttrail.agent.user_interface import EchoMockInterface
 from prompttrail.core import Metadata, Session
 from prompttrail.core.mocks import EchoMockProvider
-from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 # Run various templates
 
 # TODO: Add tests for all templates
 
 # Echo mock model
-echo_mock_model = OpenAIModel(
-    configuration=OpenAIConfig(
-        api_key="", mock_provider=EchoMockProvider(role="assistant")
-    ),
-)
-parameters = OpenAIParam(
+config = OpenAIConfig(
+    api_key="dummy",
     model_name="gpt-4o-mini",
+    mock_provider=EchoMockProvider(role="assistant"),
 )
+echo_mock_model = OpenAIModel(configuration=config)
 
 
 def test_linear_template():
     template = LinearTemplate(
-        templates=[
+        [
             SystemTemplate(content="Repeat what the user said."),
             UserTemplate(content="Lazy fox jumps over the brown dog."),
             AssistantTemplate(),
@@ -42,8 +40,7 @@ def test_linear_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=template,
     )
     session = runner.run(max_messages=10)
@@ -56,7 +53,7 @@ def test_linear_template():
 
 def test_if_template():
     template = LinearTemplate(
-        templates=[
+        [
             MessageTemplate(
                 content="{{ content }}",
                 role="system",
@@ -76,8 +73,7 @@ def test_if_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=template,
     )
     session = Session(metadata={"content": "TRUE"})
@@ -111,7 +107,7 @@ def test_loop_template():
         return loop_count >= 3
 
     template = LoopTemplate(
-        templates=[
+        [
             MessageTemplate(
                 role="assistant",
                 # loop_count is 1,2,3... as before_transform is called before the message is rendered
@@ -124,9 +120,8 @@ def test_loop_template():
 
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
         template=template,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
     )
     session = Session(metadata={"loop_count": 1})
     session = runner.run(session=session, max_messages=10)
@@ -170,14 +165,14 @@ def test_nested_loop_template():
         return inner_loop_count >= 2
 
     template = LoopTemplate(
-        templates=[
+        [
             MessageTemplate(
                 role="assistant",
                 content="Outer Loop: {{ outer_loop_count }}",
                 before_transform=[LambdaSessionTransformer(update_outer_loop_count)],
             ),
             LoopTemplate(
-                templates=[
+                [
                     MessageTemplate(
                         role="assistant",
                         content="  Inner Loop: {{ inner_loop_count }}",
@@ -195,9 +190,8 @@ def test_nested_loop_template():
 
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
         template=template,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
     )
     session = Session(metadata={"outer_loop_count": 1, "inner_loop_count": 1})
     session = runner.run(session=session, max_messages=10)
@@ -222,7 +216,7 @@ def test_nested_loop_template():
 
 def test_end_template():
     template = LinearTemplate(
-        templates=[
+        [
             MessageTemplate(
                 content="{{ content }}",
                 role="system",
@@ -243,8 +237,7 @@ def test_end_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=template,
     )
     session = Session(metadata={"content": "TRUE"})
@@ -266,7 +259,7 @@ def test_end_template():
 
 def test_break_template():
     template = LinearTemplate(
-        templates=[
+        [
             MessageTemplate(
                 content="{{ content }}",
                 role="system",
@@ -287,8 +280,7 @@ def test_break_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=template,
     )
     session = Session(metadata={"content": "TRUE"})
@@ -311,7 +303,7 @@ def test_break_template():
 def test_system_template():
     """Test SystemTemplate with static content."""
     template = LinearTemplate(
-        templates=[
+        [
             SystemTemplate(
                 content="You are a helpful assistant.",
             ),
@@ -324,8 +316,7 @@ def test_system_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=template,
     )
     session = runner.run(max_messages=10)
@@ -343,7 +334,7 @@ def test_user_template():
     """Test UserTemplate in both static and interactive modes."""
     # Test static mode
     static_template = LinearTemplate(
-        templates=[
+        [
             UserTemplate(
                 content="Hello, assistant!",
             ),
@@ -352,8 +343,7 @@ def test_user_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=static_template,
     )
     session = runner.run(session=Session(), max_messages=10)
@@ -366,7 +356,7 @@ def test_user_template():
 
     # Test interactive mode
     interactive_template = LinearTemplate(
-        templates=[
+        [
             SystemTemplate(
                 content="You are a helpful assistant.",
             ),
@@ -379,8 +369,7 @@ def test_user_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=interactive_template,
     )
     session = runner.run(max_messages=10)
@@ -399,7 +388,7 @@ def test_assistant_template():
     """Test AssistantTemplate in both static and generate modes."""
     # Test static mode
     static_template = LinearTemplate(
-        templates=[
+        [
             MessageTemplate(
                 content="Hello!",
                 role="user",
@@ -411,8 +400,7 @@ def test_assistant_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=static_template,
     )
     session = runner.run(max_messages=10)
@@ -425,7 +413,7 @@ def test_assistant_template():
 
     # Test generate mode
     generate_template = LinearTemplate(
-        templates=[
+        [
             MessageTemplate(
                 content="Hello!",
                 role="user",
@@ -435,8 +423,7 @@ def test_assistant_template():
     )
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=generate_template,
     )
     session = runner.run(max_messages=10)
@@ -471,7 +458,7 @@ def test_nested_loop_with_break_template():
         return metadata
 
     inner_loop_template = LoopTemplate(
-        templates=[
+        [
             IfTemplate(
                 before_transform=[LambdaSessionTransformer(update_inner_loop_counter)],
                 true_template=BreakTemplate(),
@@ -485,7 +472,7 @@ def test_nested_loop_with_break_template():
     )
 
     outer_loop_template = LoopTemplate(
-        templates=[
+        [
             MessageTemplate(
                 before_transform=[LambdaSessionTransformer(update_outer_loop_counter)],
                 role="assistant",
@@ -498,8 +485,7 @@ def test_nested_loop_with_break_template():
 
     runner = CommandLineRunner(
         model=echo_mock_model,
-        parameters=parameters,
-        user_interaction_provider=EchoUserInteractionTextMockProvider(),
+        user_interface=EchoMockInterface(),
         template=outer_loop_template,
     )
 

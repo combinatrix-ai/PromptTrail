@@ -11,12 +11,12 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
+from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Session
-from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 templates = LinearTemplate(
-    templates=[
+    [
         SystemTemplate(
             content="""
 You're an AI proofreader that help user to fix markdown.
@@ -32,15 +32,18 @@ You only emit the corrected python script. No explanation is needed.
     ],
 )
 
-configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=8000)
+configuration = OpenAIConfig(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    model_name="gpt-4o-mini",
+    temperature=0.0,
+    max_tokens=8000,
+)
 model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
     template=templates,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 

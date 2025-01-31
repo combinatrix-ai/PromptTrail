@@ -7,14 +7,14 @@ from . import (
     subroutine,
     templates,
     tools,
-    user_interaction,
+    user_interface,
 )
 
 __all__ = [
     "session_transformers",
     "templates",
     "runners",
-    "user_interaction",
+    "user_interface",
     "subroutine",
     "tools",
 ]

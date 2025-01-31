@@ -1,19 +1,19 @@
 import pytest
 
-from prompttrail.core import Message, Model, Parameters, Session
+from prompttrail.core import Config, Message, Model, Session
 from prompttrail.core.errors import ParameterValidationError
 
 
 def run_basic_message_test(
     model: Model,
-    parameters: Parameters,
+    config: Config,
     expected_response: str = "527",
     message_content: str = "This is automated test API call. Please answer the calculation 17*31.",
 ):
-    """Test basic message handling with a single user message."""
+    """単一のユーザーメッセージの基本的なハンドリングをテストします。"""
     message = Message(content=message_content, role="user")
     session = Session(messages=[message])
-    response = model.send(parameters, session)
+    response = model.send(session)
     assert isinstance(response, Message)
     assert isinstance(response.content, str)
     assert expected_response in response.content
@@ -22,18 +22,18 @@ def run_basic_message_test(
 
 def run_system_message_test(
     model: Model,
-    parameters: Parameters,
+    config: Config,
     expected_response: str = "27",
     system_message: str = "You're a helpful assistant.",
     user_message: str = "Calculate 14+13",
 ):
-    """Test handling of system messages."""
+    """システムメッセージのハンドリングをテストします。"""
     messages = [
         Message(content=system_message, role="system"),
         Message(content=user_message, role="user"),
     ]
     session = Session(messages=messages)
-    response = model.send(parameters, session)
+    response = model.send(session)
     assert isinstance(response, Message)
     assert isinstance(response.content, str)
     assert expected_response in response.content
@@ -45,18 +45,17 @@ def run_system_message_test(
 
 def run_malformed_sessions_test(
     model: Model,
-    parameters: Parameters,
+    config: Config,
     supports_tool_result: bool = False,
 ):
-    """Test handling of malformed sessions."""
-    # Test empty session
+    """不正な形式のセッションのハンドリングをテストします。"""
+    # 空のセッションのテスト
     with pytest.raises(ParameterValidationError):
-        model.send(parameters, Session(messages=[]))
+        model.send(Session(messages=[]))
 
-    # Test multiple system messages
+    # 複数のシステムメッセージのテスト
     with pytest.raises(ParameterValidationError):
         model.send(
-            parameters,
             Session(
                 messages=[
                     Message(content="a", role="system"),
@@ -65,10 +64,9 @@ def run_malformed_sessions_test(
             ),
         )
 
-    # Test system message not first
+    # システムメッセージが最初でない場合のテスト
     with pytest.raises(ParameterValidationError):
         model.send(
-            parameters,
             Session(
                 messages=[
                     Message(content="Hello", role="user"),

@@ -24,9 +24,9 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
-from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
+from prompttrail.agent.user_interface import EchoMockInterface
 from prompttrail.core import Session
-from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 
 class WeatherData(TypedDict):
@@ -85,32 +85,36 @@ class WeatherForecastTool(Tool):
 
 
 # Create OpenAI model with configuration
-api_key = os.environ.get("OPENAI_API_KEY", "dummy_key")
-config = OpenAIConfig(api_key=api_key)
+weather_tool = WeatherForecastTool()
+config = OpenAIConfig(
+    api_key=os.environ.get("OPENAI_API_KEY", "dummy_key"),
+    model_name="gpt-4o-mini",
+    max_tokens=100,
+    temperature=0,
+    tools=[weather_tool],
+)
 model = OpenAIModel(configuration=config)
 
 # Create templates for the conversation
 system = SystemTemplate(
     content="You're an AI weather forecast assistant that help your users to find the weather forecast.",
 )
-function_calling = OpenAIToolingTemplate(tools=[WeatherForecastTool()])
+function_calling = OpenAIToolingTemplate(tools=[weather_tool])
 
 # Create linear template that defines the conversation flow
 template = LinearTemplate(
-    templates=[
+    [
         system,
         UserTemplate(content="What's the weather in Tokyo tomorrow?"),
         function_calling,
     ]
 )
 
-# Create runner instance with model, parameters, and template
-parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
+# Create runner instance with model and template
 runner = CommandLineRunner(
     model=model,
-    parameters=parameters,
     template=template,
-    user_interaction_provider=EchoUserInteractionTextMockProvider(),
+    user_interface=EchoMockInterface(),
 )
 
 
