@@ -2,14 +2,14 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent import Session
+from prompttrail.core import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
 
-class UserInteractionProvider(Debuggable):
+class UserInterface(Debuggable):
     @abstractmethod
     def ask(
         self,
@@ -31,7 +31,7 @@ class UserInteractionProvider(Debuggable):
         raise NotImplementedError("ask method is not implemented")
 
 
-class UserInteractionTextCLIProvider(UserInteractionProvider):
+class CLIInterface(UserInterface):
     def ask(
         self,
         session: Session,
@@ -64,7 +64,7 @@ class UserInteractionTextCLIProvider(UserInteractionProvider):
         return raw
 
 
-class UserInteractionMockProvider(UserInteractionProvider):
+class MockInterface(UserInterface):
     def ask(
         self,
         session: Session,
@@ -85,7 +85,7 @@ class UserInteractionMockProvider(UserInteractionProvider):
         return ""
 
 
-class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProvider):
+class SingleTurnResponseMockInterface(MockInterface):
     def __init__(self, conversation_table: Dict[str, str]):
         self.conversation_table = conversation_table
 
@@ -115,7 +115,7 @@ class OneTurnConversationUserInteractionTextMockProvider(UserInteractionMockProv
         return self.conversation_table[last_message]
 
 
-class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
+class EchoMockInterface(MockInterface):
     def ask(
         self,
         session: Session,
@@ -136,7 +136,7 @@ class EchoUserInteractionTextMockProvider(UserInteractionMockProvider):
         return session.get_last().content
 
 
-class DefaultEchoMockProvider(UserInteractionMockProvider):
+class DefaultOrEchoMockInterface(MockInterface):
     def ask(
         self,
         session: Session,

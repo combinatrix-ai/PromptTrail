@@ -4,28 +4,30 @@ import os
 import sys
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.session_transformers import ResetMetadata
 from prompttrail.agent.templates import (
     LinearTemplate,
     LoopTemplate,
     ToolingTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Session
-from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam
-
-sys.path.append(os.path.abspath("."))
-
-
-from examples.dogfooding.dogfooding_tools import (
+from prompttrail.agent.tools.builtin import (
     CreateOrOverwriteFile,
     EditFile,
     ExecuteCommand,
     ReadFile,
-    ReadImportantFiles,
-    RunTest,
     TreeDirectory,
+)
+from prompttrail.agent.user_interface import CLIInterface
+from prompttrail.core import Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
+
+sys.path.append(os.path.abspath("."))
+
+
+from examples.dogfooding.dogfooding_tools import (  # RunTest,
+    ReadImportantFiles,
+    RunAllTestsWithSummary,
 )
 
 tools_to_use = [
@@ -35,11 +37,12 @@ tools_to_use = [
     TreeDirectory(),
     CreateOrOverwriteFile(),
     EditFile(),
-    RunTest(),
+    # RunTest(),
+    RunAllTestsWithSummary,
 ]
 
 templates = LinearTemplate(
-    templates=[
+    [
         UserTemplate(
             content="""
 Please help me improve my LLM library, PromptTrail. With the tools you provided, you can execute any linux command.
@@ -49,7 +52,7 @@ Rules:
 - You must show the edits you want to make before actual edit.
 
 # Use tools to do action
-- You must use the tools provided to do any action. 
+- You must use the tools provided to do any action.
 
 # Run tests after finish edit
 - You must run RunTest tool if you finished your work.
@@ -61,7 +64,7 @@ Rules:
 # Project Rules:
 {{clinerules}}
 """,
-            after_transform=ResetData(),
+            after_transform=ResetMetadata(),
         ),
         LoopTemplate(
             [
@@ -74,8 +77,8 @@ Rules:
     ],
 )
 
-configuration = AnthropicConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
-parameter = AnthropicParam(
+configuration = AnthropicConfig(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
     model_name="claude-3-5-sonnet-latest",
     temperature=1,
     max_tokens=4096,
@@ -85,9 +88,8 @@ model = AnthropicModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
     template=templates,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 initial_session = Session(

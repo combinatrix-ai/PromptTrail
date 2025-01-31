@@ -2,9 +2,9 @@ import re
 from dataclasses import dataclass
 from typing import List
 
-from prompttrail.agent import Session
-from prompttrail.agent.session_transformers._core import MetadataTransformer
-from prompttrail.core import Metadata
+from prompttrail.core import Metadata, Session
+
+from ._core import MetadataTransformer
 
 
 @dataclass

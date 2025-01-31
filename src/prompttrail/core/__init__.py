@@ -1,39 +1,25 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import (
-    TYPE_CHECKING,
-    AbstractSet,
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    ItemsView,
-    KeysView,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeAlias,
-    Union,
-    ValuesView,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from prompttrail.core.cache import CacheProvider
+from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
+from prompttrail.core.errors import ParameterValidationError
+from prompttrail.core.mocks import MockProvider
+from prompttrail.core.utils import Debuggable
 
 if TYPE_CHECKING:
     from prompttrail.agent.runners import Runner
     from prompttrail.agent.templates import Stack
     from prompttrail.agent.tools import Tool, ToolResult
 else:
+    # This is required to avoid circular imports and disable Pydantic errors
     Runner = Any  # type: ignore
     Stack = Any  # type: ignore
     Tool = Any  # type: ignore
     ToolResult = Any  # type: ignore
-
-from prompttrail.core.cache import CacheProvider
-from prompttrail.core.errors import ParameterValidationError
-from prompttrail.core.mocks import MockProvider
-from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +36,7 @@ def truncate_string(s: str, max_length: int = 100) -> str:
 
 
 class Metadata(Dict[str, Any]):
-    """型安全なメタデータを提供するベースクラス"""
+    """Base class providing type-safe metadata"""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__()
@@ -161,30 +147,112 @@ class Message(BaseModel):
         return f"Message({', '.join(parts)})"
 
 
-class Configuration(BaseModel):
-    """A configuration represents a set of data that is used to configure model."""
+class Config(BaseModel):
+    """Unified configuration base class.
 
+    Centralizes configuration and parameter management with integrated validation.
+    """
+
+    # Core Configuration
     cache_provider: Optional["CacheProvider"] = None
     """Cache provider to cache the response from the model."""
     mock_provider: Optional["MockProvider"] = None
     """Mock provider to mock the response from the model."""
 
-    # pydantic
+    # Core Parameters
+    tools: Optional[List["Tool"]] = None
+    """Optional list of tools that can be used by the model."""
+
+    # Common Model Settings
+    model_name: str
+    """Name of the model to use."""
+    temperature: Optional[float] = 1.0
+    """Temperature for sampling."""
+    max_tokens: Optional[int] = 1024
+    """Maximum number of tokens to generate."""
+
+    # Common Optional Parameters
+    top_p: Optional[float] = None
+    """Top-p (nucleus) sampling parameter."""
+    top_k: Optional[int] = None
+    """Top-k sampling parameter."""
+    repetition_penalty: Optional[float] = None
+    """Repetition penalty parameter."""
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @model_validator(mode="after")
-    def either_cache_or_mock(self) -> "Configuration":
+    def validate_providers(self) -> "Config":
+        """Validate that only one provider is used."""
         if self.cache_provider is not None and self.mock_provider is not None:
             raise ValueError("You can only use either cache_provider or mock_provider.")
         return self
 
+    def validate_all(self, session: Optional["Session"] = None) -> None:
+        """Integrated validation method"""
+        self._validate_providers()
+        self._validate_model_settings()
+        if session:
+            self.validate_session(session)
+        if self.tools:
+            self._validate_tools()
 
-class Parameters(BaseModel):
-    """A parameters represents a set of data that is used to define the behavior of the model at runtime."""
+    def _validate_providers(self) -> None:
+        """Validate cache and mock providers"""
+        if self.cache_provider and self.mock_provider:
+            raise ValueError("Cannot use both cache and mock providers")
 
-    # Parameters is a set of data that is used to define the behavior of the model.
-    tools: Optional[List["Tool"]] = None
-    """Optional list of tools that can be used by the model."""
+    def _validate_model_settings(self) -> None:
+        """Validate model-specific settings."""
+        if not self.model_name:
+            raise ValueError("model_name is required")
+        if self.temperature is not None:
+            if self.temperature < 0 or self.temperature > 2:
+                raise ValueError("temperature must be between 0 and 2")
+        if self.max_tokens is not None:
+            if self.max_tokens < 1:
+                raise ValueError("max_tokens must be greater than 0")
+
+    def validate_session(self, session: "Session", is_async: bool = False) -> None:
+        """Perform basic session validation."""
+        # Filter out control template messages
+        messages = [
+            message
+            for message in session.messages
+            if message.role != CONTROL_TEMPLATE_ROLE
+        ]
+
+        # Check for empty session
+        if len(messages) == 0:
+            raise ParameterValidationError("Session must have at least one message")
+
+        # Check message content type
+        if any([not isinstance(message.content, str) for message in messages]):
+            raise ParameterValidationError("All messages in session must be strings")
+
+        # Check system message position
+        system_messages = [msg for msg in messages if msg.role == "system"]
+        if system_messages:
+            if len(system_messages) > 1:
+                raise ParameterValidationError("Only one system message is allowed")
+            if messages[0].role != "system":
+                raise ParameterValidationError(
+                    "System message must be at the beginning"
+                )
+
+        # Check for empty messages
+        if any([message.content == "" for message in messages]):
+            raise ParameterValidationError("Empty messages are not allowed")
+
+    def _validate_tools(self) -> None:
+        """Validate tools configuration"""
+        if not isinstance(self.tools, list):
+            raise ValueError("tools must be a list")
+        for tool in self.tools:
+            if not tool.name:
+                raise ValueError("Tool name is required")
+            if not tool.description:
+                raise ValueError("Tool description is required")
 
 
 class Session(BaseModel):
@@ -294,18 +362,10 @@ class Session(BaseModel):
 )"""
 
 
-# TypeAlias to let users know that they return updated parameters and session.
-UpdatedConfiguration: TypeAlias = Configuration
-UpdatedParameters: TypeAlias = Parameters
-UpdatedMessage: TypeAlias = Message
-
-
 class Model(BaseModel, ABC, Debuggable):
-    """A model define an interface to interact with LLM models."""
+    """Class defining the interface for interaction with LLM models."""
 
-    configuration: Configuration
-    # To meet the Pydantic BaseModel requirements,
-    # we need to define the logger attribute as a class attribute.
+    configuration: Config
     logger: Optional[logging.Logger] = None
     enable_logging: bool = True
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -315,101 +375,77 @@ class Model(BaseModel, ABC, Debuggable):
         self.setup_logger_for_pydantic()
 
     def is_mocked(self) -> bool:
-        """is_mocked method returns True if the model is mocked."""
+        """Return whether the model is mocked."""
         return self.configuration.mock_provider is not None
 
     def is_cached(self) -> bool:
-        """is_cached method returns True if the model use cache."""
+        """Return whether the model is using cache."""
         return self.configuration.cache_provider is not None
 
     @abstractmethod
-    def _send(self, parameters: Parameters, session: Session) -> Message:
-        """A model should implement _send method to send a message to the model."""
+    def _send(self, session: Session) -> Message:
+        """Abstract method for sending messages to the model."""
         raise NotImplementedError("Any model should implement _send method.")
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
-        """Convert tool to model-specific format"""
+        """Convert tool to model-specific format."""
         raise NotImplementedError(
             "Any model should implement format_tool method if it can use tools."
         )
 
     def format_tool_result(self, result: "ToolResult") -> Dict[str, Any]:
-        """Convert tool result to model-specific format"""
+        """Convert tool execution result to model-specific format."""
         raise NotImplementedError(
             "Any model should implement format_tool_result method if it can use tools."
         )
 
-    def validate_tools(self, tools: List["Tool"]) -> None:
-        """Validate tools according to model-specific requirements"""
-        raise NotImplementedError(
-            "Any model should implement validate_tools method if it can use tools."
-        )
-
-    def prepare(
-        self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[UpdatedParameters, Session]:
-        """prepare method defines the standard procedure to pre/post-process parameters and session."""
+    def prepare(self, session: Optional[Session] = None) -> Session:
+        """Perform session preprocessing."""
         if session is None:
             session = Session()
 
-        self.validate_configuration(self.configuration, False)
-        self.validate_parameters(parameters, False)
-        self.validate_session(session, False)
-        if parameters.tools:
-            self.validate_tools(parameters.tools)
-        self.vaidate_other(parameters, session, False)
-        configuration_, parameters_, session_ = self.before_send(
-            parameters, session, False
-        )
-        if configuration_ is not None:
-            self.configuration = configuration_
-        if parameters_ is not None:
-            parameters = parameters_
-        if session_ is not None:
-            session = session_
-        return parameters, session
+        # 統合されたバリデーション
+        self.configuration.validate_all(session)
+        return session
 
-    def send(self, parameters: Parameters, session: Session) -> Message:
-        """send method defines the standard procedure to send a message to the model."""
+    def send(self, session: Session) -> Message:
+        """Define standard procedure for sending messages to the model."""
         if self.configuration.mock_provider is not None:
-            # Even with mock provider, we still need to validate
-            self.validate_configuration(self.configuration, False)
-            self.validate_parameters(parameters, False)
-            self.validate_session(session, False)
-            if parameters.tools:
-                self.validate_tools(parameters.tools)
+            self.configuration.validate_all(session)
             return self.configuration.mock_provider.call(session)
 
-        parameters, session = self.prepare(parameters, session, False)
+        session = self.prepare(session)
         self.debug("Communications %s", session)
 
         if self.configuration.cache_provider is not None:
-            message = self.configuration.cache_provider.search(parameters, session)
+            message = self.configuration.cache_provider.search(
+                self.configuration, session
+            )
             if message is not None:
                 return message
 
-        message = self._send(parameters, session)
-        return self.after_send(parameters, session, message, False)
+        message = self._send(session)
+        return self.after_send(session, message)
 
     def _send_async(
         self,
-        parameters: Parameters,
         session: Session,
-        yiled_type: Literal["all", "new"] = "new",
+        yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """A model should implement _send_async method to receive response asynchronously."""
+        """Abstract method for receiving responses asynchronously."""
         raise NotImplementedError("Async method is not implemented for this model.")
 
     def send_async(
         self,
-        parameters: Parameters,
         session: Session,
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        """send_async method defines the standard procedure to send a message to the model asynchronously."""
+        """Define standard procedure for sending messages asynchronously."""
         message: Optional[Message] = None
         if self.configuration.cache_provider is not None:
-            message = self.configuration.cache_provider.search(parameters, session)
+            message = self.configuration.cache_provider.search(
+                self.configuration, session
+            )
         if self.configuration.mock_provider is not None:
             message = self.configuration.mock_provider.call(session)
         if message is not None:
@@ -422,75 +458,49 @@ class Model(BaseModel, ABC, Debuggable):
                 for char in message.content:
                     yield Message(content=char, role=message.role)
             return
-        parameters, session = self.prepare(parameters, session, True)
-        messages = self._send_async(parameters, session, yield_type)
+
+        session = self.prepare(session)
+        messages = self._send_async(session, yield_type)
         for message in messages:
-            yield self.after_send(parameters, session, message, True)
-
-    def validate_configuration(
-        self, configuration: Configuration, is_async: bool
-    ) -> None:
-        """validate_configuration method define the concrete procedure to validate configuration."""
-        ...
-
-    def validate_parameters(self, parameters: Parameters, is_async: bool) -> None:
-        """validate_parameters method define the concrete procedure to validate parameters."""
-        ...
-
-    def validate_session(self, session: Session, is_async: bool) -> None:
-        """validate_session method defines the basic validation procedure for sessions."""
-        if len(session.messages) == 0:
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session should be a Session object and have at least one message."
-            )
-        if any([not isinstance(message.content, str) for message in session.messages]):
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: All message in a session should be string."
-            )
-
-        # Filter out control template messages for validation
-        messages = [
-            message for message in session.messages if message.role != "control"
-        ]
-
-        # Check for system messages
-        system_messages = [msg for msg in messages if msg.role == "system"]
-        if system_messages:
-            if len(system_messages) > 1:
-                raise ParameterValidationError(
-                    f"{self.__class__.__name__}: Only one system message is allowed in a session."
-                )
-            if messages[0].role != "system":
-                raise ParameterValidationError(
-                    f"{self.__class__.__name__}: System message must be at the beginning of the session."
-                )
-
-    def vaidate_other(
-        self, parameters: Parameters, session: Session, is_async: bool
-    ) -> None:
-        """vaidate_other method define the concrete procedure to validate other parameters and session."""
-        ...
-
-    def before_send(
-        self, parameters: Parameters, session: Optional[Session], is_async: bool
-    ) -> Tuple[
-        Optional[UpdatedConfiguration],
-        Optional[UpdatedParameters],
-        Optional[Session],
-    ]:
-        """before_send method define the concrete procedure to pre-process parameters and session."""
-        return (None, None, None)
+            yield self.after_send(session, message)
 
     def after_send(
         self,
-        parameters: Parameters,
         session: Optional[Session],
         message: Message,
-        is_async: bool,
-    ) -> UpdatedMessage:
-        """after_send method define the concrete procedure to post-process parameters, session, and message."""
+    ) -> Message:
+        """Perform message post-processing."""
         return message
 
+    def validate_session(self, session: Session, is_async: bool = False) -> None:
+        """Perform session validation.
+
+        Args:
+            session: Session to validate
+            is_async: Whether validation is for asynchronous processing
+
+        Raises:
+            ParameterValidationError: Validation error
+        """
+        # Filter out control template messages
+        messages = [
+            message
+            for message in session.messages
+            if message.role != CONTROL_TEMPLATE_ROLE
+        ]
+
+        # Check for empty session
+        if len(messages) == 0:
+            raise ParameterValidationError("Session must have at least one message")
+
+        # Check message content type
+        if any([not isinstance(message.content, str) for message in messages]):
+            raise ParameterValidationError("All messages in session must be strings")
+
+        # Check for empty messages
+        if any([message.content == "" for message in messages]):
+            raise ParameterValidationError("Empty messages are not allowed")
+
     def list_models(self) -> List[str]:
-        """list_models method define the concrete procedure to list models."""
+        """Return a list of available models."""
         raise NotImplementedError("List models is not implemented for this model.")

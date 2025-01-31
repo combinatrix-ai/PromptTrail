@@ -49,14 +49,15 @@ class Tool(BaseModel, Debuggable):
         super().model_post_init(*args, **kwargs)
         self.setup_logger_for_pydantic()
 
-    def validate_arguments(self, args: Dict[str, Any]) -> None:
+    def validate_arguments(self, args: Dict[str, Any], allow_redundant=False) -> None:
         """Validate that all required arguments are present and have correct types."""
         # Check for unknown arguments
-        unknown_args = set(args.keys()) - set(self.arguments.keys())
-        if unknown_args:
-            raise ParameterValidationError(
-                f"Unexpected argument: {', '.join(unknown_args)}"
-            )
+        if not allow_redundant:
+            unknown_args = set(args.keys()) - set(self.arguments.keys())
+            if unknown_args:
+                raise ParameterValidationError(
+                    f"Unexpected argument: {', '.join(unknown_args)}"
+                )
 
         # Check for required arguments
         for name, arg in self.arguments.items():

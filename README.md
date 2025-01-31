@@ -12,48 +12,41 @@
 </div>
 
 <p align="center">
-  <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/dd766b44-165e-4c55-98a3-f009334bbc1c" width="640px">
+  <img src="https://github.com/user-attachments/assets/fe20a6ff-dd2e-4bad-a540-664e133b9582" width="640px">
 </p>
-<p align="center">
-  <img src="https://github.com/combinatrix-ai/PromptTrail/assets/1284876/ef50b481-1ef5-4807-b9c4-6e2ef32d5641" width="640px">
-</p>
-
 
 PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
 
-🔌 **Unified LLM Interface** - A clean, consistent way to work with multiple LLM providers
-- OpenAI GPT-3.5/4
-- Anthropic Claude
-- Google Gemini
-- Local models via Transformers
-- Easy to add new providers
+### 🔌 Unified LLM Interface
+- **Multiple Providers**: OpenAI, Google Gemini, Anthropic Claude, and local models via Transformers
+- **Consistent API**: Same interface for all providers with full type hints
+- **Easy Extension**: Simple provider interface to add new LLM services
 
-🤖 **Agent-as-Code DSL** - A simple, intuitive way to build complex conversational agents
-- Natural template-based conversation flows
-- Built-in tools and hooks system
-- Type-safe function calling
-- Easy to test and debug
+### 🛠️ Developer Tools
+- **Testing**: Mock providers to test LLM interactions without API calls
+- **Cost Optimization**: Built-in caching to reduce API usage
+- **[Coming Soon]**: Advanced logging and debugging features
 
-🛠️ **Developer Tools** - Everything you need to build production-ready LLM apps
-- Mock providers for testing
-- Caching to reduce API costs
-- Streaming responses
-- Rich type hints and documentation
+### 🤖 Agent as Code Framework
+- **Intuitive Templates**: Natural way to define conversation flows
+- **Powerful Tooling**: Type-safe function calling and built-in utilities
+- **Extensible**: Hooks system for custom behaviors and integrations
+- **Subroutines**: Isolated execution contexts with flexible session management
+
+## Contents
 
 - [PromptTrail](#prompttrail)
   - [Quickstart](#quickstart)
   - [Installation](#installation)
-  - [What PromptTrail can do?](#what-prompttrail-can-do)
   - [Examples](#examples)
     - [LLM API Call](#llm-api-call)
     - [Developer Tools](#developer-tools)
     - [Agent as Code](#agent-as-code)
     - [Tooling](#tooling)
+    - [Find More](#find-more)
   - [Next](#next)
   - [License](#license)
   - [Contributing](#contributing)
-  - [Q\&A](#qa)
-    - [Why bother yet another LLM library?](#why-bother-yet-another-llm-library)
   - [Showcase](#showcase)
 
 ## Quickstart
@@ -74,42 +67,7 @@ cd PromptTrail
 pip install -e .
 ```
 
-## What PromptTrail can do?
-
-- PromptTrail provides a comprehensive set of features for building LLM applications:
-
-### 🔌 Unified LLM Interface
-- **Multiple Providers**: OpenAI, Google Gemini, Anthropic Claude, and local models via Transformers
-- **Consistent API**: Same interface for all providers with full type hints
-- **Easy Extension**: Simple provider interface to add new LLM services
-
-### 🛠️ Developer Tools
-- **Testing**: Mock providers to test LLM interactions without API calls
-- **Cost Optimization**: Built-in caching to reduce API usage
-- **[Coming Soon]**: Advanced logging and debugging features
-
-### 🤖 Agent as Code Framework
-- **Intuitive Templates**: Natural way to define conversation flows
-- **Powerful Tooling**: Type-safe function calling and built-in utilities
-- **Extensible**: Hooks system for custom behaviors and integrations
-- **[Coming Soon]**: Code execution, vector search, and more built-in tools
-
 ## Examples
-
-You can find more examples in [examples](examples) directory:
-
-- Agent Examples
-  - Fermi Problem Solver (examples/agent/fermi_problem.py)
-  - Math Teacher Bot (examples/agent/math_teacher.py)
-  - Weather Forecast Bot (examples/agent/weather_forecast.py)
-  - FAQ Bot (examples/agent/faq-bot/)
-
-- Developer Tools (Dogfooding)
-  - Auto-generated Commit Messages (examples/dogfooding/commit_with_auto_generated_comment.py)
-  - Docstring Generator (examples/dogfooding/create_docstring.py)
-  - Unit Test Generator (examples/dogfooding/create_unit_test.py)
-  - Comment Fixer (examples/dogfooding/fix_comment.py)
-  - Markdown Fixer (examples/dogfooding/fix_markdown.py)
 
 ### LLM API Call
 
@@ -117,19 +75,23 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 
 ```python
 > import os
-> from src.prompttrail.core import Session, Message
-> from src.prompttrail.models.openai import OpenAIModel, OpenAIConfiguration, OpenAIParam
+> from prompttrail.core import Session, Message
+> from prompttrail.models.openai import OpenAIModel, OpenAIConfig
 >
 > api_key = os.environ["OPENAI_API_KEY"]
-> config = OpenAIConfiguration(api_key=api_key)
-> parameters = OpenAIParam(model_name="gpt-4o-mini", max_tokens=100, temperature=0)
+> config = OpenAIConfig(
+>     api_key=api_key,
+>     model_name="gpt-4o-mini",
+>     max_tokens=100,
+>     temperature=0
+> )
 > model = OpenAIModel(configuration=config)
 > session = Session(
 >   messages=[
 >     Message(content="Hey", role="user"),
 >   ]
 > )
-> message = model.send(parameters=parameters, session=session)
+> message = model.send(session=session)
 
 Message(content="Hello! How can I assist you today?", role="assistant")
 ```
@@ -137,7 +99,7 @@ Message(content="Hello! How can I assist you today?", role="assistant")
 If you want streaming output, you can use the `send_async` method if the provider offers the feature.
 
 ```python
-> message_generator = model.send_async(parameters=parameters, session=session)
+> message_generator = model.send_async(session=session)
 > for message in message_generator:
 >     print(message.content, sep="", flush=True)
 
@@ -150,26 +112,26 @@ We provide various tools for developers to build LLM applications.
 For example, you can mock LLMs for testing.
 
 ```python
-> # Change model class to mock model class
-> model = OpenAIChatCompletionModelMock(configuration=config)
-> # and just call the setup method to set up the mock provider
-> model.setup(
->     mock_provider=OneTurnConversationMockProvider(
->         conversation_table={
->             "1+1": "1215973652716",
->         },
->         role="assistant",
->     )
+> from prompttrail.core import Session, Message
+> from prompttrail.core.mock import EchoMockProvider
+> from prompttrail.models.openai import OpenAIModel, OpenAIConfig
+>
+> # Create a configuration with EchoMockProvider
+> config = OpenAIConfig(
+>     api_key="dummy",  # API key is not used when using mock provider
+>     model_name="gpt-4o-mini",
+>     mock_provider=EchoMockProvider()  # Simply echoes back the last message
 > )
+> model = OpenAIModel(configuration=config)
+>
+> # Use the model as usual - it will echo back the messages
 > session = Session(
->     messages=[
->         Message(content="1+1", role="user"),
->     ]
+>     messages=[Message(content="Hello", role="user")]
 > )
-> message = model.send(parameters=parameters, session=session)
+> message = model.send(session=session)
 > print(message)
 
-TextMessage(content="1215973652716", role="assistant")
+Message(content="Hello", role="assistant")  # EchoMockProvider simply returns the same content
 ```
 
 ### Agent as Code
@@ -179,8 +141,7 @@ You can write a simple agent like below. Without reading the documentation, you 
 ```python
 template = LinearTemplate(
     [
-        MessageTemplate(
-            role="system",
+        SystemTemplate(
             content="You're a math teacher bot.",
         ),
         LoopTemplate(
@@ -189,34 +150,35 @@ template = LinearTemplate(
                     description="Let's ask a question to AI:",
                     default="Why can't you divide a number by zero?",
                 ),
-                AssistantTemplate(),  # Generates response using LLM
-                MessageTemplate(role="assistant", content="Are you satisfied?"),
+                # Generates response using LLM
+                AssistantTemplate(),  
+                # Or, you can impersonate as LLM
+                AssistantTemplate(content="Are you satisfied?"),
                 UserTemplate(
                     description="Input:",
                     default="Yes.",
                 ),
                 # Let the LLM decide whether to end the conversation or not
-                MessageTemplate(
-                    role="assistant",
+                AssistantTemplate(
                     content="The user has stated their feedback."
                     + "If you think the user is satisfied, you must answer `END`. Otherwise, you must answer `RETRY`."
                 ),
-                check_end := AssistantTemplate(),  # Generates END or RETRY response
+                AssistantTemplate(),  # Generates END or RETRY response
             ],
-            exit_condition=lambda session: ("END" == session.get_last_message().content.strip()),
+            exit_condition=lambda session: ("END" in session.get_last_message().content),
         ),
     ],
 )
 
 runner = CommandLineRunner(
     model=OpenAIModel(
-        configuration=OpenAIConfiguration(
-            api_key=os.environ.get("OPENAI_API_KEY", "")
+        configuration=OpenAIConfig(
+            api_key=os.environ["OPENAI_API_KEY"],
+            model_name="gpt-4o"
         )
     ),
-    parameters=OpenAIParam(model_name="gpt-4o"),
     template=template,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 runner.run()
@@ -257,8 +219,32 @@ message:  END
 =================
 ====== End ======
 ````
-
 Go to [examples](examples) directory for more examples.
+
+You can also use subroutines to break down complex tasks into manageable pieces:
+
+```python
+from prompttrail.agent.subroutine import SubroutineTemplate
+from prompttrail.agent.session_init_strategy import InheritSystemStrategy
+from prompttrail.agent.squash_strategy import FilterByRoleStrategy
+
+# Define a calculation subroutine
+calculation = CalculationTemplate()  # Your calculation logic here
+subroutine = SubroutineTemplate(
+    template=calculation,
+    session_init_strategy=InheritSystemStrategy(),  # Inherit system messages
+    squash_strategy=FilterByRoleStrategy(roles=["assistant"])  # Keep only assistant messages
+)
+
+# Use in main template
+template = LinearTemplate([
+    SystemTemplate(content="You are a math teacher."),
+    UserTemplate(content="What is 6 x 7?"),
+    subroutine,  # Execute calculation in isolated context
+])
+```
+
+See [examples/agent/subroutine_example.py](examples/agent/subroutine_example.py) for a complete example.
 
 ### Tooling
 
@@ -321,17 +307,15 @@ class WeatherForecastTool(Tool):
 
 # Use the tool in a template
 template = LinearTemplate(
-    templates=[
-        MessageTemplate(
+    [
+        SystemTemplate(
             content="You are a helpful weather assistant that provides weather forecasts.",
-            role="system"
         ),
-        MessageTemplate(
+        UserTemplate(
             role="user",
             content="What's the weather in Tokyo?",
         ),
         ToolingTemplate(
-            role="assistant",
             functions=[WeatherForecastTool()],
         ),
     ]
@@ -360,8 +344,24 @@ message:  The weather in Tokyo is currently sunny with a temperature of 20.5°C.
 ====== End ======
 ```
 
-See [documentation)](https://prompttrail.readthedocs.org/en/quickstart-agents.html#tool-function-calling) for more information.
+See [documentation](https://prompttrail.readthedocs.org/en/quickstart-agents.html#tool-function-calling) for more information.
 
+### Find More
+
+You can find more examples in [examples](examples) directory:
+
+- Agent Examples
+  - Fermi Problem Solver (examples/agent/fermi_problem.py)
+  - Math Teacher Bot (examples/agent/math_teacher.py)
+  - Weather Forecast Bot (examples/agent/weather_forecast.py)
+  - FAQ Bot (examples/agent/faq-bot/)
+
+- Developer Tools (Dogfooding)
+  - Auto-generated Commit Messages (examples/dogfooding/commit_with_auto_generated_comment.py)
+  - Docstring Generator (examples/dogfooding/create_docstring.py)
+  - Unit Test Generator (examples/dogfooding/create_unit_test.py)
+  - Comment Fixer (examples/dogfooding/fix_comment.py)
+  - Markdown Fixer (examples/dogfooding/fix_markdown.py)
 
 ## Next
 
@@ -384,14 +384,6 @@ File an issue if you have any requests!
 
 - Contributions are more than welcome!
 - See [CONTRIBUTING](CONTRIBUTING.md) for more details.
-
-## Q&A
-
-### Why bother yet another LLM library?
-
-- PromptTrail is designed to be lightweight and easy to use.
-- Manipulating LLM is actually not that complicated, but LLM libraries are getting more and more complex to embrace more features.
-- PromptTrail aims to provide a simple interface for LLMs and let developers implement their own features.
 
 ## Showcase
 

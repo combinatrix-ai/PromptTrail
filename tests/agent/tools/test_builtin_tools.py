@@ -6,7 +6,7 @@ from typing import Generator
 
 import pytest
 
-from examples.dogfooding.dogfooding_tools import (
+from prompttrail.agent.tools.builtin import (
     CreateOrOverwriteFile,
     EditFile,
     ReadFile,

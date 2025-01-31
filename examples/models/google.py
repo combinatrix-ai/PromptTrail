@@ -1,7 +1,7 @@
 import os
 
 from prompttrail.core import Message, Session
-from prompttrail.models.google import GoogleConfig, GoogleModel, GoogleParam
+from prompttrail.models.google import GoogleConfig, GoogleModel
 
 api_key = os.environ.get("GOOGLE_CLOUD_API_KEY", "")
 
@@ -11,10 +11,8 @@ session = Session(
     ]
 )
 
-
-config = GoogleConfig(api_key=api_key)
-parameters = GoogleParam(model_name="models/gemini-1.5-flash")
+config = GoogleConfig(api_key=api_key, model_name="models/gemini-1.5-flash")
 model = GoogleModel(configuration=config)
-message = model.send(parameters=parameters, session=session)
+message = model.send(session=session)
 
 print(message)

@@ -6,16 +6,19 @@ import openai
 from pydantic import ConfigDict
 
 from prompttrail.agent.tools import Tool
-from prompttrail.core import Configuration, Message, Model, Parameters, Session
+from prompttrail.core import Config, Message, Model, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
-from prompttrail.core.errors import ParameterValidationError
 
 logger = logging.getLogger(__name__)
 
 
-class OpenAIConfig(Configuration):
-    """Configuration for OpenAI Chat API."""
+class OpenAIConfig(Config):
+    """Integration configuration class for OpenAI Chat API.
 
+    Manages authentication credentials and model parameters in a centralized way.
+    """
+
+    # Authentication
     api_key: str
     """API key for OpenAI API."""
     organization_id: Optional[str] = None
@@ -25,30 +28,35 @@ class OpenAIConfig(Configuration):
     api_version: Optional[str] = None
     """API version for OpenAI API."""
 
-
-class OpenAIParam(Parameters):
-    """Parameters for OpenAI Chat models.
-
-    Inherits common parameters from Parameters base class and adds OpenAI-specific parameters.
-    For detailed description of each parameter, see https://platform.openai.com/docs/api-reference/chat
-    """
-
+    # Model parameters (inherited from UnifiedModelConfig)
     model_name: str = "gpt-4o-mini"
-    """ Name of the model to use. Use OpenAIModel.list_models() to get the list of available models. """
-    temperature: float = 1.0
-    """ Temperature for sampling. """
-    max_tokens: int = 100
-    """ Maximum number of tokens to generate. """
+    temperature: Optional[float] = 1.0
+    max_tokens: Optional[int] = 100
+
+    def _validate_model_settings(self) -> None:
+        """OpenAI-specific configuration validation"""
+        super()._validate_model_settings()
+        if not self.api_key:
+            raise ValueError("OpenAI API key is required")
+
+    def _validate_tools(self) -> None:
+        """OpenAI-specific tool validation"""
+        super()._validate_tools()
+        for tool in self.tools:  # type: ignore
+            if not all(c.isalnum() or c in "-_" for c in tool.name):
+                raise ValueError(
+                    f"Tool name must be alphanumeric, hyphen, or underscore: {tool.name}"
+                )
 
 
 class OpenAIModel(Model):
-    """Model for OpenAI Chat API."""
+    """Model class for OpenAI Chat API."""
 
     configuration: OpenAIConfig
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def _authenticate(self) -> None:
+        """Configure OpenAI API authentication."""
         openai.api_key = self.configuration.api_key
         if self.configuration.organization_id:
             openai.organization = self.configuration.organization_id
@@ -57,8 +65,8 @@ class OpenAIModel(Model):
         if self.configuration.api_version:
             openai.api_version = self.configuration.api_version
 
-    def format_tool(self, tool: Tool) -> Dict[str, Any]:
-        """Convert tool to OpenAI format"""
+    def format_tool(self, tool: "Tool") -> Dict[str, Any]:
+        """Convert tool to OpenAI format."""
         schema = tool.to_schema()
         return {
             "name": schema["name"],
@@ -66,27 +74,8 @@ class OpenAIModel(Model):
             "parameters": schema["parameters"],
         }
 
-    def validate_tools(self, tools: List[Tool]) -> None:
-        """Validate tools according to OpenAI API requirements"""
-        for tool in tools:
-            # Validate tool name
-            if not all(c.isalnum() or c in "-_" for c in tool.name):
-                raise ParameterValidationError(
-                    f"Tool name must be alphanumeric, hyphen, or underscore: {tool.name}"
-                )
-            # Validate description
-            if not tool.description:
-                raise ParameterValidationError(
-                    f"Tool description is required: {tool.name}"
-                )
-            # Validate arguments
-            if not tool.arguments:
-                raise ParameterValidationError(
-                    f"Tool must have at least one argument: {tool.name}"
-                )
-
     def _session_to_openai_messages(self, session: Session) -> List[Dict[str, Any]]:
-        """Convert session messages to OpenAI format"""
+        """Convert session messages to OpenAI format."""
         messages = [
             message
             for message in session.messages
@@ -112,7 +101,6 @@ class OpenAIModel(Model):
                     result.append({"content": message.content, "role": "assistant"})
             elif message.role == "tool_result":
                 # Convert tool_result to function for OpenAI API
-                # Look for the previous assistant message with function_call
                 for j in range(i - 1, -1, -1):
                     prev_message = messages[j]
                     if (
@@ -130,7 +118,6 @@ class OpenAIModel(Model):
                             )
                             break
                 else:
-                    # If no matching function_call found, treat as assistant message
                     result.append(
                         {
                             "content": str(message.content),
@@ -141,51 +128,26 @@ class OpenAIModel(Model):
                 raise ValueError(f"Unsupported role: {message.role}")
         return result
 
-    def validate_session(self, session: Session, is_async: bool) -> None:
-        """Validate session for OpenAI Chat models.
-
-        Extends the base validation with OpenAI-specific validation:
-        - At most one system message at the beginning
-        - No tool_result messages allowed
-        """
-        super().validate_session(session, is_async)
-
-        # OpenAI-specific validation for checking at least one non-system message
-        messages = [
-            message
-            for message in session.messages
-            if message.role != CONTROL_TEMPLATE_ROLE
-        ]
-
-        non_system_messages = [
-            message for message in messages if message.role != "system"
-        ]
-        if len(non_system_messages) == 0:
-            raise ParameterValidationError(
-                f"{self.__class__.__name__}: Session must contain at least one non-system message."
-            )
-
-    def _send(self, parameters: Parameters, session: Session) -> Message:
+    def _send(self, session: Session) -> Message:
+        """Send messages and return the response."""
         self._authenticate()
-        if not isinstance(parameters, OpenAIParam):
-            raise ParameterValidationError(
-                f"{OpenAIParam.__name__} is expected, but {type(parameters).__name__} is given."
-            )
-
         messages = self._session_to_openai_messages(session)
 
         # Create parameters for OpenAI API
         create_params: Dict[str, Any] = {
-            "model": parameters.model_name,
-            "temperature": parameters.temperature,
-            "max_tokens": parameters.max_tokens,
+            "model": self.configuration.model_name,
             "messages": messages,
         }
 
-        if parameters.tools:
+        if self.configuration.temperature is not None:
+            create_params["temperature"] = self.configuration.temperature
+        if self.configuration.max_tokens is not None:
+            create_params["max_tokens"] = self.configuration.max_tokens
+
+        if self.configuration.tools:
             create_params["tools"] = [
                 {"type": "function", "function": self.format_tool(tool)}
-                for tool in parameters.tools
+                for tool in self.configuration.tools
             ]
 
         response = openai.chat.completions.create(**create_params)  # type: ignore
@@ -210,30 +172,29 @@ class OpenAIModel(Model):
 
     def _send_async(
         self,
-        parameters: Parameters,
         session: Session,
-        yiled_type: Literal["all", "new"] = "new",
+        yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
-        if not isinstance(parameters, OpenAIParam):
-            raise ParameterValidationError(
-                f"{OpenAIParam.__name__} is expected, but {type(parameters).__name__} is given."
-            )
-
+        """Send messages asynchronously and return the response."""
+        self._authenticate()
         messages = self._session_to_openai_messages(session)
 
         # Create parameters for OpenAI API
         create_params: Dict[str, Any] = {
-            "model": parameters.model_name,
-            "temperature": parameters.temperature,
-            "max_tokens": parameters.max_tokens,
+            "model": self.configuration.model_name,
             "messages": messages,
             "stream": True,
         }
 
-        if parameters.tools:
+        if self.configuration.temperature is not None:
+            create_params["temperature"] = self.configuration.temperature
+        if self.configuration.max_tokens is not None:
+            create_params["max_tokens"] = self.configuration.max_tokens
+
+        if self.configuration.tools:
             create_params["tools"] = [
                 {"type": "function", "function": self.format_tool(tool)}
-                for tool in parameters.tools
+                for tool in self.configuration.tools
             ]
 
         response: openai.Stream = openai.chat.completions.create(**create_params)  # type: ignore
@@ -245,17 +206,18 @@ class OpenAIModel(Model):
             if role is None:
                 role = message.choices[0].delta.role  # type: ignore
             new_text: str = message.choices[0].delta.content or ""  # type: ignore
-            if yiled_type == "new":
+            if yield_type == "new":
                 yield Message(content=new_text, role=role)  # type: ignore
-            elif yiled_type == "all":
+            elif yield_type == "all":
                 all_text: str = all_text + new_text  # type: ignore
                 yield Message(content=all_text, role=role)  # type: ignore
             else:
-                raise ParameterValidationError(
-                    f"Invalid yield_type: {yiled_type}. Must be either 'all' or 'new'."
+                raise ValueError(
+                    f"Invalid yield_type: {yield_type}. Must be either 'all' or 'new'."
                 )
 
     def list_models(self) -> List[str]:
+        """Return a list of available models."""
         self._authenticate()
         response = openai.models.list()
         return [model.id for model in response.data]  # type: ignore
