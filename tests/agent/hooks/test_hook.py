@@ -1,12 +1,11 @@
 import logging
 import unittest
 
-from prompttrail.agent import Session
 from prompttrail.agent.session_transformers import (
     MetadataTransformer,
     SessionTransformer,
 )
-from prompttrail.core import Metadata
+from prompttrail.core import Metadata, Session
 
 logger = logging.getLogger(__name__)
 

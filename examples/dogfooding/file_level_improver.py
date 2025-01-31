@@ -6,7 +6,7 @@ import os
 import sys
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.session_transformers import ResetMetadata
 from prompttrail.agent.templates import (
     AssistantTemplate,
     LinearTemplate,
@@ -81,7 +81,7 @@ for path in paths:
     Files:
     {{important_files}}
     """,
-                after_transform=ResetData("important_files"),
+                after_transform=ResetMetadata("important_files"),
             ),
             UserTemplate(
                 content="{{content}}",

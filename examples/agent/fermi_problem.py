@@ -11,7 +11,7 @@ from typing import cast
 from prompttrail.agent.session_transformers import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
-    ResetData,
+    ResetMetadata,
 )
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -108,7 +108,7 @@ Calculation:
                     condition=lambda session: "answer" not in session.metadata,
                 ),
             ],
-            before_transform=[ResetData()],
+            before_transform=[ResetMetadata()],
         ),
         AssistantTemplate(
             # You can also give assistant message without using model, as if the assistant said it

@@ -1,12 +1,17 @@
+"""Base classes for subroutine functionality."""
+
 from typing import Generator, List, Optional, Union
 
-from prompttrail.agent.session_init_strategy import (
+from prompttrail.agent.session_transformers import SessionTransformer
+from prompttrail.agent.subroutine.session_init_strategy import (
     CleanSessionStrategy,
     SessionInitStrategy,
 )
-from prompttrail.agent.session_transformers._core import SessionTransformer
-from prompttrail.agent.squash_strategy import LastMessageStrategy, SquashStrategy
-from prompttrail.agent.templates._core import Stack, Template
+from prompttrail.agent.subroutine.squash_strategy import (
+    LastMessageStrategy,
+    SquashStrategy,
+)
+from prompttrail.agent.templates import Stack, Template
 from prompttrail.core import Message, Session
 
 

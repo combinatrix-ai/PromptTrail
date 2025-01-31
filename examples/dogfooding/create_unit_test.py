@@ -7,7 +7,6 @@ from typing import List, Optional
 
 import click
 
-from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -16,7 +15,7 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message
+from prompttrail.core import Message, Session
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 
 templates = LinearTemplate(

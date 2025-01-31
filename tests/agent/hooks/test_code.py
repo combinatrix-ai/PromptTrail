@@ -1,11 +1,10 @@
 import unittest
 
-from prompttrail.agent import Session
-from prompttrail.agent.session_transformers._code import (
+from prompttrail.agent.session_transformers import (
     EvaluatePythonCodeHook,
     ExtractMarkdownCodeBlockHook,
 )
-from prompttrail.core import Message
+from prompttrail.core import Message, Session
 
 
 class TestExtractMarkdownCodeBlockHook(unittest.TestCase):

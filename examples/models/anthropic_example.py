@@ -5,9 +5,8 @@ from typing import Any, Dict, Literal
 from typing_extensions import TypedDict
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.templates import SystemTemplate, ToolingTemplate
+from prompttrail.agent.templates import SystemTemplate, ToolingTemplate, UserTemplate
 from prompttrail.agent.templates._control import LinearTemplate
-from prompttrail.agent.templates._core import UserTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interaction import DefaultEchoMockProvider
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, AnthropicParam

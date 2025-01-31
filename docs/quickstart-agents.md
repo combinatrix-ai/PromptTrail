@@ -248,7 +248,7 @@ assistant_only = FilterByRoleStrategy(roles=["assistant"])
 Here's an example of using subroutines to solve math problems:
 
 ```python
-from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine import SubroutineTemplate
 from prompttrail.agent.templates import Template, LinearTemplate
 
 class CalculationTemplate(Template):

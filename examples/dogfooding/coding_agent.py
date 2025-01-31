@@ -4,7 +4,7 @@ import os
 import sys
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.session_transformers import ResetMetadata
 from prompttrail.agent.templates import (
     LinearTemplate,
     LoopTemplate,
@@ -18,13 +18,13 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel, Anthro
 sys.path.append(os.path.abspath("."))
 
 
-from examples.dogfooding.dogfooding_tools import (
+from examples.dogfooding.dogfooding_tools import (  # RunTest,
     CreateOrOverwriteFile,
     EditFile,
     ExecuteCommand,
     ReadFile,
     ReadImportantFiles,
-    RunTest,
+    RunAllTestsWithSummary,
     TreeDirectory,
 )
 
@@ -35,7 +35,8 @@ tools_to_use = [
     TreeDirectory(),
     CreateOrOverwriteFile(),
     EditFile(),
-    RunTest(),
+    # RunTest(),
+    RunAllTestsWithSummary,
 ]
 
 templates = LinearTemplate(
@@ -61,7 +62,7 @@ Rules:
 # Project Rules:
 {{clinerules}}
 """,
-            after_transform=ResetData(),
+            after_transform=ResetMetadata(),
         ),
         LoopTemplate(
             [

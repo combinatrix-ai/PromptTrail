@@ -102,7 +102,7 @@ class Debugger(MetadataTransformer):
         return metadata
 
 
-class ResetData(MetadataTransformer):
+class ResetMetadata(MetadataTransformer):
     """Hook that resets metadata in session."""
 
     def __init__(self, keys: Optional[str | List[str]] = None):

@@ -1,14 +1,16 @@
 import logging
 from pprint import pformat
-from typing import Any, Dict, Generator, List, Literal, Optional
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Literal, Optional
 
 import openai
 from pydantic import ConfigDict
 
-from prompttrail.agent.tools import Tool
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
+
+if TYPE_CHECKING:
+    from prompttrail.agent.tools import Tool
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ class OpenAIModel(Model):
         if self.configuration.api_version:
             openai.api_version = self.configuration.api_version
 
-    def format_tool(self, tool: Tool) -> Dict[str, Any]:
+    def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to OpenAI format"""
         schema = tool.to_schema()
         return {
@@ -66,7 +68,7 @@ class OpenAIModel(Model):
             "parameters": schema["parameters"],
         }
 
-    def validate_tools(self, tools: List[Tool]) -> None:
+    def validate_tools(self, tools: List["Tool"]) -> None:
         """Validate tools according to OpenAI API requirements"""
         for tool in tools:
             # Validate tool name

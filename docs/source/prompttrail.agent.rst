@@ -8,7 +8,9 @@ Subpackages
    :maxdepth: 4
 
    prompttrail.agent.session_transformers
+   prompttrail.agent.subroutine
    prompttrail.agent.templates
+   prompttrail.agent.tools
 
 Submodules
 ----------
@@ -17,30 +19,6 @@ prompttrail.agent.runners module
 --------------------------------
 
 .. automodule:: prompttrail.agent.runners
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-prompttrail.agent.session\_init\_strategy module
-------------------------------------------------
-
-.. automodule:: prompttrail.agent.session_init_strategy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-prompttrail.agent.squash\_strategy module
------------------------------------------
-
-.. automodule:: prompttrail.agent.squash_strategy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-prompttrail.agent.tools module
-------------------------------
-
-.. automodule:: prompttrail.agent.tools
    :members:
    :undoc-members:
    :show-inheritance:
