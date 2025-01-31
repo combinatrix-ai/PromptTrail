@@ -7,7 +7,6 @@ from typing import List, Optional
 
 import click
 
-from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import (
     AssistantTemplate,
@@ -15,12 +14,12 @@ from prompttrail.agent.templates import (
     SystemTemplate,
     UserTemplate,
 )
-from prompttrail.agent.user_interaction import UserInteractionTextCLIProvider
-from prompttrail.core import Message
-from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
+from prompttrail.agent.user_interface import CLIInterface
+from prompttrail.core import Message, Session
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 templates = LinearTemplate(
-    templates=[
+    [
         SystemTemplate(
             content="""
 You're an AI assistant that help user to create a unit test for given code.
@@ -84,15 +83,18 @@ Again, dont forget you only emit the test code. No explanation is needed. But ca
     ],
 )
 
-configuration = OpenAIConfig(api_key=os.environ.get("OPENAI_API_KEY", ""))
-parameter = OpenAIParam(model_name="gpt-4o-mini", temperature=0.0, max_tokens=5000)
+configuration = OpenAIConfig(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    model_name="gpt-4o-mini",
+    temperature=0.0,
+    max_tokens=5000,
+)
 model = OpenAIModel(configuration=configuration)
 
 runner = CommandLineRunner(
     model=model,
-    parameters=parameter,
     template=templates,
-    user_interaction_provider=UserInteractionTextCLIProvider(),
+    user_interface=CLIInterface(),
 )
 
 

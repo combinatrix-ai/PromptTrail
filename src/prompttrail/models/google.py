@@ -4,20 +4,11 @@ from typing import List, Optional
 import google.generativeai as genai  # type: ignore
 from pydantic import BaseModel, ConfigDict
 
-from prompttrail.core import Configuration, Message, Model, Parameters, Session
+from prompttrail.core import Config, Message, Model, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError, ProviderResponseError
 
 logger = getLogger(__name__)
-
-
-class GoogleConfig(Configuration):
-    """Configuration for Google API."""
-
-    api_key: str
-    """API key for Google API."""
-
-    model_config = ConfigDict(protected_namespaces=())
 
 
 class GoogleChatExample(BaseModel):
@@ -31,19 +22,25 @@ class GoogleChatExample(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
 
-class GoogleParam(Parameters):
-    """Parameters for Google models.
+class GoogleConfig(Config):
+    """Integration configuration class for Google API.
 
-    For detailed parameter descriptions, see:
-    https://cloud.google.com/ai-platform/training/docs/using-gpus#using_tpus
+    Manages authentication credentials and model parameters in a centralized way.
     """
 
+    # Authentication
+    api_key: str
+    """API key for Google API."""
+
+    # Model parameters (inherited and overridden)
     model_name: str = "models/gemini-1.5-flash"
     """Model name. Use list_models() to see available models."""
     temperature: Optional[float] = 1.0
     """Sampling temperature."""
     max_tokens: Optional[int] = 1024
     """Maximum output tokens."""
+
+    # Google-specific parameters
     top_p: Optional[float] = None
     """Nucleus sampling threshold."""
     top_k: Optional[int] = None
@@ -57,6 +54,20 @@ class GoogleParam(Parameters):
 
     model_config = ConfigDict(protected_namespaces=())
 
+    def _validate_model_settings(self) -> None:
+        """Google-specific configuration validation"""
+        super()._validate_model_settings()
+        if not self.api_key:
+            raise ValueError("Google API key is required")
+        if self.temperature is not None and (
+            self.temperature < 0 or self.temperature > 2
+        ):
+            raise ValueError("temperature must be between 0 and 2")
+        if self.top_p is not None and (self.top_p <= 0 or self.top_p > 1):
+            raise ValueError("top_p must be between 0 and 1")
+        if self.top_k is not None and self.top_k <= 0:
+            raise ValueError("top_k must be greater than 0")
+
 
 class GoogleModel(Model):
     """Google API model implementation."""
@@ -68,7 +79,7 @@ class GoogleModel(Model):
         """Configure API authentication."""
         genai.configure(api_key=self.configuration.api_key)
 
-    def validate_session(self, session: Session, is_async: bool) -> None:
+    def validate_session(self, session: Session, is_async: bool = False) -> None:
         """Validate session for Google API requirements.
 
         Args:
@@ -93,35 +104,18 @@ class GoogleModel(Model):
                 f"{self.__class__.__name__}: Tool result messages not supported"
             )
 
-    def _send(self, parameters: Parameters, session: Session) -> Message:
-        """Send a request to the Google API.
-
-        Args:
-            parameters: Generation parameters
-            session: Chat session
-
-        Returns:
-            Generated message
-
-        Raises:
-            ParameterValidationError: If parameters are invalid
-            ProviderResponseError: If API request fails
-        """
+    def _send(self, session: Session) -> Message:
+        """Send request to Google API and return the response."""
         self._authenticate()
 
-        if not isinstance(parameters, GoogleParam):
-            raise ParameterValidationError(
-                f"Expected {GoogleParam.__name__}, got {type(parameters).__name__}"
-            )
-
-        model = genai.GenerativeModel(parameters.model_name)
+        model = genai.GenerativeModel(self.configuration.model_name)
         chat = model.start_chat()
 
-        if parameters.context:
-            chat.send_message(parameters.context)
+        if self.configuration.context:
+            chat.send_message(self.configuration.context)
 
-        if parameters.examples:
-            for example in parameters.examples:
+        if self.configuration.examples:
+            for example in self.configuration.examples:
                 chat.send_message(example.prompt)
                 chat.send_message(example.response)
 
@@ -131,11 +125,11 @@ class GoogleModel(Model):
         response = chat.send_message(
             session.messages[-1].content,
             generation_config=genai.types.GenerationConfig(
-                temperature=parameters.temperature,
-                candidate_count=parameters.candidate_count,
-                top_p=parameters.top_p,
-                top_k=parameters.top_k,
-                max_output_tokens=parameters.max_tokens,
+                temperature=self.configuration.temperature,
+                candidate_count=self.configuration.candidate_count,
+                top_p=self.configuration.top_p,
+                top_k=self.configuration.top_k,
+                max_output_tokens=self.configuration.max_tokens,
             ),
         )
 
