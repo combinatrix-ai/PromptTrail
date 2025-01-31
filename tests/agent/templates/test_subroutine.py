@@ -1,14 +1,17 @@
 from typing import Generator, List
 
-from prompttrail.agent.session_init_strategy import (
+from prompttrail.agent.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine.session_init_strategy import (
     CleanSessionStrategy,
     FilteredInheritStrategy,
     InheritSystemStrategy,
     LastNMessagesStrategy,
 )
-from prompttrail.agent.squash_strategy import FilterByRoleStrategy, LastMessageStrategy
-from prompttrail.agent.templates._core import Stack, Template
-from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine.squash_strategy import (
+    FilterByRoleStrategy,
+    LastMessageStrategy,
+)
+from prompttrail.agent.templates import Stack, Template
 from prompttrail.core import Message, Session
 
 

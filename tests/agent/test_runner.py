@@ -1,7 +1,6 @@
 # simple meta templates
-from prompttrail.agent import Session
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers._core import LambdaSessionTransformer
+from prompttrail.agent.session_transformers import LambdaSessionTransformer
 from prompttrail.agent.templates import (
     AssistantTemplate,
     BreakTemplate,
@@ -14,7 +13,7 @@ from prompttrail.agent.templates import (
     UserTemplate,
 )
 from prompttrail.agent.user_interaction import EchoUserInteractionTextMockProvider
-from prompttrail.core import Metadata
+from prompttrail.core import Metadata, Session
 from prompttrail.core.mocks import EchoMockProvider
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel, OpenAIParam
 

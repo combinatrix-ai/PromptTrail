@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from prompttrail.agent import Session
+from prompttrail.core import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.utils import Debuggable
 

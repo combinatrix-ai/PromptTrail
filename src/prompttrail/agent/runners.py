@@ -2,7 +2,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Optional, Set, cast
 
-from prompttrail.agent.templates import EndTemplate, Template
+from prompttrail.agent.templates._control import EndTemplate
+from prompttrail.agent.templates._core import Template
 from prompttrail.agent.user_interaction import UserInteractionProvider
 from prompttrail.core import MessageRoleType, Model, Parameters, Session
 from prompttrail.core.const import JumpException, ReachedEndTemplateException

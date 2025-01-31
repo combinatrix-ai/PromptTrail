@@ -1,13 +1,15 @@
 import json
 import logging
 from abc import abstractmethod
-from typing import Any, Dict, Generator, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union, cast
 
-from prompttrail.agent.templates import GenerateTemplate
-from prompttrail.agent.tools import Tool, ToolResult
+from prompttrail.agent.templates._core import GenerateTemplate
 from prompttrail.core import Message, MessageRoleType, Session
 from prompttrail.models.anthropic import AnthropicModel
 from prompttrail.models.openai import OpenAIModel, OpenAIParam
+
+if TYPE_CHECKING:
+    from prompttrail.agent.tools import Tool, ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +23,11 @@ class ToolingTemplateBase(GenerateTemplate):
     message formats.
     """
 
-    tools: Dict[str, Tool] = {}
+    tools: Dict[str, "Tool"] = {}
 
     def __init__(
         self,
-        tools: List[Tool],
+        tools: List["Tool"],
         role: MessageRoleType = "assistant",
         template_id: Optional[str] = None,
         **kwargs,
@@ -41,7 +43,7 @@ class ToolingTemplateBase(GenerateTemplate):
         super().__init__(role=role, template_id=template_id, **kwargs)
         self.tools = {tool.name: tool for tool in tools}
 
-    def get_tool(self, name: str) -> Tool:
+    def get_tool(self, name: str) -> "Tool":
         """Get tool by name.
 
         Args:
@@ -110,7 +112,7 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         self.debug("No tool call found")
         return None
 
-    def format_tool_result(self, result: ToolResult) -> Message:
+    def format_tool_result(self, result: "ToolResult") -> Message:
         """Format tool result for Anthropic message format.
 
         Args:
@@ -191,7 +193,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
     adapting them to the common interface provided by ToolingTemplate.
     """
 
-    def check_tool_arguments(self, args_str: str, tool: Tool) -> Dict[str, Any]:
+    def check_tool_arguments(self, args_str: str, tool: "Tool") -> Dict[str, Any]:
         """Validate and process tool arguments
 
         Args:
@@ -252,7 +254,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
         return None
 
     @staticmethod
-    def format_tool_result(result: ToolResult) -> Message:
+    def format_tool_result(result: "ToolResult") -> Message:
         """Format tool result for OpenAI message format.
 
         Args:
@@ -366,4 +368,49 @@ class ToolingTemplate(ToolingTemplateBase):
             )
 
         session = yield from template.render(session)
+        return session
+
+
+class ExecuteToolTemplate(GenerateTemplate):
+    """Template for executing a tool with arguments automatically extracted from metadata."""
+
+    def __init__(
+        self,
+        tool: "Tool",
+        role: MessageRoleType = "user",
+        template_id: Optional[str] = None,
+        **kwargs,
+    ):
+        """Initialize the template with tool and arguments.
+
+        Args:
+            tool: Tool instance to execute
+            role: Message role (defaults to "user")
+            template_id: Optional template identifier
+            **kwargs: Additional arguments passed to parent class
+        """
+        super().__init__(role=role, template_id=template_id, **kwargs)
+        self.tool = tool
+
+    def _render(self, session: Session) -> Generator[Message, None, Session]:
+        """Execute the tool with the provided arguments.
+
+        This implementation executes the tool and returns the result as a message.
+        """
+        # Filter out metadata to only include valid arguments
+        valid_args = {
+            k: v for k, v in session.metadata.items() if k in self.tool.arguments
+        }
+
+        # Execute tool with allow_redundant=True
+        self.tool.validate_arguments(valid_args, allow_redundant=True)
+        result = self.tool.execute(**valid_args)
+
+        message = Message(
+            role="tool_result",
+            content=json.dumps(result.content),
+            metadata=session.metadata,
+        )
+        session.append(message)
+        yield message
         return session

@@ -4,7 +4,7 @@ import os
 import sys
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers import ResetData
+from prompttrail.agent.session_transformers import ResetMetadata
 from prompttrail.agent.templates import (
     AssistantTemplate,
     LinearTemplate,
@@ -30,7 +30,7 @@ You're given source code and test scripts and documents for a library, PromptTra
 {{code}}
 Discuss the question with user. User is the author of this library, who want to improve the design, implementation, and documentation of the library.
 """,
-            after_transform=ResetData(),
+            after_transform=ResetMetadata(),
         ),
         LoopTemplate(
             [

@@ -263,7 +263,7 @@ Go to [examples](examples) directory for more examples.
 You can also use subroutines to break down complex tasks into manageable pieces:
 
 ```python
-from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine import SubroutineTemplate
 from prompttrail.agent.session_init_strategy import InheritSystemStrategy
 from prompttrail.agent.squash_strategy import FilterByRoleStrategy
 

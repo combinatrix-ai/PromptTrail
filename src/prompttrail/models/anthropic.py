@@ -1,15 +1,17 @@
 from logging import getLogger
 from pprint import pformat
-from typing import Any, Dict, List, Literal, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, cast
 
 import anthropic
 from pydantic import ConfigDict
 from typing_extensions import TypedDict
 
-from prompttrail.agent.tools import Tool, ToolResult
 from prompttrail.core import Configuration, Message, Model, Parameters, Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
+
+if TYPE_CHECKING:
+    from prompttrail.agent.tools import Tool, ToolResult
 
 logger = getLogger(__name__)
 
@@ -64,7 +66,7 @@ class AnthropicModel(Model):
         if self.client is None:
             self.client = anthropic.Anthropic(api_key=self.configuration.api_key)
 
-    def format_tool(self, tool: Tool) -> Dict[str, Any]:
+    def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to Anthropic format"""
         schema = tool.to_schema()
         properties = {}
@@ -86,11 +88,11 @@ class AnthropicModel(Model):
             },
         }
 
-    def format_tool_result(self, result: ToolResult) -> Dict[str, Any]:
+    def format_tool_result(self, result: "ToolResult") -> Dict[str, Any]:
         """Format result for Anthropic API"""
         return {"type": "tool_result", "content": str(result.content)}
 
-    def validate_tools(self, tools: List[Tool]) -> None:
+    def validate_tools(self, tools: List["Tool"]) -> None:
         """Validate tools according to Anthropic API requirements"""
         for tool in tools:
             # Validate tool name

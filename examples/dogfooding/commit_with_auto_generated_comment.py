@@ -4,9 +4,9 @@ import tempfile
 from typing import Optional
 
 from prompttrail.agent.runners import CommandLineRunner
-from prompttrail.agent.session_transformers._core import (
+from prompttrail.agent.session_transformers import (
     MetadataTransformer,
-    ResetData,
+    ResetMetadata,
     SessionTransformer,
 )
 from prompttrail.agent.templates import (
@@ -145,7 +145,7 @@ Please generate a commit message based on the following information:
 3. Recent commit history:
 {{log}}
 """,
-            after_transform=ResetData(),
+            after_transform=ResetMetadata(),
         ),
         LoopTemplate(
             templates=[

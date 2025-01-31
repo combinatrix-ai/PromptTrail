@@ -2,10 +2,10 @@
 
 from typing import Generator, Optional
 
-from prompttrail.agent.session_init_strategy import InheritSystemStrategy
-from prompttrail.agent.squash_strategy import FilterByRoleStrategy
-from prompttrail.agent.templates._core import Stack, Template
-from prompttrail.agent.templates.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine import SubroutineTemplate
+from prompttrail.agent.subroutine.session_init_strategy import InheritSystemStrategy
+from prompttrail.agent.subroutine.squash_strategy import FilterByRoleStrategy
+from prompttrail.agent.templates import Stack, Template
 from prompttrail.core import Message, Session
 
 
