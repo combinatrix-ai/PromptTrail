@@ -65,6 +65,7 @@ dev-dependencies = [
     "torch>=2.5.1",
     "accelerate>=1.2.1",
     "tqdm>=4.67.1",
+    "requests>=2.32.3",
 ]
 
 [tool.rye.scripts]
