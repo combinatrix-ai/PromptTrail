@@ -12,42 +12,52 @@ jobs:
         # TODO: Extend to other python versions
         python-version: ["3.11"]
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies (apt)
-        # tree is for TreeDirectory Tool
-        run: |
-          sudo apt update && sudo apt install -y tree
-      - name: Install dependencies (pip)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.lock
-      - name: Run mypy
-        run: mypy src examples tests
-      - name: Run flake8
-        # Note that ignore must be sometimes synchronized with pyproject.toml
-        run: flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples
-      - name: Run black
-        run: black --check src examples tests
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
-      - name: Run pytest
-        run: pytest --cov=src --cov-report=xml tests examples
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        - uses: actions/checkout@v4
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ matrix.python-version }}
+        - name: Install dependencies (apt)
+          # tree is for TreeDirectory Tool
+          run: |
+            sudo apt update && sudo apt install -y tree
+        - name: Cache virtual environment
+          uses: actions/cache@v4
+          with:
+            path: .venv
+            key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements-dev.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-venv-
+        - name: Set up Python and virtual environment
+          run: |
+            python -m venv .venv
+            . .venv/bin/activate
+            python -m pip install --upgrade pip
+            pip install -r requirements-dev.lock      
+        - name: Set PYTHONPATH
+          run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV      
+        - name: Run mypy
+          run: |
+            . .venv/bin/activate
+            mypy src examples tests
+        - name: Run flake8
+          # Note that ignore must be sometimes synchronized with pyproject.toml
+          run: |
+            . .venv/bin/activate
+            flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples
+        - name: Run black
+          run: |
+            . .venv/bin/activate
+            black --check src examples tests
+        - name: Run pytest
+          run: |
+            . .venv/bin/activate
+            pytest --cov=src --cov-report=xml tests examples
+          env:
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        - name: Upload coverage reports to Codecov
+          uses: codecov/codecov-action@v3
+          env:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
