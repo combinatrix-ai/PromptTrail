@@ -1,4 +1,4 @@
-name: Automated Code Review
+name: Automated Code Review Pipeline
 
 on:
   pull_request:
@@ -11,41 +11,40 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
-    name: Automated Code Review
+    name: AI-Powered Code Analysis
     strategy:
       matrix:
         python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Initialize Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies (apt)
-        # tree is for TreeDirectory Tool
+      - name: Install System Dependencies
+        # Required for TreeDirectory Tool functionality
         run: |
           sudo apt update && sudo apt install -y tree
-      - name: Cache virtual environment
+      - name: Configure Virtual Environment Cache
         uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements-dev.lock') }}
           restore-keys: |
             ${{ runner.os }}-venv-
-      - name: Set up Python and virtual environment
+      - name: Initialize Python Environment
         run: |
           python -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements-dev.lock      
-      - name: Set PYTHONPATH
+      - name: Configure PYTHONPATH
         run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV      
-      - name: Run automated code review
+      - name: Execute Automated Code Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GITHUB_WORKFLOW_NAME: ${{ github.workflow }}
-          BOT_ICON: "🔍"
+          BOT_NAME: ${{ github.workflow }}
         run: |
           . .venv/bin/activate
           python examples/dogfooding/auto_code_review.py
