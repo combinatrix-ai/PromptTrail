@@ -6,7 +6,7 @@ if ! command -v rye &> /dev/null
 then
     echo "rye could not be found"
     echo "Installing rye"
-    curl -sSf https://rye-up.com/get | RYE_INSTALL_OPTION="--yes" bash
+    curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
     source "$HOME/.rye/env"
 fi
 
@@ -29,7 +29,13 @@ cd ..
 # Cleanup
 rm -rf package-test
 
-# Release
+# Release if in Github Actions
+if [ -n "$GITHUB_ACTIONS" ]; then
+    echo "Releasing package..."
+else
+    echo "Not in Github Actions, skipping release"
+    exit 0
+fi
 rye publish --repository $PYPI_REPOSITORY --repository-url $PYPI_URL --token $PYPI_TOKEN --yes
 
 

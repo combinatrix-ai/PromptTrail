@@ -12,15 +12,15 @@
 -e file:.
 annotated-types==0.7.0
     # via pydantic
-anthropic==0.42.0
+anthropic==0.45.2
     # via prompttrail
 anyio==4.8.0
     # via anthropic
     # via httpx
     # via openai
-cachetools==5.5.0
+cachetools==5.5.1
     # via google-auth
-certifi==2024.12.14
+certifi==2025.1.31
     # via httpcore
     # via httpx
     # via requests
@@ -31,15 +31,15 @@ click==8.1.8
 distro==1.9.0
     # via anthropic
     # via openai
-google-ai-generativelanguage==0.6.10
+google-ai-generativelanguage==0.6.15
     # via google-generativeai
-google-api-core==2.24.0
+google-api-core==2.24.1
     # via google-ai-generativelanguage
     # via google-api-python-client
     # via google-generativeai
-google-api-python-client==2.158.0
+google-api-python-client==2.160.0
     # via google-generativeai
-google-auth==2.37.0
+google-auth==2.38.0
     # via google-ai-generativelanguage
     # via google-api-core
     # via google-api-python-client
@@ -47,15 +47,15 @@ google-auth==2.37.0
     # via google-generativeai
 google-auth-httplib2==0.2.0
     # via google-api-python-client
-google-generativeai==0.8.3
+google-generativeai==0.8.4
     # via prompttrail
 googleapis-common-protos==1.66.0
     # via google-api-core
     # via grpcio-status
-grpcio==1.69.0
+grpcio==1.70.0
     # via google-api-core
     # via grpcio-status
-grpcio-status==1.69.0
+grpcio-status==1.70.0
     # via google-api-core
 h11==0.14.0
     # via httpcore
@@ -80,9 +80,9 @@ markupsafe==3.0.2
     # via jinja2
 mypy-extensions==1.0.0
     # via typing-inspect
-openai==1.59.6
+openai==1.61.0
     # via prompttrail
-proto-plus==1.25.0
+proto-plus==1.26.0
     # via google-ai-generativelanguage
     # via google-api-core
 protobuf==5.29.3
@@ -97,7 +97,7 @@ pyasn1==0.6.1
     # via rsa
 pyasn1-modules==0.4.1
     # via google-auth
-pydantic==2.10.5
+pydantic==2.10.6
     # via anthropic
     # via google-generativeai
     # via openai
