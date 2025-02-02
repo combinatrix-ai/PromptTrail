@@ -8,7 +8,7 @@ import jinja2
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
 from prompttrail.agent.templates._base import Stack
-from prompttrail.core import Message, MessageRoleType, Session
+from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
@@ -124,6 +124,7 @@ class MessageTemplate(Template):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
     ):
         super().__init__(
             template_id=template_id,
@@ -132,20 +133,40 @@ class MessageTemplate(Template):
             enable_logging=enable_logging,
         )
         self.content = content
-        self.jinja_template = jinja2.Template(self.content)
+        self.disable_jinja = disable_jinja
+        if not self.disable_jinja:
+            self.jinja_template = jinja2.Template(self.content)
+        else:
+            self.jinja_template = jinja2.Template(
+                "Jinja is disabled for this template. If you see this message, please report it to the developer."
+            )
+
         self.role = role
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         """Render message using Jinja template."""
         session.set_jump(None)
         if not session.get_jump():
-            rendered_content = self.jinja_template.render(**session.metadata)
+            rendered_content = self._jinja_render(session)
             message = Message(
                 content=rendered_content, role=self.role, metadata=session.metadata
             )
             session.append(message)
             yield message
         return session
+
+    def _jinja_render(self, session: "Session") -> str:
+        # If jinja is disabled, return content as is
+        if self.disable_jinja:
+            return self.content
+
+        # Create a new environment with StrictUndefined for rendering
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        # Set metadata as global variables in the environment
+        for key, value in session.metadata.items():
+            env.globals[key] = value
+        template = env.from_string(self.content)
+        return template.render()
 
     def create_stack(self, session: "Session") -> "Stack":
         return Stack(template_id=self.template_id)
@@ -183,6 +204,8 @@ class GenerateTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging=True,
+        disable_jinja=False,
+        model: Optional[Model] = None,
     ):
         super().__init__(
             content="",
@@ -190,7 +213,10 @@ class GenerateTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
+        self.model = model
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         """Generate content using LLM."""
@@ -198,9 +224,10 @@ class GenerateTemplate(MessageTemplate):
             raise ValueError("runner is not set")
 
         self.info(
-            "Generating content with %s...", session.runner.models.__class__.__name__
+            "Generating content with %s...", session.runner.model.__class__.__name__
         )
-        response = session.runner.models.send(session)
+        model = self.model or session.runner.model
+        response = model.send(session)
         if self.role:
             response.role = self.role
         session.append(response)
@@ -222,6 +249,7 @@ class SystemTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging=True,
+        disable_jinja=False,
     ):
         super().__init__(
             content=content,
@@ -229,6 +257,8 @@ class SystemTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
 
 
@@ -248,6 +278,7 @@ class UserTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
     ):
         super().__init__(
             content=content or "",
@@ -256,6 +287,7 @@ class UserTemplate(MessageTemplate):
             before_transform=before_transform,
             after_transform=after_transform,
             enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
         self.is_interactive = content is None
         self.description = description
@@ -271,7 +303,7 @@ class UserTemplate(MessageTemplate):
                 session, self.description, self.default
             )
         else:
-            rendered_content = self.jinja_template.render(**metadata)
+            rendered_content = self._jinja_render(session)
 
         message = Message(
             content=rendered_content,
@@ -283,7 +315,7 @@ class UserTemplate(MessageTemplate):
         return session
 
 
-class AssistantTemplate(MessageTemplate):
+class AssistantTemplate(GenerateTemplate):
     """Template for assistant messages with optional LLM generation."""
 
     def __init__(
@@ -297,37 +329,37 @@ class AssistantTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
+        model: Optional[Model] = None,
     ):
         super().__init__(
-            content=content or "",
             role="assistant",
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
             enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
+            model=model,
+        )
+        self.content = (
+            content
+            or "content for AssistantTemplate is disabled. If you see this message, please report it to the developer."
         )
         self.is_generate = content is None
 
     def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
         """Render assistant message, either generated or from template."""
-        metadata = session.metadata
 
         if self.is_generate:
-            if not session.runner:
-                raise ValueError("runner is not set")
-            self.info(
-                "Generating content with %s...",
-                session.runner.models.__class__.__name__,
-            )
-            response = session.runner.models.send(session)
-            rendered_content = response.content
-        else:
-            rendered_content = self.jinja_template.render(**metadata)
+            session = yield from super()._render(session)
+            return session
 
+        rendered_content = self._jinja_render(session)
         message = Message(
             content=rendered_content,
             role=self.role,
-            metadata=metadata,
+            # Message should take snapshot of metadata
+            metadata=session.metadata.copy(),
         )
         session.append(message)
         yield message

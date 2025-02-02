@@ -11,9 +11,7 @@
 
 </div>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/fe20a6ff-dd2e-4bad-a540-664e133b9582" width="640px">
-</p>
+![readme-header](https://github.com/user-attachments/assets/0c5e8a43-ff5b-4c28-8c7c-39df86e04193)
 
 PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
 

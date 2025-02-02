@@ -23,7 +23,7 @@ class Runner(Debuggable, metaclass=ABCMeta):
     ):
         """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
         super().__init__()
-        self.models = model
+        self.model = model
         self.user_interface = user_interface
         self.template = template
         self.template_dict: Dict[str, Template] = {}
