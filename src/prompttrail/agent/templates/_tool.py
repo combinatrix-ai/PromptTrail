@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union
 
 from prompttrail.agent.templates._core import GenerateTemplate
-from prompttrail.core import Message, MessageRoleType, Session
+from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.models.anthropic import AnthropicModel
 from prompttrail.models.openai import OpenAIModel
 
@@ -30,6 +30,7 @@ class ToolingTemplateBase(GenerateTemplate):
         tools: List["Tool"],
         role: MessageRoleType = "assistant",
         template_id: Optional[str] = None,
+        model: Optional["Model"] = None,
         **kwargs,
     ):
         """Initialize the template with tools.
@@ -40,7 +41,7 @@ class ToolingTemplateBase(GenerateTemplate):
             template_id: Optional template identifier
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(role=role, template_id=template_id, **kwargs)
+        super().__init__(role=role, template_id=template_id, model=model, **kwargs)
         self.tools = {tool.name: tool for tool in tools}
 
     def get_tool(self, name: str) -> "Tool":
@@ -84,6 +85,17 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
     """
 
     # TODO: allow tool_choice
+    def __init__(
+        self,
+        tools: List["Tool"],
+        role: MessageRoleType = "assistant",
+        template_id: Optional[str] = None,
+        model: Optional[AnthropicModel] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            role=role, template_id=template_id, model=model, tools=tools, **kwargs
+        )
 
     def format_tool_call(
         self, message: Union[Message, Session]
@@ -152,9 +164,21 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         This implementation ensures proper metadata handling and tool state tracking.
         """
         self.debug("Starting render with session: %s", session)
+        runner = session.runner
+        if runner is None:
+            raise ValueError(
+                "Runner must be given to use ToolingTemplate. Do you use Runner correctly? Runner must be passed via Session."
+            )
+        model = self.model or runner.model
+        if not isinstance(model, AnthropicModel):
+            raise ValueError(
+                "You must pass an AnthropicModel to use AnthropicToolingTemplate."
+            )
 
         # Generate initial message
-        session = yield from GenerateTemplate(role=self.role).render(session)
+        session = yield from GenerateTemplate(role=self.role, model=model).render(
+            session
+        )
         self.debug("Generated initial message: %s", session)
 
         # Check for tool call
@@ -192,6 +216,18 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
     This template handles the OpenAI-specific format for function calls and results,
     adapting them to the common interface provided by ToolingTemplate.
     """
+
+    def __init__(
+        self,
+        tools: List["Tool"],
+        role: MessageRoleType = "assistant",
+        template_id: Optional[str] = None,
+        model: Optional[OpenAIModel] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            role=role, template_id=template_id, model=model, tools=tools, **kwargs
+        )
 
     def check_tool_arguments(self, args_str: str, tool: "Tool") -> Dict[str, Any]:
         """Validate and process tool arguments
@@ -282,13 +318,14 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
             raise ValueError(
                 "Runner must be given to use GenerateTemplate. Do you use Runner correctly? Runner must be passed via Session."
             )
-        if not isinstance(runner.models, OpenAIModel):
+        model = self.model or runner.model
+        if not isinstance(model, OpenAIModel):
             raise ValueError(
-                "Function calling can only be used with OpenAIChatCompletionModel."
+                "You must pass an OpenAIModel to use OpenAIToolingTemplate."
             )
 
         # Generate initial message with function calling capability
-        rendered_message = runner.models.send(session)
+        rendered_message = model.send(session)
         message = Message(
             content=rendered_message.content or "Processing your request...",
             role=self.role,
@@ -315,7 +352,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 yield result_message
 
                 # Generate final response
-                second_response = runner.models.send(session)
+                second_response = model.send(session)
                 message = Message(
                     content=second_response.content
                     or "Here's the result of your request.",
@@ -335,6 +372,18 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
 class ToolingTemplate(ToolingTemplateBase):
     """Unified tooling template for different LLM providers."""
 
+    def __init__(
+        self,
+        tools: List["Tool"],
+        role: MessageRoleType = "assistant",
+        template_id: Optional[str] = None,
+        model: Optional[Model] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            role=role, template_id=template_id, model=model, tools=tools, **kwargs
+        )
+
     def _render(self, session: Session) -> Generator[Message, None, Session]:
         """Render the template, handling tool calls and results.
 
@@ -347,22 +396,44 @@ class ToolingTemplate(ToolingTemplateBase):
             )
 
         template: Optional[ToolingTemplateBase] = None
-        if isinstance(session.runner.models, OpenAIModel):
-            template = OpenAIToolingTemplate(
-                tools=list(self.tools.values()),
-                role=self.role,
-                template_id=self.template_id,
-            )
-        elif isinstance(session.runner.models, AnthropicModel):
-            template = AnthropicToolingTemplate(
-                tools=list(self.tools.values()),
-                role=self.role,
-                template_id=self.template_id,
-            )
+        if self.model:
+            if isinstance(self.model, OpenAIModel):
+                template = OpenAIToolingTemplate(
+                    tools=list(self.tools.values()),
+                    role=self.role,
+                    template_id=self.template_id,
+                    model=self.model,
+                )
+            elif isinstance(self.model, AnthropicModel):
+                template = AnthropicToolingTemplate(
+                    tools=list(self.tools.values()),
+                    role=self.role,
+                    template_id=self.template_id,
+                    model=self.model,
+                )
+            else:
+                raise ValueError(
+                    "Unsupported model type, use OpenAIModel or AnthropicModel"
+                )
         else:
-            raise ValueError(
-                "Unsupported model type, use OpenAIModel or AnthropicModel"
-            )
+            if isinstance(session.runner.model, OpenAIModel):
+                template = OpenAIToolingTemplate(
+                    tools=list(self.tools.values()),
+                    role=self.role,
+                    template_id=self.template_id,
+                    model=session.runner.model,
+                )
+            elif isinstance(session.runner.model, AnthropicModel):
+                template = AnthropicToolingTemplate(
+                    tools=list(self.tools.values()),
+                    role=self.role,
+                    template_id=self.template_id,
+                    model=session.runner.model,
+                )
+            else:
+                raise ValueError(
+                    "Unsupported model type, use OpenAIModel or AnthropicModel"
+                )
 
         session = yield from template.render(session)
         return session

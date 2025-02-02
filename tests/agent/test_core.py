@@ -1,3 +1,6 @@
+import jinja2
+import pytest
+
 # simple meta templates
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.session_transformers import LambdaSessionTransformer
@@ -382,6 +385,49 @@ def test_user_template():
     assert session.messages[1].content == "You are a helpful assistant."
     assert session.messages[2].role == "assistant"
     assert session.messages[2].content == "You are a helpful assistant."
+
+
+def test_jinja_template_errors():
+    """Test Jinja template error handling in MessageTemplate."""
+    # Test broken Jinja syntax - should fail during initialization
+    with pytest.raises(jinja2.exceptions.TemplateSyntaxError):
+        MessageTemplate(
+            content="{{ broken syntax",
+            role="system",
+        )
+
+    # Test with disable_jinja=True
+    disabled_template = MessageTemplate(
+        content="{{ broken syntax",
+        role="system",
+        disable_jinja=True,
+    )
+
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        user_interface=EchoMockInterface(),
+        template=disabled_template,
+    )
+
+    session = Session()
+    # Should not raise error and return content as-is
+    session = runner.run(session=session, max_messages=10)
+    assert session.messages[0].content == "{{ broken syntax"
+
+    # Test undefined variable
+    undefined_var_template = MessageTemplate(
+        content="{{ undefined_variable }}",
+        role="system",
+    )
+    runner = CommandLineRunner(
+        model=echo_mock_model,
+        user_interface=EchoMockInterface(),
+        template=undefined_var_template,
+    )
+    session = Session()
+    # Should raise jinja2.exceptions.UndefinedError
+    with pytest.raises(jinja2.exceptions.UndefinedError):
+        session = runner.run(session=session, max_messages=10)
 
 
 def test_assistant_template():

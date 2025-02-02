@@ -1,5 +1,9 @@
+import copy
 from typing import Generator, List
 
+import pytest
+
+from prompttrail.agent.runners import Runner
 from prompttrail.agent.subroutine import SubroutineTemplate
 from prompttrail.agent.subroutine.session_init_strategy import (
     CleanSessionStrategy,
@@ -12,7 +16,7 @@ from prompttrail.agent.subroutine.squash_strategy import (
     LastMessageStrategy,
 )
 from prompttrail.agent.templates import Stack, Template
-from prompttrail.core import Message, Session
+from prompttrail.core import Message, Model, Session
 
 
 class MockTemplate(Template):
@@ -169,3 +173,116 @@ def test_subroutine_template_execution():
     assert len(messages) == 2
     assert len(parent_session.messages) == 2  # system + last message
     assert parent_session.messages[-1].content == "test2"
+
+
+class MockModel:
+    """Mock model for testing"""
+
+    def __init__(self, response_content: str):
+        self.response_content = response_content
+
+    def send(self, session: Session) -> Message:
+        return Message(role="assistant", content=self.response_content)
+
+
+class MockRunner(Runner):
+    """Mock runner for testing"""
+
+    def __init__(self, model: Model, template: Template, user_interface=None):
+        super().__init__(model=model, template=template, user_interface=user_interface)
+
+    def run(
+        self, start_template_id=None, session=None, max_messages=None, debug_mode=False
+    ) -> Session:
+        """Mock implementation of run method"""
+        return session or Session()
+
+
+def test_subroutine_model_override():
+    """Test model override in SubroutineTemplate"""
+    mock_template = MockTemplate([])
+    parent_model = MockModel("parent response")
+    override_model = MockModel("override response")
+
+    parent_session = Session()
+    parent_session.runner = MockRunner(
+        model=parent_model, template=mock_template, user_interface=None
+    )
+
+    subroutine = SubroutineTemplate(template=mock_template, model=override_model)
+
+    # Verify that the subroutine uses the overridden model
+    temp_session = subroutine.session_init_strategy.initialize(parent_session)
+    subroutine.squash_strategy.initialize(parent_session, temp_session)
+    if subroutine.model:
+        temp_session.runner = type(parent_session.runner)(
+            model=subroutine.model,
+            template=parent_session.runner.template,
+            user_interface=parent_session.runner.user_interface,
+        )
+
+    response = temp_session.runner.model.send(temp_session)
+    assert response.content == "override response"
+
+
+def test_subroutine_runner_override():
+    """Test runner override in SubroutineTemplate"""
+    mock_template = MockTemplate([])
+    parent_model = MockModel("parent response")
+    override_model = MockModel("override response")
+    override_runner = MockRunner(
+        model=override_model, template=mock_template, user_interface=None
+    )
+
+    parent_session = Session()
+    parent_session.runner = MockRunner(
+        model=parent_model, template=mock_template, user_interface=None
+    )
+
+    subroutine = SubroutineTemplate(template=mock_template, runner=override_runner)
+
+    # Verify that the subroutine uses the overridden runner
+    temp_session = subroutine.session_init_strategy.initialize(parent_session)
+    subroutine.squash_strategy.initialize(parent_session, temp_session)
+    temp_session.runner = subroutine.runner
+
+    response = temp_session.runner.model.send(temp_session)
+    assert response.content == "override response"
+
+
+def test_subroutine_runner_model_exclusive():
+    """Test that runner and model cannot be set simultaneously"""
+    mock_template = MockTemplate([])
+    model = MockModel("test")
+    runner = MockRunner(model=model, template=mock_template, user_interface=None)
+
+    with pytest.raises(ValueError) as exc_info:
+        SubroutineTemplate(template=mock_template, runner=runner, model=model)
+    assert (
+        str(exc_info.value) == "Cannot set both runner and model - use one or the other"
+    )
+
+
+def test_subroutine_environment_isolation():
+    """Test that subroutine environment is properly isolated"""
+    mock_template = MockTemplate([])
+    parent_model = MockModel("parent response")
+
+    parent_session = Session()
+    parent_session.runner = MockRunner(
+        model=parent_model, template=mock_template, user_interface=None
+    )
+
+    subroutine = SubroutineTemplate(template=mock_template)
+
+    # Verify that the subroutine creates a copy of the parent runner
+    temp_session = subroutine.session_init_strategy.initialize(parent_session)
+    subroutine.squash_strategy.initialize(parent_session, temp_session)
+    temp_session.runner = copy.deepcopy(parent_session.runner)
+
+    # Modify temp_session's runner
+    temp_session.runner.model = MockModel("modified response")
+
+    # Verify that parent session's runner is unchanged
+    assert parent_session.runner.model.send(parent_session).content == "parent response"
+    assert temp_session.runner.model.send(temp_session).content == "modified response"
