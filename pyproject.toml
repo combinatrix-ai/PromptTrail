@@ -94,6 +94,7 @@ pyreverse = "pyreverse src.prompttrail -o png"
 chat = "python examples/dogfooding/chat.py"
 agent = "python examples/dogfooding/coding_agent.py"
 commit = { chain = ["format-check", "all", "dogfooding:commit"] }
+commit-skip-test = { chain = ["dogfooding:commit"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

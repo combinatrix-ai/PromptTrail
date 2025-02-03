@@ -405,6 +405,7 @@ traitlets==5.14.3
     # via jupyter-core
     # via matplotlib-inline
 transformers==4.48.2
+    # via prompttrail
 typeapi==2.2.4
     # via databind
 types-cachetools==5.5.0.20240820

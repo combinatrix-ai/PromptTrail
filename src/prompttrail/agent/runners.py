@@ -6,7 +6,7 @@ from prompttrail.agent.templates._control import EndTemplate
 from prompttrail.agent.templates._core import Template
 from prompttrail.agent.user_interface import UserInterface
 from prompttrail.core import MessageRoleType, Model, Session
-from prompttrail.core.const import JumpException, ReachedEndTemplateException
+from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.core.utils import Debuggable
 
 # Session is already imported from prompttrail.core
@@ -38,7 +38,6 @@ class Runner(Debuggable, metaclass=ABCMeta):
     @abstractmethod
     def run(
         self,
-        start_template_id: Optional[str] = None,
         session: Optional["Session"] = None,
         max_messages: Optional[int] = None,
         debug_mode: bool = False,
@@ -73,7 +72,6 @@ def cutify_role(role: MessageRoleType) -> str:
 class CommandLineRunner(Runner):
     def run(
         self,
-        start_template_id: Optional[str] = None,
         session: Optional["Session"] = None,
         max_messages: Optional[int] = 100,
         debug_mode: bool = False,
@@ -81,7 +79,6 @@ class CommandLineRunner(Runner):
         """Command line runner. This runner is for debugging purpose. It prints out the messages to the console.
 
         Args:
-            start_template_id (Optional[str], optional): If set, start from the template id given. Otherwise, start from the first template. Defaults to None.
             session (Optional[Session], optional): If set, use the session given. Otherwise, create a new session. Defaults to None.
             max_messages (Optional[int], optional): Maximum number of messages to yield. If number of messages exceeds this number, the conversation is forced to stop. Defaults to 100.
             debug_mode (bool, optional): If set, print out debug messages. Defaults to False.
@@ -101,17 +98,13 @@ class CommandLineRunner(Runner):
                 session.runner = self
             session.debug_mode = debug_mode or session.debug_mode
 
-        current_template_id = (
-            start_template_id if start_template_id else self.template.template_id
-        )
-
         # not to override session for type checking
         session_ = session
         # not to reuse it
         del session
 
         n_messages = 0
-        template = self.search_template(current_template_id)
+        template = self.template
         gen = template.render(session_)
         print("===== Start =====")
         while 1:
@@ -124,15 +117,6 @@ class CommandLineRunner(Runner):
                     EndTemplate.template_id,
                 )
                 break
-            except JumpException as e:
-                # Jump to another template
-                current_template_id = e.jump_to
-                template = self.search_template(current_template_id)
-                # reset stack
-                assert len(session_.stack) == 0
-                session_.stack = []
-                gen = template.render(session_)
-                continue
             except StopIteration as e:
                 # For generator, type support for return value is not so good.
                 session_ = cast(Session, e.value)
@@ -141,15 +125,6 @@ class CommandLineRunner(Runner):
                 print("From: " + cutify_role(message.role))
                 if message.content:
                     print("message: ", message.content)
-                if message.metadata and any(
-                    key != "template_id" for key in message.metadata
-                ):
-                    # Filter out template_id from metadata
-                    metadata = {
-                        k: v for k, v in message.metadata.items() if k != "template_id"
-                    }
-                    if metadata:
-                        print("metadata: ", metadata)
                 if message.tool_use:
                     print("tool_use: ", message.tool_use)
                 n_messages += 1

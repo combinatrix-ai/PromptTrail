@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union
 
 from prompttrail.agent.templates._core import GenerateTemplate
 from prompttrail.core import Message, MessageRoleType, Model, Session
+from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.models.anthropic import AnthropicModel
 from prompttrail.models.openai import OpenAIModel
 
@@ -187,7 +188,26 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
                 # Get and execute tool
                 tool = self.get_tool(tool_call["name"])
                 self.info("Executing tool: %s", tool.name)
-                result = tool.execute(**tool_call["arguments"])
+                try:
+                    result = tool.execute(**tool_call["arguments"])
+                except ReachedEndTemplateException as e:
+                    if e.farewell_message:
+                        self.debug(
+                            "Reached end of conversation from tooling with farewell message: %s",
+                            e.farewell_message,
+                        )
+                        m = Message(
+                            role="assistant",
+                            content=e.farewell_message,
+                            metadata=session.metadata.copy(),
+                        )
+                        yield m
+                        session.messages.append(m)
+                    else:
+                        self.debug(
+                            "Reached end of conversation from tooling without farewell message"
+                        )
+                    raise e
                 self.debug("Tool execution result: %s", result)
 
                 # Format and append result

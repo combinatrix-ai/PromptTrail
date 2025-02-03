@@ -12,7 +12,6 @@ from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
-    JumpException,
     ReachedEndTemplateException,
 )
 from prompttrail.core.utils import Debuggable
@@ -71,7 +70,7 @@ class Template(Debuggable, metaclass=ABCMeta):
             res = yield from self._render(session)
             for hook in self.after_transform:
                 session = hook.process(session)
-        except (BreakException, ReachedEndTemplateException, JumpException) as e:
+        except (BreakException, ReachedEndTemplateException) as e:
             raise e
         except Exception as e:
             self.error(f"RenderingTemplateError@{self.template_id}")

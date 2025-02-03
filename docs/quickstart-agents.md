@@ -389,7 +389,6 @@ class Session(BaseModel):
     runner: Optional["Runner"] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
-    jump_to_id: Optional[str] = Field(default=None)
 ```
 
 Other attributes can also be accessed:
@@ -397,8 +396,6 @@ Other attributes can also be accessed:
 - `runner`: You can access the runner itself. If you want to search templates passed to the runner, you can use `session.runner.search_template`.
 
 - `stack`: You can access the template stack. This is used for template control flow.
-
-- `jump_to_id`: You can set this to jump to another template. This is used by control flow templates like `JumpTemplate`.
 
 ## Control Flow
 
@@ -419,14 +416,6 @@ PromptTrail provides several templates for controlling the flow of conversation:
       condition=lambda session: "answer" in session.metadata,
       true_template=AssistantTemplate(...),
       false_template=BreakTemplate()
-  )
-  ```
-
-- `JumpTemplate`: Jumps to another template when a condition is met
-  ```python
-  JumpTemplate(
-      jump_to="template_id",
-      condition=lambda session: session.metadata["should_jump"]
   )
   ```
 

@@ -17,6 +17,7 @@ from prompttrail.agent.templates import (
 )
 from prompttrail.agent.user_interface import EchoMockInterface
 from prompttrail.core import Metadata, Session
+from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.core.mocks import EchoMockProvider
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
@@ -218,23 +219,44 @@ def test_nested_loop_template():
 
 
 def test_end_template():
+    """Test EndTemplate with and without farewell message"""
+    # Test without farewell message
+    template = EndTemplate()
+    session = Session()
+    gen = template._render(session)
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        next(gen)
+    assert exc_info.value.farewell_message is None
+    assert len(session.messages) == 0
+
+    # Test with farewell message
+    template = EndTemplate(farewell_message="Goodbye!")
+    session = Session()
+    gen = template._render(session)
+    message = next(gen)
+    assert message.content == "Goodbye!"
+    assert message.role == "assistant"
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        next(gen)
+    # farewell_message is consumed. Reset it to None.
+    assert exc_info.value.farewell_message is None
+    assert len(session.messages) == 1
+    assert session.messages[0].content == "Goodbye!"
+
+
+def test_end_template_in_linear():
+    """Test EndTemplate within LinearTemplate"""
     template = LinearTemplate(
         [
-            MessageTemplate(
+            SystemTemplate(
                 content="{{ content }}",
-                role="system",
             ),
             IfTemplate(
-                true_template=MessageTemplate(
+                true_template=AssistantTemplate(
                     content="True",
-                    role="assistant",
                 ),
-                false_template=EndTemplate(),
+                false_template=EndTemplate(farewell_message="Goodbye!"),
                 condition=lambda session: session.messages[-1].content == "TRUE",
-            ),
-            MessageTemplate(
-                role="assistant",
-                content="This is rendered if the previous message was TRUE",
             ),
         ]
     )
@@ -243,21 +265,19 @@ def test_end_template():
         user_interface=EchoMockInterface(),
         template=template,
     )
+    # Test TRUE case (should not end)
     session = Session(metadata={"content": "TRUE"})
     session = runner.run(session=session, max_messages=10)
-
-    assert len(session.messages) == 3  # system message + True message + final message
+    assert len(session.messages) == 2  # system message + True message
     assert session.messages[0].content == "TRUE"
     assert session.messages[1].content == "True"
-    assert (
-        session.messages[2].content
-        == "This is rendered if the previous message was TRUE"
-    )
 
+    # Test FALSE case (should end with farewell)
     session = Session(metadata={"content": "FALSE"})
     session = runner.run(session=session, max_messages=10)
-    assert len(session.messages) == 1
+    assert len(session.messages) == 2  # system message + farewell message
     assert session.messages[0].content == "FALSE"
+    assert session.messages[1].content == "Goodbye!"
 
 
 def test_break_template():

@@ -191,9 +191,7 @@ class MockRunner(Runner):
     def __init__(self, model: Model, template: Template, user_interface=None):
         super().__init__(model=model, template=template, user_interface=user_interface)
 
-    def run(
-        self, start_template_id=None, session=None, max_messages=None, debug_mode=False
-    ) -> Session:
+    def run(self, session=None, max_messages=None, debug_mode=False) -> Session:
         """Mock implementation of run method"""
         return session or Session()
 

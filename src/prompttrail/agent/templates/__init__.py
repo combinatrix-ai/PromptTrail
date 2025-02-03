@@ -11,7 +11,6 @@ from prompttrail.agent.templates._control import (
     ControlTemplate,
     EndTemplate,
     IfTemplate,
-    JumpTemplate,
     LinearTemplate,
     LoopTemplate,
 )
@@ -44,7 +43,6 @@ __all__ = [
     "IfTemplate",
     "LinearTemplate",
     "EndTemplate",
-    "JumpTemplate",
     "BreakTemplate",
     "ToolingTemplateBase",
     "AnthropicToolingTemplate",
