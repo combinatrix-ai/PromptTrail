@@ -6,12 +6,26 @@ from typing import Generator
 
 import pytest
 
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import (
+    EndTemplate,
+    LinearTemplate,
+    SystemTemplate,
+    ToolingTemplate,
+    UserTemplate,
+)
 from prompttrail.agent.tools.builtin import (
     CreateOrOverwriteFile,
     EditFile,
+    EndConversationTool,
     ReadFile,
     TreeDirectory,
 )
+from prompttrail.agent.user_interface import EchoMockInterface
+from prompttrail.core import Session
+from prompttrail.core.const import ReachedEndTemplateException
+from prompttrail.core.mocks import OneTurnConversationMockProvider
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 
 @pytest.fixture
@@ -208,6 +222,102 @@ def test_edit_file_tool(temp_dir: Path):
     result = tool.execute(path=str(file_path), diff="Invalid diff content")
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "error"
+
+
+def test_end_conversation_tool():
+    """Test EndConversationTool"""
+    tool = EndConversationTool()
+
+    # Test default message
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        _ = tool.execute(**{})
+    assert exc_info.value.farewell_message is None
+
+    # Test custom message
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        _ = tool.execute(**{"message": "Goodbye!"})
+    assert exc_info.value.farewell_message == "Goodbye!"
+
+
+def test_end_template_farewell():
+    """Test EndTemplate with farewell message"""
+    # Test without farewell message
+    session = Session()
+    template = EndTemplate()
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        next(template._render(session))
+    assert exc_info.value.farewell_message is None
+    assert len(session.messages) == 0
+
+    # Test with farewell message
+    template = EndTemplate(farewell_message="See you later!")
+    session = Session()
+    gen = template._render(session)
+    message = next(gen)
+    assert message.content == "See you later!"
+    assert message.role == "assistant"
+    with pytest.raises(ReachedEndTemplateException) as exc_info:
+        next(gen)
+    # farewell_message is consumed. Reset it to None.
+    assert exc_info.value.farewell_message is None
+
+
+def test_end_conversation_with_llm():
+    """Test EndConversationTool with LLM decision making"""
+    # Configure mock model to simulate LLM using the tool
+    from prompttrail.core import Message
+
+    config = OpenAIConfig(
+        api_key="dummy",
+        model_name="gpt-4o-mini",
+        mock_provider=OneTurnConversationMockProvider(
+            {
+                "Let's end this chat.": Message(
+                    role="assistant",
+                    content="Let me end this conversation.",
+                    metadata={
+                        "function_call": {
+                            "name": "end_conversation",
+                            "arguments": json.dumps(
+                                {"message": "Thanks for chatting!"}
+                            ),
+                        }
+                    },
+                )
+            }
+        ),
+    )
+    mock_model = OpenAIModel(configuration=config)
+
+    # Create template with system instruction and tool
+    template = LinearTemplate(
+        [
+            SystemTemplate(
+                content="You can end the conversation using the end_conversation tool."
+            ),
+            UserTemplate(content="Let's end this chat."),
+            ToolingTemplate(tools=[EndConversationTool()]),
+        ]
+    )
+
+    # Run the conversation
+    runner = CommandLineRunner(
+        model=mock_model, template=template, user_interface=EchoMockInterface()
+    )
+
+    session = runner.run()
+
+    # Verify the conversation flow
+    assert len(session.messages) == 3  # system + user + assistant
+    assert session.messages[0].role == "system"
+    assert session.messages[1].role == "user"
+    assert session.messages[2].role == "assistant"
+    assert session.messages[2].content == "Let me end this conversation."
+    assert "function_call" in session.messages[2].metadata
+    assert session.messages[2].metadata["function_call"]["name"] == "end_conversation"
+    assert json.loads(session.messages[2].metadata["function_call"]["arguments"]) == {
+        "message": "Thanks for chatting!"
+    }
 
 
 if __name__ == "__main__":

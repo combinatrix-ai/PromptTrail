@@ -35,7 +35,7 @@ class CLIInterface(UserInterface):
     def ask(
         self,
         session: Session,
-        description: Optional[str] = "Input>",
+        description: Optional[str] = "Input> ",
         default: Optional[str] = None,
     ) -> str:
         """
