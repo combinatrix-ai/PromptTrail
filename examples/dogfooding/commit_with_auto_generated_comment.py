@@ -156,7 +156,7 @@ Please generate a commit message based on the following information:
                 UserTemplate(
                     template_id="get_feedback",
                     description="Please provide your feedback:",
-                    default="Looks good!",
+                    default="Prefect!",
                 ),
                 MessageTemplate(
                     template_id="analyze_feedback",

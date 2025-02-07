@@ -3,7 +3,7 @@ import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union
 
-from prompttrail.agent.templates._core import GenerateTemplate
+from prompttrail.agent.templates._core import Event, GenerateTemplate
 from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.models.anthropic import AnthropicModel
@@ -62,7 +62,9 @@ class ToolingTemplateBase(GenerateTemplate):
         return self.tools[name]
 
     @abstractmethod
-    def _render(self, session: Session) -> Generator[Message, None, Session]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         """Render the template, handling tool calls and results.
 
         Args:
@@ -159,7 +161,9 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         self.debug("Created tool result message: %s", message)
         return message
 
-    def _render(self, session: Session) -> Generator[Message, None, Session]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         """Override _render to handle tool-specific message generation.
 
         This implementation ensures proper metadata handling and tool state tracking.
@@ -199,7 +203,7 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
                         m = Message(
                             role="assistant",
                             content=e.farewell_message,
-                            metadata=session.metadata.copy(),
+                            metadata=session.metadata,
                         )
                         yield m
                         session.messages.append(m)
@@ -404,7 +408,9 @@ class ToolingTemplate(ToolingTemplateBase):
             role=role, template_id=template_id, model=model, tools=tools, **kwargs
         )
 
-    def _render(self, session: Session) -> Generator[Message, None, Session]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         """Render the template, handling tool calls and results.
 
         This implementation ensures proper metadata handling and tool state tracking

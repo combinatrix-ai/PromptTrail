@@ -14,7 +14,7 @@ class UserInterface(Debuggable):
     def ask(
         self,
         session: Session,
-        description: Optional[str],
+        instruction: Optional[str],
         default: Optional[str] = None,
     ) -> str:
         """

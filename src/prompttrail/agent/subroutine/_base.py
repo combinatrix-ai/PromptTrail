@@ -13,6 +13,7 @@ from prompttrail.agent.subroutine.squash_strategy import (
     SquashStrategy,
 )
 from prompttrail.agent.templates import Stack, Template
+from prompttrail.agent.templates._core import Event
 from prompttrail.core import Message, Model, Runner, Session
 
 
@@ -79,7 +80,9 @@ class SubroutineTemplate(Template):
         self.runner = runner
         self.model = model
 
-    def _render(self, session: Session) -> Generator[Message, None, Session]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         """Execute the subroutine template with isolated session management.
 
         Args:
@@ -118,6 +121,10 @@ class SubroutineTemplate(Template):
         try:
             # Execute subroutine
             for message in self.template.render(temp_session):
+                if isinstance(message, Event):
+                    # TODO: Should raise error?
+                    yield message
+                    continue
                 messages.append(message)
                 yield message
 

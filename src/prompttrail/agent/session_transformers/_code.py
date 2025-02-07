@@ -29,7 +29,7 @@ def extract_code_blocks(markdown: str) -> List[CodeBlock]:
     return [CodeBlock(lang=m.group(1), code=m.group(2).strip()) for m in matches]
 
 
-class ExtractMarkdownCodeBlockHook(MetadataTransformer):
+class ExtractMarkdownCodeBlock(MetadataTransformer):
     """A hook that extracts code blocks from markdown content."""
 
     def __init__(self, key: str, lang: str):
@@ -74,7 +74,7 @@ class ExtractMarkdownCodeBlockHook(MetadataTransformer):
         return metadata
 
 
-class EvaluatePythonCodeHook(MetadataTransformer):
+class DangerouslyEvaluatePythonCode(MetadataTransformer):
     """A hook that evaluates Python code blocks."""
 
     def __init__(self, key: str, code: str):
