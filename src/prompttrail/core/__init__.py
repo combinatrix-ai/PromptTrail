@@ -12,7 +12,7 @@ from prompttrail.core.utils import Debuggable
 
 if TYPE_CHECKING:
     from prompttrail.agent.runners import Runner
-    from prompttrail.agent.templates import Stack
+    from prompttrail.agent.templates import Stack, Template
     from prompttrail.agent.tools import Tool, ToolResult
 else:
     # This is required to avoid circular imports and disable Pydantic errors
@@ -360,6 +360,16 @@ class Session(BaseModel):
     jump={self.jump_to_id},
     debug_mode={self.debug_mode}
 )"""
+
+    def get_current_template(self) -> "Template":
+        from prompttrail.agent.templates import Template
+
+        """Get the ID of the current template."""
+        if not self.stack:
+            raise IndexError("Stack is empty")
+        if not self.runner:
+            raise IndexError("Runner is empty")
+        return self.runner.search_template(self.stack[-1].template_id)
 
 
 class Model(BaseModel, ABC, Debuggable):

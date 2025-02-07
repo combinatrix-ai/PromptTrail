@@ -1,4 +1,4 @@
-from ._code import CodeBlock, EvaluatePythonCodeHook, ExtractMarkdownCodeBlockHook
+from ._code import CodeBlock, DangerouslyEvaluatePythonCode, ExtractMarkdownCodeBlock
 from ._core import (
     Debugger,
     LambdaSessionTransformer,
@@ -10,8 +10,8 @@ from ._core import (
 
 __all__ = [
     "CodeBlock",
-    "EvaluatePythonCodeHook",
-    "ExtractMarkdownCodeBlockHook",
+    "DangerouslyEvaluatePythonCode",
+    "ExtractMarkdownCodeBlock",
     "SessionTransformer",
     "MetadataTransformer",
     "LambdaSessionTransformer",

@@ -4,7 +4,7 @@ from typing import Callable, Generator, List, Optional, Sequence, Set, TypeAlias
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
 from prompttrail.agent.templates._base import Stack
-from prompttrail.agent.templates._core import Template
+from prompttrail.agent.templates._core import Event, Template
 from prompttrail.core import Message, Session
 from prompttrail.core.const import (
     END_TEMPLATE_ID,
@@ -142,7 +142,9 @@ class LoopTemplate(ControlTemplate):
         self.exit_condition = exit_condition
         self.exit_loop_count = exit_loop_count
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         stack = session.stack[-1]
         if not isinstance(stack, LoopTemplateStack):
             raise RuntimeError("LoopTemplateStack is not the last stack")
@@ -224,7 +226,9 @@ class IfTemplate(ControlTemplate):
         self.false_template = false_template
         self.condition = condition
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         if self.condition(session):
             session = yield from self.true_template.render(session)
         else:
@@ -287,7 +291,9 @@ class LinearTemplate(ControlTemplate):
         )
         self.templates = templates
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         stack = session.stack[-1]
         if not isinstance(stack, LinearTemplateStack):
             raise RuntimeError("LinearTemplateStack is not the last stack")
@@ -339,12 +345,14 @@ class EndTemplate(Template):
             cls._instance = super(EndTemplate, cls).__new__(cls)
         return cls._instance
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         if self.farewell_message:
             yield Message(
                 content=self.farewell_message,
                 role="assistant",
-                metadata=session.metadata.copy(),
+                metadata=session.metadata,
             )
             session.messages.append(
                 Message(content=self.farewell_message, role="assistant")
@@ -374,7 +382,9 @@ class BreakTemplate(ControlTemplate):
             # after_transform is unavailable for the templates that raise errors
         )
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         self.info("Breaking the loop from %s.", self.template_id)
         raise BreakException()
 

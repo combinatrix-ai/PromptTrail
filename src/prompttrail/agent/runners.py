@@ -1,11 +1,12 @@
+import json
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Optional, Set, cast
+from typing import Any, Dict, Optional, Set, cast
 
 from prompttrail.agent.templates._control import EndTemplate
-from prompttrail.agent.templates._core import Template
+from prompttrail.agent.templates._core import Event, Template, UserInteractionEvent
 from prompttrail.agent.user_interface import UserInterface
-from prompttrail.core import MessageRoleType, Model, Session
+from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.core.utils import Debuggable
 
@@ -69,6 +70,45 @@ def cutify_role(role: MessageRoleType) -> str:
     return role
 
 
+def pretty_print_metadata(metadata: Dict[str, Any]) -> str:
+    TRUNCATION_THRESHOLD = 20  # Only truncate strings longer than this
+    TRUNC_HEAD = 5  # Number of characters to keep at the start
+    TRUNC_TAIL = 5  # Number of characters to keep at the end
+
+    def format_value(value: Any) -> str:
+        if isinstance(value, str):
+            # Truncate string if it is too long.
+            if len(value) > TRUNCATION_THRESHOLD:
+                value = value[:TRUNC_HEAD] + "..." + value[-TRUNC_TAIL:]
+            # Use json.dumps to produce a properly escaped string (with quotes)
+            return json.dumps(value)
+        elif isinstance(value, (int, float, bool)):
+            return str(value)
+        elif isinstance(value, dict):
+            # Nested dictionaries use curly braces.
+            return format_dict(value)
+        elif isinstance(value, list):
+            # Format each element recursively for lists.
+            return "[" + ", ".join(format_value(item) for item in value) + "]"
+        elif value is None:
+            return "None"
+        else:
+            # For custom objects, simply show the class name followed by ()
+            return f"{value.__class__.__name__}()"
+
+    def format_dict(d: dict) -> str:
+        # Top-level dictionary uses parentheses, nested ones use curly braces.
+        open_delim = "{"
+        close_delim = "}"
+        formatted_items = []
+        for key, val in d.items():
+            # We assume keys are strings and print them as is.
+            formatted_items.append(f'"{key}": {format_value(val)}')
+        return open_delim + ", ".join(formatted_items) + close_delim
+
+    return format_dict(metadata)
+
+
 class CommandLineRunner(Runner):
     def run(
         self,
@@ -98,19 +138,14 @@ class CommandLineRunner(Runner):
                 session.runner = self
             session.debug_mode = debug_mode or session.debug_mode
 
-        # not to override session for type checking
-        session_ = session
-        # not to reuse it
-        del session
-
         n_messages = 0
         template = self.template
-        gen = template.render(session_)
+        gen = template.render(session)
         print("===== Start =====")
         while 1:
             # render template until exhausted
             try:
-                message = next(gen)
+                obj = next(gen)
             except ReachedEndTemplateException:
                 self.warning(
                     "End template %s is reached. Flow is forced to stop.",
@@ -119,15 +154,37 @@ class CommandLineRunner(Runner):
                 break
             except StopIteration as e:
                 # For generator, type support for return value is not so good.
-                session_ = cast(Session, e.value)
+                session = cast(Session, e.value)
                 break
-            if message:
+            if isinstance(obj, Message):
+                message = obj
                 print("From: " + cutify_role(message.role))
                 if message.content:
                     print("message: ", message.content)
                 if message.tool_use:
                     print("tool_use: ", message.tool_use)
-                n_messages += 1
+                if message.metadata:
+                    print("metadata: ", pretty_print_metadata(message.metadata))
+                    n_messages += 1
+            elif isinstance(obj, Event):
+                event = obj
+                if isinstance(event, UserInteractionEvent):
+                    instruction = event.instruction or "Input: "
+                    default = event.default or None
+                    content = self.user_interface.ask(session, instruction, default)
+                    session.messages.append(
+                        Message(
+                            role="user",
+                            content=content,
+                            metadata=session.metadata,
+                        )
+                    )
+                else:
+                    self.warning(f"Unknown event type: {type(event)}")
+                    raise ValueError(f"Unknown event type: {type(event)}")
+            else:
+                self.warning(f"Unknown object type: {type(obj)}")
+
             if max_messages and n_messages >= max_messages:
                 self.warning(
                     "Max messages %s is reached. Flow is forced to stop.", max_messages
@@ -135,4 +192,4 @@ class CommandLineRunner(Runner):
                 break
             print("=================")
         print("====== End ======")
-        return session_
+        return session
