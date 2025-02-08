@@ -371,6 +371,42 @@ class Session(BaseModel):
             raise IndexError("Runner is empty")
         return self.runner.search_template(self.stack[-1].template_id)
 
+    def to_dict(self) -> dict:
+        """Convert session to dictionary representation"""
+        return {
+            "messages": [
+                {
+                    "content": msg.content,
+                    "role": msg.role,
+                    "metadata": dict(msg.metadata),
+                    "tool_use": msg.tool_use,
+                }
+                for msg in self.messages
+            ],
+            "metadata": dict(self.metadata),
+            "debug_mode": self.debug_mode,
+            # Exclude complex objects that can't be serialized
+            # runner, stack, and jump_to_id are handled separately
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Session":
+        """Create session from dictionary representation"""
+        messages = [
+            Message(
+                content=msg["content"],
+                role=msg["role"],
+                metadata=msg.get("metadata", {}),
+                tool_use=msg.get("tool_use"),
+            )
+            for msg in data.get("messages", [])
+        ]
+        return cls(
+            messages=messages,
+            metadata=data.get("metadata", {}),
+            debug_mode=data.get("debug_mode", False),
+        )
+
 
 class Model(BaseModel, ABC, Debuggable):
     """Class defining the interface for interaction with LLM models."""
