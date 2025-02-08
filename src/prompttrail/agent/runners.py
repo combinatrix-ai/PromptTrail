@@ -1,7 +1,13 @@
+import asyncio
 import json
 import logging
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Dict, Optional, Set, cast
+from uuid import uuid4
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request, WebSocket
 
 from prompttrail.agent.templates._control import EndTemplate
 from prompttrail.agent.templates._core import Event, Template, UserInteractionEvent
@@ -193,3 +199,154 @@ class CommandLineRunner(Runner):
             print("=================")
         print("====== End ======")
         return session
+
+
+@dataclass
+class SessionState:
+    session: Session
+    current_event: Optional[UserInteractionEvent] = None
+    is_running: bool = False
+    websocket: Optional[WebSocket] = None
+
+
+class APIRunner(Runner):
+    def __init__(
+        self,
+        model: Model,
+        template: "Template",
+        user_interface: UserInterface,
+        host: str = "127.0.0.1",
+        port: int = 8000,
+    ):
+        super().__init__(model, template, user_interface)
+        self.host = host
+        self.port = port
+        self.app = FastAPI()
+        self.sessions: Dict[str, SessionState] = {}
+        self._setup_routes()
+
+    def run(
+        self,
+        session: Optional["Session"] = None,
+        max_messages: Optional[int] = 100,
+        debug_mode: bool = False,
+    ) -> "Session":
+        """Run method implementation for APIRunner.
+
+        This method is mainly for compatibility with the Runner interface.
+        The actual processing is done through the API endpoints.
+        """
+        if session is None:
+            session = Session(
+                runner=self,
+                debug_mode=debug_mode,
+            )
+        else:
+            if session.runner is None or session.runner != self:
+                session.runner = self
+            session.debug_mode = debug_mode or session.debug_mode
+
+        # Create a session state
+        session_id = str(uuid4())
+        self.sessions[session_id] = SessionState(session=session)
+
+        # Start template execution
+        asyncio.create_task(self._run_template(session_id))
+
+        return session
+
+    def _setup_routes(self):
+        @self.app.post("/sessions")
+        async def create_session(request: Request):
+            data = await request.json()
+            metadata = data.get("metadata", {})
+            session_id = str(uuid4())
+            session = Session(runner=self, metadata=metadata)
+            self.sessions[session_id] = SessionState(session=session)
+            return {
+                "session_id": session_id,
+                "session": session.to_dict(),  # Use to_dict() method
+            }
+
+        @self.app.get("/sessions/{session_id}")
+        async def get_session_status(session_id: str):
+            state = self._get_session_state(session_id)
+            return {
+                "is_running": state.is_running,
+                "has_event": state.current_event is not None,
+                "session": state.session.to_dict(),  # Use to_dict() method
+                "current_event": {
+                    "instruction": state.current_event.instruction,
+                    "default": state.current_event.default,
+                }
+                if state.current_event
+                else None,
+            }
+
+        @self.app.post("/sessions/{session_id}/start")
+        async def start_session(session_id: str):
+            state = self._get_session_state(session_id)
+            if state.is_running:
+                raise HTTPException(status_code=400, detail="Session already running")
+            asyncio.create_task(self._run_template(session_id))
+            return {"status": "started"}
+
+        @self.app.post("/sessions/{session_id}/input")
+        async def post_input(session_id: str, request: Request):
+            data = await request.json()
+            user_input = data.get("input")
+            if not user_input:
+                raise HTTPException(status_code=400, detail="Input is required")
+
+            state = self._get_session_state(session_id)
+            if not state.current_event:
+                raise HTTPException(status_code=400, detail="No pending event")
+
+            state.session.messages.append(
+                Message(
+                    role="user",
+                    content=user_input,
+                    metadata=state.session.metadata,
+                )
+            )
+            state.current_event = None
+            return {"status": "success"}
+
+    def _get_session_state(self, session_id: str) -> SessionState:
+        if session_id not in self.sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return self.sessions[session_id]
+
+    async def _run_template(self, session_id: str):
+        state = self._get_session_state(session_id)
+        state.is_running = True
+
+        try:
+            template = self.template
+            gen = template.render(state.session)
+
+            while True:
+                try:
+                    obj = next(gen)
+
+                    if isinstance(obj, Message):
+                        pass
+                    elif isinstance(obj, UserInteractionEvent):
+                        state.current_event = obj
+                        # Wait for input
+                        while state.current_event is not None:
+                            await asyncio.sleep(0.1)
+
+                except StopIteration as e:
+                    state.session = cast(Session, e.value)
+                    break
+                except ReachedEndTemplateException:
+                    break
+
+        finally:
+            state.is_running = False
+            if state.websocket:
+                await state.websocket.send_json({"type": "completed"})
+
+    def start_server(self):
+        uvicorn.run(self.app, host=self.host, port=self.port)
