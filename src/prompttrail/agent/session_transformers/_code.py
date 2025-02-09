@@ -32,7 +32,7 @@ def extract_code_blocks(markdown: str) -> List[CodeBlock]:
 class ExtractMarkdownCodeBlock(MetadataTransformer):
     """A hook that extracts code blocks from markdown content."""
 
-    def __init__(self, key: str, lang: str):
+    def __init__(self, key: str, lang: str, raise_error_on_empty: bool = False):
         """Initialize the hook.
 
         Args:
@@ -42,6 +42,7 @@ class ExtractMarkdownCodeBlock(MetadataTransformer):
         super().__init__()
         self.key = key
         self.lang = lang
+        self.raise_error_on_empty = raise_error_on_empty
 
     def process_metadata(self, metadata: Metadata, session: Session) -> Metadata:
         """Extract code block from last message content.
@@ -61,12 +62,22 @@ class ExtractMarkdownCodeBlock(MetadataTransformer):
 
         if not code_blocks:
             self.warning("No code blocks found in message content: %s", message.content)
+            if self.raise_error_on_empty:
+                raise ValueError("No code blocks found in message content")
             metadata[self.key] = None
             return metadata
 
         if self.lang:
             code_blocks = [block for block in code_blocks if block.lang == self.lang]
             if not code_blocks:
+                self.warning(
+                    "No code blocks found in message content for language: %s",
+                    self.lang,
+                )
+                if self.raise_error_on_empty:
+                    raise ValueError(
+                        f"No code blocks found in message content for language: {self.lang}"
+                    )
                 metadata[self.key] = None
                 return metadata
 
