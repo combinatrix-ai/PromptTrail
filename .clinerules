@@ -1,3 +1,61 @@
+# Summary
+
+PromptTrail is a library that provides a Unified LLM Interface + DSL for agents with developer-friendly functionality. The usage looks like this:
+
+```python
+import os
+
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.templates import *
+from prompttrail.agent.tools.builtin import *
+from prompttrail.agent.user_interface import CLIInterface
+from prompttrail.core import Session
+from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
+
+# 🤖 Multiple LLM models are supported through a unified API
+model = AnthropicModel(
+  configuration=AnthropicConfig(
+    api_key=os.environ["ANTHROPIC_API_KEY"],
+    model_name="claude-3-5-sonnet-latest",
+    max_tokens=4096,
+    tools=[ExecuteCommand(), ReadFile(), CreateOrOverwriteFile(), EditFile()]))
+
+# 🏗️ Create your agent with an intuitive Domain-Specific Language (DSL)
+templates = LinearTemplate([
+  # ✨ Generate dynamic messages using Jinja2 templating
+  SystemTemplate(content=
+    "You're a smart coding agent! Type END if you want to end conversation. Follow rules: {{clinerules}}"),
+  # 🔄 Supports all standard control flows (while/for, if/else, functions)
+  LoopTemplate([
+    # 💬 Handle user interactions seamlessly
+    UserTemplate(description="Input: "),
+    # 🛠️ Integrate powerful built-in tools for function calling and automation
+    ToolingTemplate(tools=[ExecuteCommand(),ReadFile(),CreateOrOverwriteFile(),EditFile()])],
+    # 🧩 Easily construct complex control flow logic
+    exit_condition=lambda session: session.messages[-1].content == "END")])
+
+# 📦 Use metadata to efficiently pass, store, and retrieve information within your agent
+initial_session = Session(metadata={"clinerules": open(".clinerules").read()})
+
+# 🚀 Deploy your agent anywhere - terminal, server, or other environments
+runner = CommandLineRunner(model=model, template=templates, user_interface=CLIInterface())
+runner.run(session=initial_session)
+
+# ===== Start =====
+# From: 📝 system
+# message:  "You're a smart coding agent! Type END if you want to end conversation. Follow rules: ..."
+# metadata:  {'clinerules': '...'}
+# =================
+# From: 👤 user
+# Input:
+```
+
+# Important files
+
+- src/prompttrail/core/__init__.py: Implementation of core functionality (Model, Config, Message, Session)
+- src/prompttrail/agent/templates/_core.py: Implementation of agent template
+- src/prompttrail/agent/runner.py: Implementation of agent runner
+
 # Project Setup
 - This project is managed with rye and pyproject.toml.
   - requirements.lock and requirements-dev.lock files should not be edited directly.
@@ -12,4 +70,5 @@
 - If a diff application fails, re-read the file first and check it as it may have been updated.
 - If type matching fails repeatedly, you can add #type: ignore and proceed.
 - To run tests for specific files, use `rye run pytest [test files]`. Always run `rye run all` after successfully passing related tests.
-- Use `gpt-4o-mini` or `claude-3-5-haiku-latest` for easy task or test. Use `gpt-4o` or `claude-3-5-sonnet-latest` for complex tasks.
+- After your knowledge cutoff, there are new models. Use `gpt-4o-mini` or `claude-3-5-haiku-latest` for easy tasks or tests. Use `gpt-4o` or `claude-3-5-sonnet-latest` for complex tasks.
+- If you're writing a proposal, place it in proposal-docs

@@ -1,8 +1,10 @@
 name: Automated Code Review Pipeline
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  # Temporarily disabled
+  workflow_dispatch:
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
 
 permissions:
   pull-requests: write

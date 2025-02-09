@@ -25,7 +25,7 @@ model = AnthropicModel(
 templates = LinearTemplate([
   # ✨ Generate dynamic messages using Jinja2 templating
   SystemTemplate(content=
-    "You're a smart coding agent! Type END if you want to end conversation. Follow rules: {{clinerules}}"),
+    "You're a coding agent! Type END if you want to end conversation. Follow rules: {{clinerules}}"),
   # 🔄 Supports all standard control flows (while/for, if/else, functions)
   LoopTemplate([
     # 💬 Handle user interactions seamlessly

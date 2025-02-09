@@ -1,7 +1,7 @@
 """Base classes for subroutine functionality."""
 
 import copy
-from typing import Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Generator, List, Optional, Union
 
 from prompttrail.agent.session_transformers import SessionTransformer
 from prompttrail.agent.subroutine.session_init_strategy import (
@@ -14,7 +14,10 @@ from prompttrail.agent.subroutine.squash_strategy import (
 )
 from prompttrail.agent.templates import Stack, Template
 from prompttrail.agent.templates._core import Event
-from prompttrail.core import Message, Model, Runner, Session
+from prompttrail.core import Message, Model, Session
+
+if TYPE_CHECKING:
+    from prompttrail.agent.runners import Runner
 
 
 class SubroutineTemplate(Template):
@@ -48,7 +51,7 @@ class SubroutineTemplate(Template):
         after_transform: Optional[
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
-        runner: Optional[Runner] = None,  # Complete environment override
+        runner: Optional["Runner"] = None,  # Complete environment override
         model: Optional[Model] = None,  # Model-only override
     ):
         """Initialize SubroutineTemplate.
