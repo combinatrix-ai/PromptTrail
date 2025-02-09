@@ -3,8 +3,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Callable, Generator, List, Optional, Sequence, Set, TypeAlias, Union
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
-from prompttrail.agent.templates._base import Stack
-from prompttrail.agent.templates._core import Event, Template
+from prompttrail.agent.templates._core import Event, Stack, Template
 from prompttrail.core import Message, Session
 from prompttrail.core.const import (
     END_TEMPLATE_ID,

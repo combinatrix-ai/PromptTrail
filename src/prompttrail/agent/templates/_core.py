@@ -6,9 +6,9 @@ from typing import Any, Dict, Generator, List, Optional, Set, Union
 from uuid import uuid4
 
 import jinja2
+from pydantic import BaseModel
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
-from prompttrail.agent.templates._base import Stack
 from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
@@ -61,6 +61,12 @@ def check_template_id(template_id: str) -> None:
         raise ValueError(
             f"Template id {template_id} is reserved. Please use another template id."
         )
+
+
+class Stack(BaseModel):
+    """Stack frame for template execution."""
+
+    template_id: str
 
 
 class Template(Debuggable, metaclass=ABCMeta):

@@ -10,8 +10,7 @@
 [![Documentation Status](https://readthedocs.org/projects/prompttrail/badge/?version=latest)](https://prompttrail.readthedocs.io/en/latest/?badge=latest)
 
 </div>
-
-![readme-header](https://github.com/user-attachments/assets/0c5e8a43-ff5b-4c28-8c7c-39df86e04193)
+![readme-header](https://github.com/user-attachments/assets/3944a737-b958-43d3-9857-8b3bed5811e6)
 
 PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
 
