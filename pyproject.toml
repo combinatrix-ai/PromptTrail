@@ -1,6 +1,6 @@
 [project]
 name = "prompttrail"
-version = "0.2.0"
+version = "0.2.1rc0"
 description = "A lightweight library for Prompt Programming: Agent as Code"
 authors = [
     { name = "hmirin", email = "hmirin@example.com" }
