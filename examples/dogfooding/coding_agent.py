@@ -25,7 +25,7 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 sys.path.append(os.path.abspath("."))
 
 
-from examples.dogfooding.dogfooding_tools import (  # RunTest,
+from examples.dogfooding.dogfooding_tools import (
     ReadImportantFiles,
     RunAllTestsWithSummary,
 )
