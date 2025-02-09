@@ -5,13 +5,13 @@ from typing import Any, Dict
 from prompttrail.agent.runners import CommandLineRunner
 from prompttrail.agent.templates import OpenAIToolingTemplate, ToolingTemplate
 from prompttrail.agent.templates._control import LinearTemplate
-from prompttrail.agent.templates._core import MessageTemplate
+from prompttrail.agent.templates._core import GenerateTemplate, MessageTemplate
 from prompttrail.agent.templates._tool import ExecuteToolTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interface import EchoMockInterface
-from prompttrail.core import Session
+from prompttrail.core import Message, Session
 from prompttrail.core.errors import ParameterValidationError
-from prompttrail.core.mocks import EchoMockProvider
+from prompttrail.core.mocks import EchoMockProvider, FunctionalMockProvider
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
@@ -261,6 +261,120 @@ class TestOpenAIToolingTemplate(unittest.TestCase):
         self.assertListEqual([m.role for m in session.messages], ["user", "assistant"])
         self.assertEqual(session.messages[0].content, "What's the weather in Tokyo?")
         self.assertEqual(session.messages[1].content, "What's the weather in Tokyo?")
+
+
+class TestModelOverride(unittest.TestCase):
+    """Test cases for model override functionality"""
+
+    def setUp(self):
+        self.tool = WeatherTool()
+        # Setup OpenAI model
+        # Setup mock providers that return fixed responses
+        openai_mock = FunctionalMockProvider(
+            lambda session: Message(content="OpenAI response", role="assistant")
+        )
+        anthropic_mock = FunctionalMockProvider(
+            lambda session: Message(content="Anthropic response", role="assistant")
+        )
+
+        openai_config = OpenAIConfig(
+            api_key="dummy",
+            model_name="gpt-4o-mini",
+            tools=[self.tool],
+            mock_provider=openai_mock,
+        )
+        self.openai_model = OpenAIModel(configuration=openai_config)
+
+        # Setup Anthropic model
+        anthropic_config = AnthropicConfig(
+            api_key="dummy",
+            model_name="claude-3-5-sonnet-latest",
+            tools=[self.tool],
+            mock_provider=anthropic_mock,
+        )
+        self.anthropic_model = AnthropicModel(configuration=anthropic_config)
+
+    def test_generate_template_model_override(self):
+        """Test that GenerateTemplate can override runner's model"""
+        # Create a session with an initial message
+        session = Session()
+        session.append(Message(role="user", content="Test message"))
+
+        # Create template with model override
+        template = GenerateTemplate(
+            role="assistant",
+            model=self.anthropic_model,  # Override with Anthropic model
+        )
+
+        # Setup runner with OpenAI model
+        runner = CommandLineRunner(
+            model=self.openai_model,
+            user_interface=EchoMockInterface(),
+            template=template,
+        )
+        session.runner = runner
+
+        # Run template
+        messages = list(template.render(session))
+
+        # Verify Anthropic model was used
+        self.assertEqual(messages[-1].content, "Anthropic response")
+
+    def test_tooling_template_model_distinction(self):
+        """Test that ToolingTemplate correctly distinguishes between models"""
+        # Create a session with an initial message
+        session = Session()
+        session.append(Message(role="user", content="Test message"))
+
+        # Test with OpenAI model
+        openai_template = ToolingTemplate(tools=[self.tool])
+        runner_openai = CommandLineRunner(
+            model=self.openai_model,
+            user_interface=EchoMockInterface(),
+            template=openai_template,
+        )
+        session_openai = session.model_copy()
+        session_openai.runner = runner_openai
+        messages_openai = list(openai_template.render(session_openai))
+        self.assertEqual(messages_openai[-1].content, "OpenAI response")
+
+        # Test with Anthropic model
+        anthropic_template = ToolingTemplate(tools=[self.tool])
+        runner_anthropic = CommandLineRunner(
+            model=self.anthropic_model,
+            user_interface=EchoMockInterface(),
+            template=anthropic_template,
+        )
+        session_anthropic = session.model_copy()
+        session_anthropic.runner = runner_anthropic
+        messages_anthropic = list(anthropic_template.render(session_anthropic))
+        self.assertEqual(messages_anthropic[-1].content, "Anthropic response")
+
+    def test_tooling_template_model_override(self):
+        """Test that ToolingTemplate can override runner's model"""
+        # Create a session with an initial message
+        session = Session()
+        session.append(Message(role="user", content="Test message"))
+
+        # Create template with model override
+        template = ToolingTemplate(
+            tools=[self.tool],
+            model=self.anthropic_model,  # Override with Anthropic model
+        )
+
+        # Setup runner with OpenAI model
+        runner = CommandLineRunner(
+            model=self.openai_model,
+            user_interface=EchoMockInterface(),
+            template=template,
+        )
+        session.runner = runner
+
+        # Run template
+        messages = list(template.render(session))
+
+        # Verify Anthropic model was used
+        self.assertEqual(messages[-1].content, "Anthropic response")
 
 
 if __name__ == "__main__":

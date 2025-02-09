@@ -1,23 +1,58 @@
 import logging
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 from pprint import pformat
-from typing import Generator, List, Optional, Set, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Union
 from uuid import uuid4
 
 import jinja2
+from pydantic import BaseModel
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
-from prompttrail.agent.templates._base import Stack
-from prompttrail.core import Message, MessageRoleType, Session
+from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import (
     RESERVED_TEMPLATE_IDS,
     BreakException,
-    JumpException,
     ReachedEndTemplateException,
 )
 from prompttrail.core.utils import Debuggable
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Event:
+    """Represents an event in the template rendering process.
+
+    Attributes:
+        event_type (str): The type of the event.
+        payload (Dict[str, Any]): The data associated with the event.
+    """
+
+    event_type: str
+    payload: Dict[str, Any]
+
+
+class UserInteractionEvent(Event):
+    """An event representing a user interaction.
+
+    Attributes:
+        instruction (Optional[str]): The instruction to display to the user.
+        default (Optional[str]): The default value for the interaction.
+    """
+
+    instruction: Optional[str] = None
+    default: Optional[str] = None
+
+    def __init__(
+        self,
+        payload: Dict[str, Any] = {},
+        instruction: Optional[str] = None,
+        default: Optional[str] = None,
+    ):
+        super().__init__(event_type="user_interaction", payload=payload)
+        self.instruction = instruction
+        self.default = default
 
 
 def check_template_id(template_id: str) -> None:
@@ -26,6 +61,12 @@ def check_template_id(template_id: str) -> None:
         raise ValueError(
             f"Template id {template_id} is reserved. Please use another template id."
         )
+
+
+class Stack(BaseModel):
+    """Stack frame for template execution."""
+
+    template_id: str
 
 
 class Template(Debuggable, metaclass=ABCMeta):
@@ -61,8 +102,14 @@ class Template(Debuggable, metaclass=ABCMeta):
             return []
         return [hooks] if not isinstance(hooks, list) else hooks
 
-    def render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render template with hooks and error handling."""
+    def render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Render template with hooks and error handling.
+
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         logging.debug(f"Rendering {self.template_id}")
         session.push_stack(self.create_stack(session))
         try:
@@ -71,7 +118,7 @@ class Template(Debuggable, metaclass=ABCMeta):
             res = yield from self._render(session)
             for hook in self.after_transform:
                 session = hook.process(session)
-        except (BreakException, ReachedEndTemplateException, JumpException) as e:
+        except (BreakException, ReachedEndTemplateException) as e:
             raise e
         except Exception as e:
             self.error(f"RenderingTemplateError@{self.template_id}")
@@ -87,8 +134,14 @@ class Template(Debuggable, metaclass=ABCMeta):
         return Stack(template_id=self.template_id)
 
     @abstractmethod
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render the template and return message generator."""
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Render the template and return message generator.
+
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         raise NotImplementedError("render method is not implemented")
 
     def walk(
@@ -124,6 +177,7 @@ class MessageTemplate(Template):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
     ):
         super().__init__(
             template_id=template_id,
@@ -132,20 +186,46 @@ class MessageTemplate(Template):
             enable_logging=enable_logging,
         )
         self.content = content
-        self.jinja_template = jinja2.Template(self.content)
+        self.disable_jinja = disable_jinja
+        if not self.disable_jinja:
+            self.jinja_template = jinja2.Template(self.content)
+        else:
+            self.jinja_template = jinja2.Template(
+                "Jinja is disabled for this template. If you see this message, please report it to the developer."
+            )
+
         self.role = role
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render message using Jinja template."""
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Render message using Jinja template.
+
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         session.set_jump(None)
         if not session.get_jump():
-            rendered_content = self.jinja_template.render(**session.metadata)
+            rendered_content = self._jinja_render(session)
             message = Message(
                 content=rendered_content, role=self.role, metadata=session.metadata
             )
             session.append(message)
             yield message
         return session
+
+    def _jinja_render(self, session: "Session") -> str:
+        # If jinja is disabled, return content as is
+        if self.disable_jinja:
+            return self.content
+
+        # Create a new environment with StrictUndefined for rendering
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined, autoescape=True)
+        # Set metadata as global variables in the environment
+        for key, value in session.metadata.items():
+            env.globals[key] = value
+        template = env.from_string(self.content)
+        return template.render()
 
     def create_stack(self, session: "Session") -> "Stack":
         return Stack(template_id=self.template_id)
@@ -183,6 +263,8 @@ class GenerateTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging=True,
+        disable_jinja=False,
+        model: Optional[Model] = None,
     ):
         super().__init__(
             content="",
@@ -190,17 +272,27 @@ class GenerateTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
+        self.model = model
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Generate content using LLM."""
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Generate content using LLM.
+
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         if not session.runner:
             raise ValueError("runner is not set")
 
         self.info(
-            "Generating content with %s...", session.runner.models.__class__.__name__
+            "Generating content with %s...", session.runner.model.__class__.__name__
         )
-        response = session.runner.models.send(session)
+        model = self.model or session.runner.model
+        response = model.send(session)
         if self.role:
             response.role = self.role
         session.append(response)
@@ -222,6 +314,7 @@ class SystemTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging=True,
+        disable_jinja=False,
     ):
         super().__init__(
             content=content,
@@ -229,6 +322,8 @@ class SystemTemplate(MessageTemplate):
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
+            enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
 
 
@@ -248,6 +343,7 @@ class UserTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
     ):
         super().__init__(
             content=content or "",
@@ -256,34 +352,40 @@ class UserTemplate(MessageTemplate):
             before_transform=before_transform,
             after_transform=after_transform,
             enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
         )
         self.is_interactive = content is None
         self.description = description
         self.default = default
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render user message, either from input or template."""
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Render user message, either from input or template.
+
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         metadata = session.metadata
         if self.is_interactive:
-            if not session.runner:
-                raise ValueError("Runner must be given to use interactive mode")
-            rendered_content = session.runner.user_interface.ask(
-                session, self.description, self.default
+            yield UserInteractionEvent(
+                instruction=self.description,
+                default=self.default,
             )
+            return session
         else:
-            rendered_content = self.jinja_template.render(**metadata)
+            rendered_content = self._jinja_render(session)
+            message = Message(
+                content=rendered_content,
+                role=self.role,
+                metadata=metadata,
+            )
+            session.append(message)
+            yield message
+            return session
 
-        message = Message(
-            content=rendered_content,
-            role=self.role,
-            metadata=metadata,
-        )
-        session.append(message)
-        yield message
-        return session
 
-
-class AssistantTemplate(MessageTemplate):
+class AssistantTemplate(GenerateTemplate):
     """Template for assistant messages with optional LLM generation."""
 
     def __init__(
@@ -297,37 +399,42 @@ class AssistantTemplate(MessageTemplate):
             Union[List[SessionTransformer], SessionTransformer]
         ] = None,
         enable_logging: bool = True,
+        disable_jinja: bool = False,
+        model: Optional[Model] = None,
     ):
         super().__init__(
-            content=content or "",
             role="assistant",
             template_id=template_id,
             before_transform=before_transform,
             after_transform=after_transform,
             enable_logging=enable_logging,
+            disable_jinja=disable_jinja,
+            model=model,
+        )
+        self.content = (
+            content
+            or "content for AssistantTemplate is disabled. If you see this message, please report it to the developer."
         )
         self.is_generate = content is None
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        """Render assistant message, either generated or from template."""
-        metadata = session.metadata
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        """Render assistant message, either generated or from template.
 
+        Yields:
+            Union[Message, Event]: The next message or event in the rendering process.
+        """
         if self.is_generate:
-            if not session.runner:
-                raise ValueError("runner is not set")
-            self.info(
-                "Generating content with %s...",
-                session.runner.models.__class__.__name__,
-            )
-            response = session.runner.models.send(session)
-            rendered_content = response.content
-        else:
-            rendered_content = self.jinja_template.render(**metadata)
+            session = yield from super()._render(session)
+            return session
 
+        rendered_content = self._jinja_render(session)
         message = Message(
             content=rendered_content,
             role=self.role,
-            metadata=metadata,
+            # Message should take snapshot of metadata
+            metadata=session.metadata.copy(),
         )
         session.append(message)
         yield message

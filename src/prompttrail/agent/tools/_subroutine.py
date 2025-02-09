@@ -13,7 +13,7 @@ from prompttrail.agent.subroutine.squash_strategy import (
     LastMessageStrategy,
     SquashStrategy,
 )
-from prompttrail.agent.templates._core import Template
+from prompttrail.agent.templates._core import Event, Template
 from prompttrail.agent.tools._base import Tool, ToolArgument, ToolResult
 from prompttrail.core import Message, Session
 
@@ -115,6 +115,11 @@ class SubroutineTool(Tool):
         # Execute subroutine with parent session
         messages = []
         for message in self.subroutine.render(parent_session):
+            if isinstance(message, Event):
+                # TODO: Should allow raising events? This will force tool to yield geenrator but it is a little bit complicated
+                raise ValueError(
+                    "SubroutineTool._execute received event. SubroutineTool does not support events, remove event from template."
+                )
             messages.append(message)
             logging.debug(f"SubroutineTool._execute received message: {message}")
 

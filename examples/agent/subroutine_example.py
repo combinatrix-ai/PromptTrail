@@ -1,11 +1,12 @@
 """Example of using SubroutineTemplate for solving math problems"""
 
-from typing import Generator, Optional
+from typing import Generator, Optional, Union
 
 from prompttrail.agent.subroutine import SubroutineTemplate
 from prompttrail.agent.subroutine.session_init_strategy import InheritSystemStrategy
 from prompttrail.agent.subroutine.squash_strategy import FilterByRoleStrategy
 from prompttrail.agent.templates import Stack, Template
+from prompttrail.agent.templates._core import Event
 from prompttrail.core import Message, Session
 
 
@@ -44,7 +45,9 @@ class MathProblemTemplate(Template):
             template_id="calculation_subroutine",
         )
 
-    def _render(self, session: Session) -> Generator[Message, None, Session]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         # Initial response
         yield Message(role="assistant", content="I'll help solve this math problem.")
 

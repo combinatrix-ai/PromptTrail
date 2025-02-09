@@ -1,6 +1,6 @@
 [project]
 name = "prompttrail"
-version = "0.2.0"
+version = "0.2.1rc1"
 description = "A lightweight library for Prompt Programming: Agent as Code"
 authors = [
     { name = "hmirin", email = "hmirin@example.com" }
@@ -17,6 +17,8 @@ dependencies = [
     "typing-inspect>=0.9.0",
     "jinja2>=3.1.2",
     "transformers>=4.44.2",
+    "fastapi>=0.115.8",
+    "uvicorn>=0.34.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"
@@ -67,6 +69,8 @@ dev-dependencies = [
     "accelerate>=1.2.1",
     "tqdm>=4.67.1",
     "requests>=2.32.3",
+    "httpx>=0.28.1",
+    "pytest-asyncio>=0.25.3",
 ]
 
 [tool.rye.scripts]
@@ -94,6 +98,7 @@ pyreverse = "pyreverse src.prompttrail -o png"
 chat = "python examples/dogfooding/chat.py"
 agent = "python examples/dogfooding/coding_agent.py"
 commit = { chain = ["format-check", "all", "dogfooding:commit"] }
+commit-skip-test = { chain = ["dogfooding:commit"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

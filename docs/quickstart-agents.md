@@ -67,20 +67,116 @@ Finally, `AssistantTemplate` is a template that generates content using LLM. Whe
 
 OK. You may grasp what's going on here. Let's run this agent.
 
-### Runner
+### Runners
 
-`agent.runner` is a library to run the conversation defined in `agent.templates`.
+PromptTrail provides different runners to execute your agent templates in various environments. Each runner type is designed for specific use cases:
 
-We have defined how the conversation should go in `agent.templates`.
+#### CommandLineRunner
 
-Then, we need to define how the conversation is actually carried out. You need to pass the following arguments:
+The `CommandLineRunner` is ideal for development, debugging, and CLI applications. It provides a simple command-line interface for interacting with your agent.
 
-- How the agent interacts with LLM?: Model & Parameter
-- How the agent interacts with the user?: UserInteractionProvider
+```python
+from prompttrail.agent.runners import CommandLineRunner
+from prompttrail.agent.user_interface import CLIInterface
 
-In this example, we don't have any user interaction. If you want to see more about user interaction, see [examples/agent/fermi_problem.py](examples/agent/fermi_problem.py).
+runner = CommandLineRunner(
+    model=model,                # LLM model instance
+    template=templates,         # Your template definition
+    user_interface=CLIInterface()
+)
 
-Let's run the agent above on CLI. Use OpenAI's gpt-4o-mini. The user is interacted with CLI.
+# Run with optional parameters
+session = runner.run(
+    session=None,              # Optional: existing session to continue
+    max_messages=100,          # Optional: limit on number of messages
+    debug_mode=False           # Optional: enable debug output
+)
+```
+
+The CommandLineRunner prints all interactions to the console, making it easy to follow the conversation flow and debug your agent.
+
+#### APIRunner
+
+The `APIRunner` exposes your agent as a REST API server, perfect for web applications and services. It provides endpoints for session management and user interaction.
+
+```python
+from prompttrail.agent.runners import APIRunner
+from prompttrail.agent.user_interface import CLIInterface
+
+runner = APIRunner(
+    model=model,
+    template=templates,
+    user_interface=CLIInterface(),
+    host="127.0.0.1",          # Optional: server host (default: 127.0.0.1)
+    port=8000                  # Optional: server port (default: 8000)
+)
+
+# Start the API server
+runner.start_server()
+```
+
+The APIRunner provides the following endpoints:
+
+- `POST /sessions`
+  - Create a new session
+  - Request body: `{ "metadata": {} }` (optional)
+  - Returns: `{ "session_id": "uuid", "session": {...} }`
+
+- `GET /sessions/{session_id}`
+  - Get session status and current state
+  - Returns:
+    ```json
+    {
+        "is_running": bool,
+        "has_event": bool,
+        "session": {...},
+        "current_event": {
+            "instruction": "string",
+            "default": "string"
+        }
+    }
+    ```
+
+- `POST /sessions/{session_id}/start`
+  - Start template execution for a session
+  - Returns: `{ "status": "started" }`
+
+- `POST /sessions/{session_id}/input`
+  - Provide user input when requested
+  - Request body: `{ "input": "user input" }`
+  - Returns: `{ "status": "success" }`
+
+For a complete working example of using APIRunner, see [examples/agent/weather_forecast_api.py](examples/agent/weather_forecast_api.py). This example demonstrates:
+- Setting up an APIRunner with a weather forecast tool
+- Configuring the API server
+- Using session metadata to pass user input
+- Interacting with the API endpoints
+
+Example usage with curl:
+
+```bash
+# Create a new session with weather query
+curl -X POST http://localhost:8000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"metadata": {"user_input": "What'\''s the weather in Tokyo?"}}'
+
+# Start the session
+curl -X POST http://localhost:8000/sessions/{session_id}/start
+
+# Check session status and get weather forecast
+curl http://localhost:8000/sessions/{session_id}
+```
+
+#### Common Runner Features
+
+All runners share these core capabilities:
+
+- **Session Management**: Continue conversations by passing existing sessions
+- **Template Search**: Find templates by ID using `runner.search_template()`
+- **Debug Mode**: Enable detailed logging with `debug_mode=True`
+- **Message Limits**: Control conversation length with `max_messages`
+
+Let's see a basic example using the CommandLineRunner:
 
 ```python
 import os
@@ -389,7 +485,6 @@ class Session(BaseModel):
     runner: Optional["Runner"] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
-    jump_to_id: Optional[str] = Field(default=None)
 ```
 
 Other attributes can also be accessed:
@@ -397,8 +492,6 @@ Other attributes can also be accessed:
 - `runner`: You can access the runner itself. If you want to search templates passed to the runner, you can use `session.runner.search_template`.
 
 - `stack`: You can access the template stack. This is used for template control flow.
-
-- `jump_to_id`: You can set this to jump to another template. This is used by control flow templates like `JumpTemplate`.
 
 ## Control Flow
 
@@ -419,14 +512,6 @@ PromptTrail provides several templates for controlling the flow of conversation:
       condition=lambda session: "answer" in session.metadata,
       true_template=AssistantTemplate(...),
       false_template=BreakTemplate()
-  )
-  ```
-
-- `JumpTemplate`: Jumps to another template when a condition is met
-  ```python
-  JumpTemplate(
-      jump_to="template_id",
-      condition=lambda session: session.metadata["should_jump"]
   )
   ```
 

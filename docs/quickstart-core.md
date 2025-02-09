@@ -144,4 +144,69 @@ Actually, the role of `MockProvider` is very similar to that of `CacheProvider`.
 `MockProvider` and `CacheProvider` cannot be used at the same time.
 ```
 
-<!-- TODO: Add debug and logging section -->
+## Debug and Logging
+
+PromptTrail provides comprehensive debugging and logging capabilities to help you understand and troubleshoot your LLM applications.
+
+### Debug Mode
+
+Debug mode can be enabled at both the runner and session level:
+
+```python
+# Enable debug mode when running
+session = runner.run(debug_mode=True)
+
+# Or when creating a session
+session = Session(debug_mode=True)
+```
+
+When debug mode is enabled, you'll see detailed information about:
+- Template rendering process
+- Message generation and transformation
+- Tool execution and results
+- Cache hits and misses
+- API calls and responses
+
+### Logging
+
+PromptTrail uses Python's standard logging module. You can configure logging to see different levels of detail:
+
+```python
+import logging
+
+# Set logging level for all PromptTrail components
+logging.basicConfig(level=logging.DEBUG)
+
+# Or configure specific loggers
+logger = logging.getLogger("prompttrail")
+logger.setLevel(logging.INFO)
+
+# Add handlers for custom output
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+```
+
+Common logging areas include:
+- Model interactions (`prompttrail.models`)
+- Runner execution (`prompttrail.agent.runners`)
+- Template processing (`prompttrail.agent.templates`)
+- Tool execution (`prompttrail.agent.tools`)
+- Cache operations (`prompttrail.core.cache`)
+
+### Debuggable Base Class
+
+All major components in PromptTrail inherit from the `Debuggable` base class, which provides consistent debugging capabilities:
+
+```python
+from prompttrail.core.utils import Debuggable
+
+class MyComponent(Debuggable):
+    def my_method(self):
+        self.debug("Debug message")
+        self.info("Info message")
+        self.warning("Warning message")
+        self.error("Error message")
+```
+
+This ensures consistent logging behavior across the library and makes it easier to add debugging to your own components.
