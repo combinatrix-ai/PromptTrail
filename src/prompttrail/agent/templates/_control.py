@@ -3,13 +3,11 @@ from abc import ABCMeta, abstractmethod
 from typing import Callable, Generator, List, Optional, Sequence, Set, TypeAlias, Union
 
 from prompttrail.agent.session_transformers._core import SessionTransformer
-from prompttrail.agent.templates._base import Stack
-from prompttrail.agent.templates._core import Template
+from prompttrail.agent.templates._core import Event, Stack, Template
 from prompttrail.core import Message, Session
 from prompttrail.core.const import (
     END_TEMPLATE_ID,
     BreakException,
-    JumpException,
     ReachedEndTemplateException,
 )
 
@@ -143,7 +141,9 @@ class LoopTemplate(ControlTemplate):
         self.exit_condition = exit_condition
         self.exit_loop_count = exit_loop_count
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         stack = session.stack[-1]
         if not isinstance(stack, LoopTemplateStack):
             raise RuntimeError("LoopTemplateStack is not the last stack")
@@ -225,7 +225,9 @@ class IfTemplate(ControlTemplate):
         self.false_template = false_template
         self.condition = condition
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         if self.condition(session):
             session = yield from self.true_template.render(session)
         else:
@@ -288,7 +290,9 @@ class LinearTemplate(ControlTemplate):
         )
         self.templates = templates
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         stack = session.stack[-1]
         if not isinstance(stack, LinearTemplateStack):
             raise RuntimeError("LinearTemplateStack is not the last stack")
@@ -332,70 +336,31 @@ class EndTemplate(Template):
     _instance = None
     before_transform = []
 
-    def __init__(self):
-        pass  # No configuration is needed here.
+    def __init__(self, farewell_message: str | None = None):
+        self.farewell_message = farewell_message
 
-    def __new__(cls):
+    def __new__(cls, farewell_message: str | None = None):
         if cls._instance is None:
             cls._instance = super(EndTemplate, cls).__new__(cls)
         return cls._instance
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
+        if self.farewell_message:
+            yield Message(
+                content=self.farewell_message,
+                role="assistant",
+                metadata=session.metadata,
+            )
+            session.messages.append(
+                Message(content=self.farewell_message, role="assistant")
+            )
+        # farewell_message is consumed. Reset it to None.
         raise ReachedEndTemplateException()
 
     def create_stack(self, session: "Session") -> Stack:
         return super().create_stack(session)
-
-
-class JumpTemplate(ControlTemplate):
-    def __init__(
-        self,
-        jump_to: Template | TemplateId,
-        condition: Callable[[Session], bool],
-        template_id: Optional[str] = None,
-        before_transform: Optional[
-            Union[List[SessionTransformer], SessionTransformer]
-        ] = None,
-    ):
-        """A template for jumping to another template.
-
-        after_transform is unavailable for `JumpTemplate` because it may skipped when the jump is executed.
-
-        Args:
-            jump_to (Template | TemplateId): Template or template ID to jump to. When passed a TemplateId and the runner cannot find the template, it raises an error.
-            condition (Condition): Condition to be checked. If the condition is met, the jump is executed. Otherwise, this template exits without jumping.
-            template_id (Optional[str], optional): Template ID of this template. Defaults to None.
-            before_transform (Optional[List[TransformHook]], optional): `TrnasformHook`s to be applied before rendering. Defaults to None.
-        """
-        super().__init__(
-            template_id=template_id,
-            before_transform=before_transform if before_transform is not None else [],
-            # after_transform is unavailable for the templates that raise errors
-        )
-        if isinstance(jump_to, Template):
-            jump_to = jump_to.template_id
-        self.jump_to = jump_to
-        self.condition = condition
-
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
-        self.warning(
-            "Jumping to %s from %s. This resets the stack, and the dialogue will not come back to this template.",
-            self.jump_to,
-            self.template_id,
-        )
-        raise JumpException(self.jump_to)
-
-    def walk(
-        self, visited_templates: Optional[Set["Template"]] = None
-    ) -> Generator["Template", None, None]:
-        visited_templates = visited_templates or set()
-        if self in visited_templates:
-            return
-        visited_templates.add(self)
-        yield self
-
-    def create_stack(self, session: "Session") -> LinearTemplateStack:
-        return LinearTemplateStack(template_id=self.template_id, idx=0)
 
 
 class BreakTemplate(ControlTemplate):
@@ -416,7 +381,9 @@ class BreakTemplate(ControlTemplate):
             # after_transform is unavailable for the templates that raise errors
         )
 
-    def _render(self, session: "Session") -> Generator[Message, None, "Session"]:
+    def _render(
+        self, session: "Session"
+    ) -> Generator[Union[Message, Event], None, "Session"]:
         self.info("Breaking the loop from %s.", self.template_id)
         raise BreakException()
 

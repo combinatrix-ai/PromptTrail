@@ -9,8 +9,8 @@ import os
 from typing import cast
 
 from prompttrail.agent.session_transformers import (
-    EvaluatePythonCodeHook,
-    ExtractMarkdownCodeBlockHook,
+    DangerouslyEvaluatePythonCode,
+    ExtractMarkdownCodeBlock,
     ResetMetadata,
 )
 from prompttrail.agent.templates import (
@@ -90,14 +90,14 @@ Calculation:
                         #     5300000 * 0.49 * 2.1
                         #  ```
                         # This hook will extract a Python code block and store it in key: "python_segment"
-                        ExtractMarkdownCodeBlockHook(
-                            key="python_segment", lang="python"
-                        ),
+                        ExtractMarkdownCodeBlock(key="python_segment", lang="python"),
                         # Then, you can evaluate the code block using EvaluatePythonCodeHook
                         # Yeah, this is a bit dangerous, we will provide safer way to do this in the future.
                         # Note that the key "python_segment" from ExtractMarkdownCodeBlockHook is used here
                         # The result of the evaluation is stored in key: "answer"
-                        EvaluatePythonCodeHook(key="answer", code="python_segment"),
+                        DangerouslyEvaluatePythonCode(
+                            key="answer", code="python_segment"
+                        ),
                     ],
                 ),
                 IfTemplate(
