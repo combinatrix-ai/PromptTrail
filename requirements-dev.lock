@@ -21,6 +21,7 @@ anyio==4.8.0
     # via anthropic
     # via httpx
     # via openai
+    # via starlette
 appnope==0.1.4
     # via ipykernel
 astroid==3.3.8
@@ -48,6 +49,7 @@ click==8.1.8
     # via mkdocstrings
     # via prompttrail
     # via pydoc-markdown
+    # via uvicorn
 comm==0.2.2
     # via ipykernel
 coverage==7.6.10
@@ -88,6 +90,8 @@ docutils==0.21.2
     # via sphinx-rtd-theme
 executing==2.2.0
     # via stack-data
+fastapi==0.115.8
+    # via prompttrail
 filelock==3.17.0
     # via huggingface-hub
     # via torch
@@ -126,6 +130,7 @@ grpcio-status==1.70.0
     # via google-api-core
 h11==0.14.0
     # via httpcore
+    # via uvicorn
 httpcore==1.0.7
     # via httpx
 httplib2==0.22.0
@@ -281,6 +286,7 @@ pycodestyle==2.12.1
 pydantic==2.10.6
     # via anthropic
     # via autodoc-pydantic
+    # via fastapi
     # via google-generativeai
     # via openai
     # via prompttrail
@@ -304,7 +310,9 @@ pyparsing==3.2.1
     # via httplib2
 pyproject-autoflake==1.0.2
 pytest==8.3.4
+    # via pytest-asyncio
     # via pytest-cov
+pytest-asyncio==0.25.3
 pytest-cov==6.0.0
 python-dateutil==2.9.0.post0
     # via ghp-import
@@ -373,6 +381,8 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stack-data==0.6.3
     # via ipython
+starlette==0.45.3
+    # via fastapi
 sympy==1.13.1
     # via torch
 tiktoken==0.8.0
@@ -405,6 +415,7 @@ traitlets==5.14.3
     # via jupyter-core
     # via matplotlib-inline
 transformers==4.48.2
+    # via prompttrail
 typeapi==2.2.4
     # via databind
 types-cachetools==5.5.0.20240820
@@ -416,6 +427,7 @@ typing-extensions==4.12.2
     # via anthropic
     # via anyio
     # via databind
+    # via fastapi
     # via google-generativeai
     # via huggingface-hub
     # via ipython
@@ -434,6 +446,8 @@ uritemplate==4.1.1
 urllib3==2.3.0
     # via requests
     # via types-requests
+uvicorn==0.34.0
+    # via prompttrail
 watchdog==6.0.0
     # via mkdocs
     # via pydoc-markdown

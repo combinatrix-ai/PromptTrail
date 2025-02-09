@@ -5,20 +5,20 @@ Core module provides base classes and utilities for building conversation templa
 Tool module provides tool use related templates for building conversation templates.
 """
 
-from prompttrail.agent.templates._base import Stack
 from prompttrail.agent.templates._control import (
     BreakTemplate,
     ControlTemplate,
     EndTemplate,
     IfTemplate,
-    JumpTemplate,
     LinearTemplate,
     LoopTemplate,
 )
 from prompttrail.agent.templates._core import (
     AssistantTemplate,
+    Event,
     GenerateTemplate,
     MessageTemplate,
+    Stack,
     SystemTemplate,
     Template,
     UserTemplate,
@@ -44,11 +44,11 @@ __all__ = [
     "IfTemplate",
     "LinearTemplate",
     "EndTemplate",
-    "JumpTemplate",
     "BreakTemplate",
     "ToolingTemplateBase",
     "AnthropicToolingTemplate",
     "OpenAIToolingTemplate",
     "ToolingTemplate",
     "ExecuteToolTemplate",
+    "Event",
 ]

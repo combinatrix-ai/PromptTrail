@@ -1,0 +1,490 @@
+name: Test and Release
+
+# test: 
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.set_status.outputs.status }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install System Dependencies
+        # Required for TreeDirectory Tool functionality
+        run: |
+          sudo apt update && sudo apt install -y tree
+      - name: Configure Virtual Environment Cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements-dev.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+      - name: Initialize Python Environment
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.lock      
+      - name: Configure PYTHONPATH
+        run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV      
+      - name: Static Type Checking
+        run: |
+          . .venv/bin/activate
+          mypy src examples tests
+      - name: Code Style Verification
+        # Note: Ignore rules must be synchronized with pyproject.toml when modified
+        run: |
+          . .venv/bin/activate
+          flake8 --ignore=E121,E123,E126,E226,E24,E704,E203,W503,W504,E501,F401,F403 src tests examples
+      - name: Code Formatting Check
+        run: |
+          . .venv/bin/activate
+          black --check src examples tests
+      - name: Execute Test Suite
+        run: |
+          . .venv/bin/activate
+          pytest --cov=src --cov-report=xml tests examples
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Submit Coverage Report
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Write Test Status
+        id: set_status
+        run: echo "status=success" >> $GITHUB_OUTPUT
+        
+# Continue to release workflow
+
+# This workflow is triggered on pushes to the main branch.
+# First, it checks the version of the package in the pyproject.toml file.
+# Then, it compares the version to the latest version on PyPI and GitHub.
+# If a new version is detected, it tags the commit with the new version and pushes the tag on GitHub.concurrency: 
+# Also, it generates a release note from the last tag to the new tag and uploads it as an artifact.
+# Finally, it releases the new version to PyPI and creates a GitHub release with the release note.
+# This also triggers PyPI release.
+
+# Version naming strategy
+# pyproject.toml: 0.2.1
+# PyPI: 0.2.0
+# GitHub: v0.2.0 (tag and release)
+
+# Expected pyproject.toml structure:
+
+# [project]
+# name = "prompttrail"
+# version = "0.2.1"
+
+# Github API Response
+
+# https://api.github.com/repos/combinatrix-ai/PromptTrail/releases/latest
+# {
+#   "url": "https://api.github.com/repos/combinatrix-ai/PromptTrail/releases/197926506",
+#   "assets_url": "https://api.github.com/repos/combinatrix-ai/PromptTrail/releases/197926506/assets",
+#   "upload_url": "https://uploads.github.com/repos/combinatrix-ai/PromptTrail/releases/197926506/assets{?name,label}",
+#   "html_url": "https://github.com/combinatrix-ai/PromptTrail/releases/tag/v0.2.0",
+#   "id": 197926506,
+#   "author": {
+#     "login": "hmirin",
+#     "id": 1284876,
+#     "node_id": "MDQ6VXNlcjEyODQ4NzY=",
+#     "avatar_url": "https://avatars.githubusercontent.com/u/1284876?v=4",
+#     "gravatar_id": "",
+#     "url": "https://api.github.com/users/hmirin",
+#     "html_url": "https://github.com/hmirin",
+#     "followers_url": "https://api.github.com/users/hmirin/followers",
+#     "following_url": "https://api.github.com/users/hmirin/following{/other_user}",
+#     "gists_url": "https://api.github.com/users/hmirin/gists{/gist_id}",
+#     "starred_url": "https://api.github.com/users/hmirin/starred{/owner}{/repo}",
+#     "subscriptions_url": "https://api.github.com/users/hmirin/subscriptions",
+#     "organizations_url": "https://api.github.com/users/hmirin/orgs",
+#     "repos_url": "https://api.github.com/users/hmirin/repos",
+#     "events_url": "https://api.github.com/users/hmirin/events{/privacy}",
+#     "received_events_url": "https://api.github.com/users/hmirin/received_events",
+#     "type": "User",
+#     "user_view_type": "public",
+#     "site_admin": false
+#   },
+#   "node_id": "RE_kwDOJ8z-YM4LzB5q",
+#   "tag_name": "v0.2.0",
+#   "target_commitish": "main",
+#   "name": "v0.2.0",
+#   "draft": false,
+#   "prerelease": false,
+#   "created_at": "2025-02-01T13:43:44Z",
+#   "published_at": "2025-02-01T14:37:53Z",
+#   "assets": [
+
+#   ],
+#   "tarball_url": "https://api.github.com/repos/combinatrix-ai/PromptTrail/tarball/v0.2.0",
+#   "zipball_url": "https://api.github.com/repos/combinatrix-ai/PromptTrail/zipball/v0.2.0",
+#   "body": "# PromptTrail v0.2.0 Release Notes\r\n\r\nWe're excited to announce the release of PromptTrail v0.2.0, featuring significant improvements in modular agent development, model support, and developer experience.\r\n\r\n## Major Features\r\n\r\n### Subroutines for Modular Agents\r\n- Introduced `SubroutineTemplate` for creating modular, reusable components within larger agents\r\n- Added flexible session initialization with `SessionInitStrategy`:\r\n  - `CleanSessionStrategy` for isolated contexts\r\n  - `InheritSystemStrategy` for system message preservation\r\n  - `LastNMessagesStrategy` for recent context retention\r\n  - `FilteredInheritStrategy` for custom message selection\r\n- Implemented `SquashStrategy` for post-execution message handling:\r\n  - `LastMessageStrategy` for final output retention\r\n  - `FilterByRoleStrategy` for role-based filtering\r\n  - `LLMFilteringStrategy` and `LLMSummarizingStrategy` for AI-powered context management\r\n\r\n### Enhanced Model Support\r\n- Added support for Google Gemini and Anthropic Claude Sonnet models\r\n- Added local LLM support using Hugging Face Transformers\r\n\r\n### API Improvements\r\n- Unified configuration system:\r\n  - Merged `Parameters` into consolidated `Config` class\r\n  - Streamlined model settings and API key management\r\n- Introduced unified `ToolingTemplate` supporting both OpenAI and Anthropic models\r\n- Standardized message roles across all models\r\n- Implemented new logging system with `Debuggable` base class\r\n\r\n## Technical Updates\r\n\r\n### Dependency Upgrades\r\n- anthropic: v0.45.2\r\n- openai: v1.61.0\r\n- google-generativeai: v0.8.4\r\n\r\n### Code Quality Improvements\r\n- Renamed `Message.sender` to `Message.role` for industry standard alignment\r\n- Simplified model class names (e.g., `OpenAIChatCompletionModel` to `OpenAIModel`)\r\n- Enhanced type safety in tool system\r\n- Transitioned to session-based state management\r\n- Implemented template-driven API enhancements\r\n- Streamlined metadata handling in Session class\r\n\r\n## Developer Tools\r\n- Added automated code review bot (`examples/dogfooding/auto_code_review.py`)\r\n- Enhanced project documentation and tooling processes\r\n- Improved debugging capabilities through standardized logging\r\n\r\nFor detailed documentation and migration guides, please refer to our documentation website."
+# }
+
+
+# PyPI API Response
+# https://pypi.org/pypi/prompttrail/json
+# {
+#   "info": {
+#     "author": null,
+#     "author_email": "hmirin <hmirin@example.com>",
+#     "bugtrack_url": null,
+#     "classifiers": [...],
+#     "description": "...",
+#     "description_content_type": "text/markdown",
+#     "docs_url": null,
+#     "download_url": null,
+#     "downloads": {
+#       "last_day": -1,
+#       "last_month": -1,
+#       "last_week": -1
+#     },
+#     "dynamic": null,
+#     "home_page": null,
+#     "keywords": null,
+#     "license": "MIT",
+#     "license_expression": null,
+#     "license_files": null,
+#     "maintainer": null,
+#     "maintainer_email": null,
+#     "name": "prompttrail",
+#     "package_url": "https://pypi.org/project/prompttrail/",
+#     "platform": null,
+#     "project_url": "https://pypi.org/project/prompttrail/",
+#     "project_urls": {
+#       "Documentation": "https://prompttrail.readthedocs.io",
+#       "Repository": "https://github.com/combinatrix-ai/PromptTrail"
+#     },
+#     "provides_extra": null,
+#     "release_url": "https://pypi.org/project/prompttrail/0.2.0/",
+#     "requires_dist": [
+#       "anthropic>=0.21.0",
+#       "click>=8.1.7",
+#       "google-generativeai>=0.4.1",
+#       "jinja2>=3.1.2",
+#       "openai>=1.14.2",
+#       "pydantic>=2.6.4",
+#       "tiktoken>=0.6.0",
+#       "transformers>=4.44.2",
+#       "types-cachetools>=5.3.0.7",
+#       "typing-inspect>=0.9.0"
+#     ],
+#     "requires_python": ">=3.11",
+#     "summary": "A lightweight library for Prompt Programming: Agent as Code",
+#     "version": "0.2.0",
+#     "yanked": false,
+#     "yanked_reason": null
+#   },
+#   "last_serial": 27237408,
+#   "releases": {
+#     "0.1.0": [
+#       ...
+#     ],
+#     "0.2.0": [
+#       {
+#         "comment_text": "",
+#         "digests": {
+#           "blake2b_256": "0a97329abe55a6eeb80708592b81cfd621109a016a0ccab1381a0580c9905552",
+#           "md5": "1e6264744d5613bfe7a34984d75172ad",
+#           "sha256": "c461a0bd78a0732d431d50fae785522cc97acf44a378526ed59ff562f88526ff"
+#         },
+#         "downloads": -1,
+#         "filename": "prompttrail-0.2.0-py3-none-any.whl",
+#         "has_sig": false,
+#         "md5_digest": "1e6264744d5613bfe7a34984d75172ad",
+#         "packagetype": "bdist_wheel",
+#         "python_version": "py3",
+#         "requires_python": ">=3.11",
+#         "size": 53774,
+#         "upload_time": "2025-02-01T14:38:26",
+#         "upload_time_iso_8601": "2025-02-01T14:38:26.291724Z",
+#         "url": "https://files.pythonhosted.org/packages/0a/97/329abe55a6eeb80708592b81cfd621109a016a0ccab1381a0580c9905552/prompttrail-0.2.0-py3-none-any.whl",
+#         "yanked": false,
+#         "yanked_reason": null
+#       },
+#       {
+#         "comment_text": "",
+#         "digests": {
+#           "blake2b_256": "9ea4d8502cd6548408e9412132d1ce588fd1a1ac86ba36a87d6378a1e2e80718",
+#           "md5": "3eb716726e657153ccbb25b54e1cbe64",
+#           "sha256": "e617182a455b4b1f9ed0bbfb442c9e2b279ec3674663170fa5179873bf632da8"
+#         },
+#         "downloads": -1,
+#         "filename": "prompttrail-0.2.0.tar.gz",
+#         "has_sig": false,
+#         "md5_digest": "3eb716726e657153ccbb25b54e1cbe64",
+#         "packagetype": "sdist",
+#         "python_version": "source",
+#         "requires_python": ">=3.11",
+#         "size": 95577,
+#         "upload_time": "2025-02-01T14:38:28",
+#         "upload_time_iso_8601": "2025-02-01T14:38:28.223804Z",
+#         "url": "https://files.pythonhosted.org/packages/9e/a4/d8502cd6548408e9412132d1ce588fd1a1ac86ba36a87d6378a1e2e80718/prompttrail-0.2.0.tar.gz",
+#         "yanked": false,
+#         "yanked_reason": null
+#       }
+#     ],
+#     "0.2.0rc1": [
+#       ... 
+#     ]
+#   },
+#   "urls": [
+#     {
+#       "comment_text": "",
+#       "digests": {
+#         "blake2b_256": "0a97329abe55a6eeb80708592b81cfd621109a016a0ccab1381a0580c9905552",
+#         "md5": "1e6264744d5613bfe7a34984d75172ad",
+#         "sha256": "c461a0bd78a0732d431d50fae785522cc97acf44a378526ed59ff562f88526ff"
+#       },
+#       "downloads": -1,
+#       "filename": "prompttrail-0.2.0-py3-none-any.whl",
+#       "has_sig": false,
+#       "md5_digest": "1e6264744d5613bfe7a34984d75172ad",
+#       "packagetype": "bdist_wheel",
+#       "python_version": "py3",
+#       "requires_python": ">=3.11",
+#       "size": 53774,
+#       "upload_time": "2025-02-01T14:38:26",
+#       "upload_time_iso_8601": "2025-02-01T14:38:26.291724Z",
+#       "url": "https://files.pythonhosted.org/packages/0a/97/329abe55a6eeb80708592b81cfd621109a016a0ccab1381a0580c9905552/prompttrail-0.2.0-py3-none-any.whl",
+#       "yanked": false,
+#       "yanked_reason": null
+#     },
+#     {
+#       "comment_text": "",
+#       "digests": {
+#         "blake2b_256": "9ea4d8502cd6548408e9412132d1ce588fd1a1ac86ba36a87d6378a1e2e80718",
+#         "md5": "3eb716726e657153ccbb25b54e1cbe64",
+#         "sha256": "e617182a455b4b1f9ed0bbfb442c9e2b279ec3674663170fa5179873bf632da8"
+#       },
+#       "downloads": -1,
+#       "filename": "prompttrail-0.2.0.tar.gz",
+#       "has_sig": false,
+#       "md5_digest": "3eb716726e657153ccbb25b54e1cbe64",
+#       "packagetype": "sdist",
+#       "python_version": "source",
+#       "requires_python": ">=3.11",
+#       "size": 95577,
+#       "upload_time": "2025-02-01T14:38:28",
+#       "upload_time_iso_8601": "2025-02-01T14:38:28.223804Z",
+#       "url": "https://files.pythonhosted.org/packages/9e/a4/d8502cd6548408e9412132d1ce588fd1a1ac86ba36a87d6378a1e2e80718/prompttrail-0.2.0.tar.gz",
+#       "yanked": false,
+#       "yanked_reason": null
+#     }
+#   ],
+#   "vulnerabilities": []
+# }
+
+  check_versions:
+    needs:
+      - test
+    if : ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test.outputs.status == 'success' }}
+    name: Check Version for Release
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.compare_versions.outputs.new_tag }}
+      latest_pypi_version: ${{ steps.get_pypi_version.outputs.latest_pypi_version }}
+      latest_github_version: ${{ steps.get_github_version.outputs.latest_github_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Initialize Python Environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install toml      
+
+      - name: Get Repository Info
+        id: get_repository_info
+        run: |
+          # Use the built-in GITHUB_REPOSITORY variable, which is "owner/repo"
+          owner=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f1)
+          repository_name=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
+          echo "Owner: $owner"
+          echo "Repository: $repository_name"
+          echo "owner=$owner" >> $GITHUB_OUTPUT
+          echo "repository_name=$repository_name" >> $GITHUB_OUTPUT
+
+      - name: Read pyproject.toml
+        id: get_package_name
+        run: |
+          package_name=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['name'])")
+          echo "Package name: $package_name"
+          echo "package_name=$package_name" >> $GITHUB_OUTPUT
+
+      - name: Read Version from pyproject.toml
+        id: get_version
+        run: |
+          new_version=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+          echo "Version in pyproject.toml: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Get Latest Version from PyPI
+        id: get_pypi_version
+        run: |
+          package_name="${{ steps.get_package_name.outputs.package_name }}"
+          pypi_version=$(python -c "import json, urllib.request; package_name='${package_name}'; data = json.load(urllib.request.urlopen(f'https://pypi.org/pypi/{package_name}/json')); print(data['info']['version'])")
+          echo "Latest version on PyPI: $pypi_version"
+          echo "latest_pypi_version=$pypi_version" >> $GITHUB_OUTPUT
+
+      - name: Get Latest Version from GitHub
+        id: get_github_version
+        run: |
+          owner="${{ steps.get_repository_info.outputs.owner }}"
+          repository_name="${{ steps.get_repository_info.outputs.repository_name }}"
+          github_version=$(python -c "import json, urllib.request; owner='${owner}'; repository_name='${repository_name}'; data = json.load(urllib.request.urlopen(f'https://api.github.com/repos/{owner}/{repository_name}/releases/latest')); print(data['tag_name'])")
+          # Remove leading 'v' if present.
+          github_version=${github_version#v}
+          echo "Latest version on GitHub: $github_version"
+          echo "latest_github_version=$github_version" >> $GITHUB_OUTPUT
+
+      - name: Compare Versions
+        id: compare_versions
+        run: |
+          new_version="${{ steps.get_version.outputs.new_version }}"
+          pypi_version="${{ steps.get_pypi_version.outputs.latest_pypi_version }}"
+          github_version="${{ steps.get_github_version.outputs.latest_github_version }}"
+          echo "new_version: $new_version"
+          echo "pypi_version: $pypi_version"
+          echo "github_version: $github_version"
+          # Ensure that PyPI and GitHub agree
+          if [ "$pypi_version" != "$github_version" ]; then
+            echo "PyPI and GitHub versions are mismatched. Exiting with error."
+            exit 1
+          fi
+          # If new version differs from the published version, compare using sort -V
+          if [ "$new_version" != "$pypi_version" ]; then
+            highest=$(printf "%s\n" "$new_version" "$pypi_version" | sort -V | tail -n1)
+            if [ "$highest" = "$new_version" ]; then
+              echo "New version detected: $new_version"
+              echo "new_tag=$new_version" >> $GITHUB_OUTPUT
+            else
+              echo "Version in pyproject.toml ($new_version) is lower than published version ($pypi_version). Exiting with error."
+              exit 1
+            fi
+          else
+            echo "No new version detected."
+            exit 1
+          fi
+
+  tag_and_push:
+    name: Tag and Push New Version to GitHub
+    runs-on: ubuntu-latest
+    needs:
+      - check_versions
+    if: ${{ needs.check_versions.outputs.new_tag != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag new version
+        run: |
+          new_tag="v${{ needs.check_versions.outputs.new_tag }}"
+          echo "Tagging commit with new version: $new_tag"
+          git tag "$new_tag"
+          git push origin "$new_tag"
+          # wait for the tag to be available
+          sleep 5
+
+  generate_release_note:
+    name: Automtic Release Note Generation
+    runs-on: ubuntu-latest
+    needs:
+      - check_versions
+      - tag_and_push
+    if: ${{ needs.check_versions.outputs.new_tag != '' }}
+    outputs:
+      release_note: ${{ steps.get_release_note.outputs.release_note }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install System Dependencies
+        # Required for TreeDirectory Tool functionality
+        run: |
+          sudo apt update && sudo apt install -y tree
+      - name: Configure Virtual Environment Cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements-dev.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+      - name: Initialize Python Environment
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.lock
+      - name: Configure PYTHONPATH
+        run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
+      - name: Generate Release Note
+        id: get_release_note
+        env:
+          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+        run: |
+          last_tag="v${{ needs.check_versions.outputs.latest_github_version }}"
+          current_tag="v${{ needs.check_versions.outputs.new_tag }}"
+          echo "Generating release note from $last_tag to $current_tag"
+          . .venv/bin/activate
+          python examples/dogfooding/release_note_writer.py --non-interactive --last-tag "$last_tag" --current-tag "$current_tag" --output release.md
+          echo "Release note generated:"
+          cat release.md
+          release_note=$(cat release.md)
+          echo "release_note<<EOF" >> $GITHUB_OUTPUT
+          echo "$release_note" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  release_on_github:
+    name: Release on GitHub
+    runs-on: ubuntu-latest
+    needs:
+      - check_versions
+      - generate_release_note
+    if: ${{ needs.check_versions.outputs.new_tag != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ needs.check_versions.outputs.new_tag }}"
+          name: "v${{ needs.check_versions.outputs.new_tag }}"
+          body: ${{ needs.generate_release_note.outputs.release_note }}
+
+  release_to_pypi:
+    name: Release to PyPI
+    runs-on: ubuntu-latest
+    needs: release_on_github
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test and Release
+        run: bash package-release.sh
+        env:
+          PYPI_REPOSITORY: ${{ vars.PYPI_REPOSITORY }}
+          PYPI_URL: ${{ vars.PYPI_URL }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_CLOUD_API_KEY: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

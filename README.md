@@ -11,9 +11,7 @@
 
 </div>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/fe20a6ff-dd2e-4bad-a540-664e133b9582" width="640px">
-</p>
+![readme-header](https://github.com/user-attachments/assets/3944a737-b958-43d3-9857-8b3bed5811e6)
 
 PromptTrail is a Python framework designed to make building LLM-powered applications easier and more maintainable. It provides:
 
@@ -362,19 +360,6 @@ You can find more examples in [examples](examples) directory:
   - Unit Test Generator (examples/dogfooding/create_unit_test.py)
   - Comment Fixer (examples/dogfooding/fix_comment.py)
   - Markdown Fixer (examples/dogfooding/fix_markdown.py)
-
-## Next
-
-- [ ] Provide a way to export / import sessions
-- [ ] Better error messages that help debugging
-- [ ] More default tools
-  - [ ] Vector Search Integration
-  - [ ] Code Execution
-- [ ] toml input/output for templates
-- [ ] repository for templates
-- [ ] job queue and server
-- [ ] asynchronous execution (more complex runner)
-File an issue if you have any requests!
 
 ## License
 

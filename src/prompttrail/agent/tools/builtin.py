@@ -5,6 +5,7 @@ import tempfile
 from typing import Any, Dict, Optional, Tuple, Union
 
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
+from prompttrail.core.const import ReachedEndTemplateException
 
 
 class ReadFile(Tool):
@@ -554,6 +555,24 @@ class EditFile(Tool):
 
         self.debug("No match found")
         return False
+
+
+class EndConversationTool(Tool):
+    name: str = "end_conversation"
+    description: str = "End the current conversation"
+    arguments: Dict[str, ToolArgument[Any]] = {
+        "message": ToolArgument(
+            name="message",
+            description="Optional farewell message",
+            value_type=str,
+            required=False,
+        )
+    }
+
+    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+        message = args.get("message", None)
+        # TODO: Should this return tool_use message?
+        raise ReachedEndTemplateException(farewell_message=message)
 
 
 class ExecuteCommand(Tool):
