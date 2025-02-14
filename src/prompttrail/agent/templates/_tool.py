@@ -274,22 +274,25 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
 
         result = {}
 
-        # Check required arguments
-        for name, arg in tool.arguments.items():
-            if arg.required and name not in args_dict:
-                raise ValueError(f"Missing required argument: {name}")
+        # Create argument map for validation
+        arg_map = {arg.name: arg for arg in tool.arguments}
 
-            if name in args_dict:
-                value = args_dict[name]
+        # Check required arguments
+        for arg in tool.arguments:
+            if arg.required and arg.name not in args_dict:
+                raise ValueError(f"Missing required argument: {arg.name}")
+
+            if arg.name in args_dict:
+                value = args_dict[arg.name]
                 if not arg.validate_value(value):
                     raise ValueError(
-                        f"Invalid type for argument {name}: expected {arg.value_type}, got {type(value)}"
+                        f"Invalid type for argument {arg.name}: expected {arg.value_type}, got {type(value)}"
                     )
-                result[name] = value
+                result[arg.name] = value
 
         # Warn about unexpected arguments
         for name in args_dict:
-            if name not in tool.arguments:
+            if name not in arg_map:
                 self.warning(f"Unexpected argument: {name}")
 
         return result
@@ -492,9 +495,8 @@ class ExecuteToolTemplate(GenerateTemplate):
         This implementation executes the tool and returns the result as a message.
         """
         # Filter out metadata to only include valid arguments
-        valid_args = {
-            k: v for k, v in session.metadata.items() if k in self.tool.arguments
-        }
+        arg_names = {arg.name for arg in self.tool.arguments}
+        valid_args = {k: v for k, v in session.metadata.items() if k in arg_names}
 
         # Execute tool with allow_redundant=True
         self.tool.validate_arguments(valid_args, allow_redundant=True)

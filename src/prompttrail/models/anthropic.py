@@ -21,7 +21,7 @@ from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.errors import ParameterValidationError
 
 if TYPE_CHECKING:
-    from prompttrail.agent.tools import Tool, ToolResult
+    from prompttrail.agent.tools._base import Tool, ToolResult
 
 logger = getLogger(__name__)
 
@@ -77,7 +77,10 @@ class AnthropicConfig(Config):
     def _validate_tools(self) -> None:
         """Anthropic-specific tool validation"""
         super()._validate_tools()
+        from prompttrail.agent.tools._base import Tool
+
         for tool in self.tools:  # type: ignore
+            tool = cast(Tool, tool)  # Cast to Tool type for proper type checking
             if not tool.name.replace("-", "").replace("_", "").isalnum():
                 raise ValueError(
                     f"Tool name must be alphanumeric, hyphen, underscore: {tool.name}"
@@ -97,10 +100,13 @@ class AnthropicModel(Model):
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to Anthropic format"""
+        from prompttrail.agent.tools._base import Tool
+
+        tool = cast(Tool, tool)  # Cast to Tool type for proper type checking
         schema = tool.to_schema()
         properties = {}
-        for name, arg in tool.arguments.items():
-            properties[name] = {
+        for arg in tool.arguments:
+            properties[arg.name] = {
                 "type": "string",  # Currently only supporting string type
                 "description": arg.description,
             }
@@ -111,9 +117,7 @@ class AnthropicModel(Model):
             "input_schema": {
                 "type": "object",
                 "properties": properties,
-                "required": [
-                    name for name, arg in tool.arguments.items() if arg.required
-                ],
+                "required": [arg.name for arg in tool.arguments if arg.required],
             },
         }
 
@@ -123,7 +127,10 @@ class AnthropicModel(Model):
 
     def validate_tools(self, tools: List["Tool"]) -> None:
         """Validate tools according to Anthropic API requirements"""
+        from prompttrail.agent.tools._base import Tool
+
         for tool in tools:
+            tool = cast(Tool, tool)  # Cast to Tool type for proper type checking
             # Validate tool name
             if not tool.name.replace("-", "").replace("_", "").isalnum():
                 raise ParameterValidationError(

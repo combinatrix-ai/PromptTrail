@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 import tempfile
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.core.const import ReachedEndTemplateException
@@ -11,14 +11,14 @@ from prompttrail.core.const import ReachedEndTemplateException
 class ReadFile(Tool):
     name: str = "read_file"
     description: str = "Read content of a specific file"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "path": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="path",
             description="Path to the file to read",
             value_type=str,
             required=True,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
@@ -35,20 +35,20 @@ class ReadFile(Tool):
 class TreeDirectory(Tool):
     name: str = "tree_directory"
     description: str = "Display directory structure from cwd in a tree-like format"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "max_depth": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="max_depth",
             description="Maximum depth of directory traversal",
             value_type=int,
             required=False,
         ),
-        "root_dir": ToolArgument(
+        ToolArgument(
             name="root_dir",
             description="Root directory to display. Deafult is current working directory. Respect .gitignore if it exists in the root directory.",
             value_type=str,
             required=False,
         ),
-    }
+    ]
 
     def run_command(self, max_depth: Optional[int], root_dir: Optional[str]) -> str:
         """Get ignore patterns from .gitignore file."""
@@ -134,20 +134,20 @@ class TreeDirectory(Tool):
 class CreateOrOverwriteFile(Tool):
     name: str = "create_or_overwrite_file"
     description: str = "Create a new file or overwrite an existing one"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "path": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="path",
             description="Path where to create/overwrite the file",
             value_type=str,
             required=True,
         ),
-        "content": ToolArgument(
+        ToolArgument(
             name="content",
             description="Content to write to the file",
             value_type=str,
             required=True,
         ),
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
@@ -198,20 +198,20 @@ class CreateOrOverwriteFile(Tool):
 class EditFile(Tool):
     name: str = "edit_file"
     description: str = "Edit a file by applying a diff in SEARCH/REPLACE block format"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "path": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="path",
             description="Path to the file to edit",
             value_type=str,
             required=True,
         ),
-        "diff": ToolArgument(
+        ToolArgument(
             name="diff",
             description="Diff content in format: SEARCH/REPLACE blocks",
             value_type=str,
             required=True,
         ),
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
@@ -560,14 +560,14 @@ class EditFile(Tool):
 class EndConversationTool(Tool):
     name: str = "end_conversation"
     description: str = "End the current conversation"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "message": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="message",
             description="Optional farewell message",
             value_type=str,
             required=False,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         message = args.get("message", None)
@@ -578,14 +578,14 @@ class EndConversationTool(Tool):
 class ExecuteCommand(Tool):
     name: str = "execute_command"
     description: str = "You can run any linux command with arguments like: ls, git status, git commit --amend --no-edit. Dangerous operation is reviewed by user."
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "command": ToolArgument(
+    arguments: List[ToolArgument[Any]] = [
+        ToolArgument(
             name="command",
             description="Command to run.",
             value_type=str,
             required=False,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         if "command" not in args:

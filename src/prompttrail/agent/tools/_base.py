@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Any, Dict, Generic, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -38,11 +38,22 @@ class Tool(BaseModel, Debuggable):
 
     name: str
     description: str
-    arguments: Dict[str, ToolArgument[Any]]
+    arguments: List[ToolArgument[Any]]
     logger: Logger = None  # type: ignore
     enable_logging: bool = True
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def get_argument(self, name: str) -> Optional[ToolArgument[Any]]:
+        """Get argument by name."""
+        for arg in self.arguments:
+            if arg.name == name:
+                return arg
+        return None
+
+    def get_arguments_dict(self) -> Dict[str, ToolArgument[Any]]:
+        """Get arguments as a dictionary for backward compatibility."""
+        return {arg.name: arg for arg in self.arguments}
 
     def model_post_init(self, *args, **kwargs):
         """Configure logging after initialization."""
@@ -51,22 +62,25 @@ class Tool(BaseModel, Debuggable):
 
     def validate_arguments(self, args: Dict[str, Any], allow_redundant=False) -> None:
         """Validate that all required arguments are present and have correct types."""
+        # Create a mapping of argument names for validation
+        arg_map = {arg.name: arg for arg in self.arguments}
+
         # Check for unknown arguments
         if not allow_redundant:
-            unknown_args = set(args.keys()) - set(self.arguments.keys())
+            unknown_args = set(args.keys()) - set(arg_map.keys())
             if unknown_args:
                 raise ParameterValidationError(
                     f"Unexpected argument: {', '.join(unknown_args)}"
                 )
 
         # Check for required arguments
-        for name, arg in self.arguments.items():
-            if arg.required and name not in args:
-                raise ParameterValidationError(f"Missing required argument: {name}")
+        for arg in self.arguments:
+            if arg.required and arg.name not in args:
+                raise ParameterValidationError(f"Missing required argument: {arg.name}")
 
         # Validate argument types
         for name, value in args.items():
-            arg = self.arguments[name]
+            arg = arg_map[name]
             if not isinstance(value, arg.value_type):
                 raise ParameterValidationError(
                     f"Invalid type for argument {name}: expected {arg.value_type.__name__}, got {type(value).__name__}"
@@ -99,14 +113,12 @@ class Tool(BaseModel, Debuggable):
             "parameters": {
                 "type": "object",
                 "properties": {
-                    name: {
+                    arg.name: {
                         "type": "string" if arg.value_type == str else "number",
                         "description": arg.description,
                     }
-                    for name, arg in self.arguments.items()
+                    for arg in self.arguments
                 },
-                "required": [
-                    name for name, arg in self.arguments.items() if arg.required
-                ],
+                "required": [arg.name for arg in self.arguments if arg.required],
             },
         }

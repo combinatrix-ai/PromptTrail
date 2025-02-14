@@ -28,26 +28,26 @@ class SampleEnumType(enum.Enum):
 class SampleTool(Tool):
     name: str = "test_tool"
     description: str = "test tool"
-    arguments: dict[str, ToolArgument[Any]] = {
-        "arg1": ToolArgument(
+    arguments: list[ToolArgument[Any]] = [
+        ToolArgument(
             name="arg1",
             description="arg1",
             value_type=str,
             required=True,
         ),
-        "arg2": ToolArgument(
+        ToolArgument(
             name="arg2",
             description="arg2",
             value_type=int,
             required=False,
         ),
-        "arg3": ToolArgument(
+        ToolArgument(
             name="arg3",
             description="arg3",
             value_type=SampleEnumType,
             required=False,
         ),
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         return SampleResult(result="test")

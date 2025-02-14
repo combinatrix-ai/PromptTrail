@@ -57,14 +57,14 @@ class ReadImportantFiles(Tool):
     description: str = (
         "Read all files in src/ tests/ examples/ and docs/ and return the content"
     )
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "output": ToolArgument(
+    arguments: list[ToolArgument[Any]] = [
+        ToolArgument(
             name="output",
             description="Output text.",
             value_type=str,
             required=False,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         return ToolResult(content={"result": load_all_important_files()})
@@ -73,14 +73,14 @@ class ReadImportantFiles(Tool):
 class RunTest(Tool):
     name: str = "run_test"
     description: str = "Run standard pytest tests in the project using rye run test"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "output": ToolArgument(
+    arguments: list[ToolArgument[Any]] = [
+        ToolArgument(
             name="output",
             description="Output text.",
             value_type=str,
             required=False,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         return ExecuteCommand().execute(command="rye run test")
@@ -91,14 +91,14 @@ class RunAllTests(Tool):
     description: str = (
         "Run all tests and checks (rye run all) and extract failed test results"
     )
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "output": ToolArgument(
+    arguments: list[ToolArgument[Any]] = [
+        ToolArgument(
             name="output",
             description="Output text.",
             value_type=str,
             required=False,
         )
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         try:

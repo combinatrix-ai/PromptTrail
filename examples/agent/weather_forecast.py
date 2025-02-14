@@ -60,20 +60,20 @@ class WeatherForecastTool(Tool):
 
     name: str = "get_weather_forecast"
     description: str = "Get the current weather in a given location and date"
-    arguments: Dict[str, ToolArgument[Any]] = {
-        "location": ToolArgument(
+    arguments: list[ToolArgument[Any]] = [
+        ToolArgument(
             name="location",
             description="The location to get the weather forecast",
             value_type=str,
             required=True,
         ),
-        "unit": ToolArgument(
+        ToolArgument(
             name="unit",
             description="The unit of temperature (Celsius or Fahrenheit)",
             value_type=str,
             required=False,
         ),
-    }
+    ]
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
         """Execute weather forecast tool

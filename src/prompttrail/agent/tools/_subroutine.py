@@ -53,20 +53,20 @@ class SubroutineTool(Tool):
         super().__init__(
             name=name,
             description=description,
-            arguments={
-                "input": ToolArgument(
+            arguments=[
+                ToolArgument(
                     name="input",
                     description="Input message for the subroutine",
                     value_type=str,
                     required=True,
                 ),
-                "system_message": ToolArgument(
+                ToolArgument(
                     name="system_message",
                     description="Optional system message for the subroutine",
                     value_type=str,
                     required=False,
                 ),
-            },
+            ],
         )
 
         # Use FilteredInheritStrategy to inherit both system and user messages

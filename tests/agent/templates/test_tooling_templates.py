@@ -21,11 +21,11 @@ class WeatherTool(Tool):
         super().__init__(
             name="get_weather",
             description="Get weather information for a city. Returns condition and temperature in celcius.",
-            arguments={
-                "city": ToolArgument(
+            arguments=[
+                ToolArgument(
                     name="city", description="City name", value_type=str, required=True
                 )
-            },
+            ],
         )
 
     def execute(self, **kwargs) -> ToolResult:
@@ -42,20 +42,20 @@ class MockTool(Tool):
 
     name: str = "mock_tool"
     description: str = "Mock tool for testing"
-    arguments: "Dict[str, ToolArgument[Any]]" = {
-        "arg1": ToolArgument(
+    arguments: "list[ToolArgument[Any]]" = [
+        ToolArgument(
             name="arg1",
             description="First argument",
             value_type=str,
             required=True,
         ),
-        "arg2": ToolArgument(
+        ToolArgument(
             name="arg2",
             description="Second argument",
             value_type=int,
             required=False,
         ),
-    }
+    ]
 
     def _execute(self, args: "Dict[str, Any]") -> ToolResult:
         return ToolResult(content={"result": f"Executed with args: {args}"})
