@@ -259,6 +259,7 @@ pluggy==1.5.0
     # via pytest
 prompt-toolkit==3.0.50
     # via ipython
+    # via prompttrail
 proto-plus==1.26.0
     # via google-ai-generativelanguage
     # via google-api-core

@@ -16,8 +16,6 @@ from prompttrail.core import Message, MessageRoleType, Model, Session
 from prompttrail.core.const import ReachedEndTemplateException
 from prompttrail.core.utils import Debuggable
 
-# Session is already imported from prompttrail.core
-
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +24,7 @@ class Runner(Debuggable, metaclass=ABCMeta):
         self,
         model: Model,
         template: "Template",
-        user_interface: UserInterface,
+        user_interface: UserInterface | None,
     ):
         """Abstract class for runner. Runner is a class to run the templates. It is responsible for rendering templates and handling user interactions."""
         super().__init__()
@@ -115,6 +113,16 @@ def pretty_print_metadata(metadata: Dict[str, Any]) -> str:
     return format_dict(metadata)
 
 
+def print_message(message: Message):
+    print("From: " + cutify_role(message.role))
+    if message.content:
+        print("message: ", message.content)
+    if message.tool_use:
+        print("tool_use: ", message.tool_use)
+    if message.metadata:
+        print("metadata: ", pretty_print_metadata(message.metadata))
+
+
 class CommandLineRunner(Runner):
     def run(
         self,
@@ -132,6 +140,9 @@ class CommandLineRunner(Runner):
         Returns:
             Session: Final session of the conversation.
         """
+
+        if self.user_interface is None:
+            self.info("User interface is not set. Running in non-interactive mode.")
 
         # set / update session
         if session is None:
@@ -154,7 +165,7 @@ class CommandLineRunner(Runner):
                 obj = next(gen)
             except ReachedEndTemplateException:
                 self.warning(
-                    "End template %s is reached. Flow is forced to stop.",
+                    "End template %s is reached. Exiting the session.",
                     EndTemplate.template_id,
                 )
                 break
@@ -175,16 +186,21 @@ class CommandLineRunner(Runner):
             elif isinstance(obj, Event):
                 event = obj
                 if isinstance(event, UserInteractionEvent):
+                    if self.user_interface is None:
+                        self.error(
+                            "User interface is not set. But user interaction event is found."
+                        )
+                        raise ValueError("User interface is not set.")
                     instruction = event.instruction or "Input: "
                     default = event.default or None
                     content = self.user_interface.ask(session, instruction, default)
-                    session.messages.append(
-                        Message(
-                            role="user",
-                            content=content,
-                            metadata=session.metadata,
-                        )
+                    message = Message(
+                        role="user",
+                        content=content,
+                        metadata=session.metadata,
                     )
+                    session.messages.append(message)
+                    print_message(message)
                 else:
                     self.warning(f"Unknown event type: {type(event)}")
                     raise ValueError(f"Unknown event type: {type(event)}")
@@ -193,7 +209,7 @@ class CommandLineRunner(Runner):
 
             if max_messages and n_messages >= max_messages:
                 self.warning(
-                    "Max messages %s is reached. Flow is forced to stop.", max_messages
+                    "Max messages %s is reached. Exiting the session.", max_messages
                 )
                 break
             print("=================")

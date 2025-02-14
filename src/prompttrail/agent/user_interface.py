@@ -2,6 +2,12 @@ import logging
 from abc import abstractmethod
 from typing import Dict, Optional
 
+from prompt_toolkit import prompt
+from prompt_toolkit.application import get_app
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.layout.processors import BeforeInput, ConditionalProcessor
+from prompt_toolkit.styles import Style
+
 from prompttrail.core import Session
 from prompttrail.core.const import CONTROL_TEMPLATE_ROLE
 from prompttrail.core.utils import Debuggable
@@ -35,33 +41,49 @@ class CLIInterface(UserInterface):
     def ask(
         self,
         session: Session,
-        description: Optional[str] = "Input> ",
-        default: Optional[str] = None,
+        instruction: str | None = "Input> ",
+        default: str | None = None,
     ) -> str:
         """
-        Ask the user for input via the command line interface.
+        Ask the user for input via the command line with an inline dimmed placeholder.
+
+        - If a default is provided, it is shown dimly as placeholder text.
+        - The placeholder appears only when the input is empty.
+        - Once the user starts typing, the placeholder disappears.
+        - Pressing Enter without typing any input returns the default value.
 
         Args:
-            session: The current session of the conversation.
-            description: The description of the input prompt.
-            default: The default value for the input prompt.
+            session: The current session.
+            description: The prompt text shown to the user.
+            default: The default value to show as a placeholder.
 
         Returns:
-            The user's input as a string.
+            The user's input as a string, or the default if nothing was entered.
         """
-        raw = input(description).strip()
-        while 1:
-            if (not raw) and default is not None:
-                self.info("No input. Using default value: %s", default)
-                raw = default
-            if raw:
-                break
-            else:
-                self.warning(
-                    "You must input something or set default value for template. Please try again."
-                )
-                raw = input(description).strip()
-        return raw
+        if not default:
+            # No placeholder, just a regular prompt.
+            return prompt(instruction).strip()
+
+        # Define a style for the placeholder text.
+        style = Style.from_dict(
+            {"placeholder": "fg:#888888"}  # Dim color for the placeholder
+        )
+
+        # Create an input processor that shows the placeholder only when the buffer is empty.
+        placeholder_processor = ConditionalProcessor(
+            processor=BeforeInput(default, style="class:placeholder"),
+            filter=Condition(lambda: not get_app().current_buffer.text),
+        )
+
+        # Use the input processor in the prompt.
+        user_input = prompt(
+            instruction,
+            style=style,
+            input_processors=[placeholder_processor],
+        ).strip()
+
+        # Return the user input or the default if no input was provided.
+        return user_input or default
 
 
 class MockInterface(UserInterface):
