@@ -99,6 +99,7 @@ chat = "python examples/dogfooding/chat.py"
 agent = "python examples/dogfooding/coding_agent.py"
 commit = { chain = ["format-check", "all", "dogfooding:commit"] }
 commit-skip-test = { chain = ["dogfooding:commit"] }
+"to-text" = "python -c \"from examples.dogfooding.dogfooding_tools import load_all_important_files; print(load_all_important_files())\"" 
 
 [tool.hatch.metadata]
 allow-direct-references = true

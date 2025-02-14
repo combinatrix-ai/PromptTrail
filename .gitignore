@@ -32,4 +32,5 @@ lib
 
 package-test
 
-coding-agent
+# typescript package
+node_modules
