@@ -498,8 +498,7 @@ class ExecuteToolTemplate(GenerateTemplate):
         arg_names = {arg.name for arg in self.tool.arguments}
         valid_args = {k: v for k, v in session.metadata.items() if k in arg_names}
 
-        # Execute tool with allow_redundant=True
-        self.tool.validate_arguments(valid_args, allow_redundant=True)
+        self.tool.runtime_check_arguments(valid_args)
         result = self.tool.execute(**valid_args)
 
         message = Message(

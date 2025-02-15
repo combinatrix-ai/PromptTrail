@@ -1,7 +1,7 @@
 from logging import Logger
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Self, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.utils import Debuggable
@@ -44,6 +44,14 @@ class Tool(BaseModel, Debuggable):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    @model_validator(mode="after")
+    def validate_arguments(self) -> Self:
+        """Validate that arguments are unique by name."""
+        arg_names = [arg.name for arg in self.arguments]
+        if len(arg_names) != len(set(arg_names)):
+            raise ValueError("Arguments must have unique names")
+        return self
+
     def get_argument(self, name: str) -> Optional[ToolArgument[Any]]:
         """Get argument by name."""
         for arg in self.arguments:
@@ -60,18 +68,17 @@ class Tool(BaseModel, Debuggable):
         super().model_post_init(*args, **kwargs)
         self.setup_logger_for_pydantic()
 
-    def validate_arguments(self, args: Dict[str, Any], allow_redundant=False) -> None:
+    def runtime_check_arguments(self, args: Dict[str, Any]) -> None:
         """Validate that all required arguments are present and have correct types."""
         # Create a mapping of argument names for validation
         arg_map = {arg.name: arg for arg in self.arguments}
 
         # Check for unknown arguments
-        if not allow_redundant:
-            unknown_args = set(args.keys()) - set(arg_map.keys())
-            if unknown_args:
-                raise ParameterValidationError(
-                    f"Unexpected argument: {', '.join(unknown_args)}"
-                )
+        unknown_args = set(args.keys()) - set(arg_map.keys())
+        if unknown_args:
+            raise ParameterValidationError(
+                f"Unexpected argument: {', '.join(unknown_args)}"
+            )
 
         # Check for required arguments
         for arg in self.arguments:
@@ -88,7 +95,7 @@ class Tool(BaseModel, Debuggable):
 
     def execute(self, **kwargs) -> ToolResult:
         """Execute the tool after validating arguments."""
-        self.validate_arguments(kwargs)
+        self.runtime_check_arguments(kwargs)
         return self._execute(kwargs)
 
     def _execute(self, args: Dict[str, Any]) -> ToolResult:
