@@ -47,7 +47,7 @@ class TestLRUCacheProvider(unittest.TestCase):
             temperature=0,
             cache_provider=cache_provider,
         )
-        model = OpenAIModel(configuration=config)
+        model = OpenAIModel(config)
 
         message = model.send(session=session)
         self.assertEqual(message.content, message_out.content)
@@ -68,7 +68,7 @@ class TestLRUCacheProvider(unittest.TestCase):
             temperature=0,
             mock_provider=mock_provider,
         )
-        model = OpenAIModel(configuration=config)
+        model = OpenAIModel(config)
 
         message = model.send(session=session)
         self.assertEqual(message.content, "MockResponse")

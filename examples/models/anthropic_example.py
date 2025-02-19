@@ -88,7 +88,7 @@ def main():
         temperature=0,
         tools=[weather_tool],  # Set tools in configuration
     )
-    model = AnthropicModel(configuration=config)
+    model = AnthropicModel(config)
 
     # Create template with tools
     template = LinearTemplate(

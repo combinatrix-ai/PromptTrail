@@ -93,7 +93,7 @@ config = OpenAIConfig(
     temperature=0,
     tools=[weather_tool],
 )
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 
 # Create templates for the conversation
 system = SystemTemplate(

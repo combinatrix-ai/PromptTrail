@@ -165,7 +165,7 @@ if not is_in_test_env():
         api_key=os.environ.get("OPENAI_API_KEY", ""), model_name="gpt-4o-mini"
     )
     runner = CommandLineRunner(
-        model=OpenAIModel(configuration=config),
+        model=OpenAIModel(config),
         template=agent_template,
         user_interface=CLIInterface(),
     )
@@ -199,7 +199,7 @@ else:
         ),
     )
     runner = CommandLineRunner(
-        model=OpenAIModel(configuration=config),
+        model=OpenAIModel(config),
         user_interface=SingleTurnResponseMockInterface(
             conversation_table={
                 # 5300000 * 0.49 * 2.1 = 5453700.0

@@ -38,7 +38,7 @@ class TestOpenAIChatCompletionModelMock(unittest.TestCase):
             max_tokens=1024,
             mock_provider=self.mock_provider,
         )
-        self.models = OpenAIModel(configuration=config)
+        self.models = OpenAIModel(config)
 
     def test_send_with_known_message(self):
         session = Session(messages=[Message(content="Hello", role="user")])

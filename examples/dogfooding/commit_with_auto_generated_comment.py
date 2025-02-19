@@ -225,7 +225,7 @@ def main(
         temperature=0.7,
         max_tokens=1000,
     )
-    model = AnthropicModel(configuration=configuration)
+    model = AnthropicModel(configuration)
 
     runner = CommandLineRunner(
         model=model,

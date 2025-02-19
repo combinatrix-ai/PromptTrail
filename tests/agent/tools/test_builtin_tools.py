@@ -287,7 +287,7 @@ def test_end_conversation_with_llm():
             }
         ),
     )
-    mock_model = OpenAIModel(configuration=config)
+    mock_model = OpenAIModel(config)
 
     # Create template with system instruction and tool
     template = LinearTemplate(

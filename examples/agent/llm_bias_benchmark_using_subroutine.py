@@ -54,7 +54,7 @@ def main():
     # Initialize models
     models = {
         "claude-3-5-haiku-latest": AnthropicModel(
-            configuration=AnthropicConfig(
+            AnthropicConfig(
                 api_key=os.environ["ANTHROPIC_API_KEY"],
                 model_name="claude-3-5-haiku-latest",
                 max_tokens=1000,
@@ -62,7 +62,7 @@ def main():
             )
         ),
         "gpt-4o-mini": OpenAIModel(
-            configuration=OpenAIConfig(
+            OpenAIConfig(
                 api_key=os.environ["OPENAI_API_KEY"],
                 model_name="gpt-4o-mini",
                 max_tokens=1000,

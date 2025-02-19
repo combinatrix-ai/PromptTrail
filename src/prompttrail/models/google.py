@@ -72,12 +72,13 @@ class GoogleConfig(Config):
 class GoogleModel(Model):
     """Google API model implementation."""
 
-    configuration: GoogleConfig
-    model_config = ConfigDict(protected_namespaces=())
+    def __init__(self, config: GoogleConfig) -> None:
+        super().__init__(config)
+        self.config: GoogleConfig = config
 
     def _authenticate(self) -> None:
         """Configure API authentication."""
-        genai.configure(api_key=self.configuration.api_key)
+        genai.configure(api_key=self.config.api_key)
 
     def validate_session(self, session: Session, is_async: bool = False) -> None:
         """Validate session for Google API requirements.
@@ -108,14 +109,14 @@ class GoogleModel(Model):
         """Send request to Google API and return the response."""
         self._authenticate()
 
-        model = genai.GenerativeModel(self.configuration.model_name)
+        model = genai.GenerativeModel(self.config.model_name)
         chat = model.start_chat()
 
-        if self.configuration.context:
-            chat.send_message(self.configuration.context)
+        if self.config.context:
+            chat.send_message(self.config.context)
 
-        if self.configuration.examples:
-            for example in self.configuration.examples:
+        if self.config.examples:
+            for example in self.config.examples:
                 chat.send_message(example.prompt)
                 chat.send_message(example.response)
 
@@ -125,11 +126,11 @@ class GoogleModel(Model):
         response = chat.send_message(
             session.messages[-1].content,
             generation_config=genai.types.GenerationConfig(
-                temperature=self.configuration.temperature,
-                candidate_count=self.configuration.candidate_count,
-                top_p=self.configuration.top_p,
-                top_k=self.configuration.top_k,
-                max_output_tokens=self.configuration.max_tokens,
+                temperature=self.config.temperature,
+                candidate_count=self.config.candidate_count,
+                top_p=self.config.top_p,
+                top_k=self.config.top_k,
+                max_output_tokens=self.config.max_tokens,
             ),
         )
 

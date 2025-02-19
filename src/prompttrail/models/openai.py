@@ -5,7 +5,6 @@ from typing import Any, Dict, Generator, List, Literal, Optional
 
 import openai
 from openai import OpenAI
-from pydantic import ConfigDict
 
 from prompttrail.agent.tools import Tool
 from prompttrail.core import Config, Message, Model, Session
@@ -54,16 +53,17 @@ class OpenAIConfig(Config):
 class OpenAIModel(Model):
     """Model class for OpenAI Chat API."""
 
-    configuration: OpenAIConfig
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    client: Optional[OpenAI] = None
+    # configuration: OpenAIConfig
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
+    # client: Optional[OpenAI] = None
 
-    def _authenticate(self) -> None:
-        """Configure OpenAI API authentication."""
+    def __init__(self, config: OpenAIConfig) -> None:
+        super().__init__(config)
+        self.config: OpenAIConfig = config
         self.client = OpenAI(
-            api_key=self.configuration.api_key,
-            organization=self.configuration.organization_id,
-            base_url=self.configuration.api_base,
+            api_key=config.api_key,
+            organization=config.organization_id,
+            base_url=config.api_base,
         )
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
@@ -111,22 +111,21 @@ class OpenAIModel(Model):
 
     def _send(self, session: Session) -> Message:
         """Send messages and return the response."""
-        self._authenticate()
         messages = self._session_to_openai_messages(session)
 
         # Create parameters for OpenAI API
         create_params: Dict[str, Any] = {
-            "model": self.configuration.model_name,
+            "model": self.config.model_name,
             "messages": messages,
         }
 
-        if self.configuration.temperature is not None:
-            create_params["temperature"] = self.configuration.temperature
-        if self.configuration.max_tokens is not None:
-            create_params["max_tokens"] = self.configuration.max_tokens
+        if self.config.temperature is not None:
+            create_params["temperature"] = self.config.temperature
+        if self.config.max_tokens is not None:
+            create_params["max_tokens"] = self.config.max_tokens
 
-        if session.available_tools or self.configuration.tools:
-            if session.available_tools and self.configuration.tools:
+        if session.available_tools or self.config.tools:
+            if session.available_tools and self.config.tools:
                 self.info(
                     "Both template tools and model tools are present. Using template tools."
                 )
@@ -136,10 +135,10 @@ class OpenAIModel(Model):
                     for tool in session.available_tools
                 ]
             else:
-                if self.configuration.tools:
+                if self.config.tools:
                     create_params["tools"] = [
                         {"type": "function", "function": self.format_tool(tool)}
-                        for tool in self.configuration.tools
+                        for tool in self.config.tools
                     ]
         response = self.client.chat.completions.create(**create_params)  # type: ignore
         self.debug("Response: %s", pformat(response))
@@ -165,25 +164,24 @@ class OpenAIModel(Model):
         yield_type: Literal["all", "new"] = "new",
     ) -> Generator[Message, None, None]:
         """Send messages asynchronously and return the response."""
-        self._authenticate()
         messages = self._session_to_openai_messages(session)
 
         # Create parameters for OpenAI API
         create_params: Dict[str, Any] = {
-            "model": self.configuration.model_name,
+            "model": self.config.model_name,
             "messages": messages,
             "stream": True,
         }
 
-        if self.configuration.temperature is not None:
-            create_params["temperature"] = self.configuration.temperature
-        if self.configuration.max_tokens is not None:
-            create_params["max_tokens"] = self.configuration.max_tokens
+        if self.config.temperature is not None:
+            create_params["temperature"] = self.config.temperature
+        if self.config.max_tokens is not None:
+            create_params["max_tokens"] = self.config.max_tokens
 
-        if self.configuration.tools:
+        if self.config.tools:
             create_params["tools"] = [
                 {"type": "function", "function": self.format_tool(tool)}
-                for tool in self.configuration.tools
+                for tool in self.config.tools
             ]
 
         response: openai.Stream = self.client.chat.completions.create(**create_params)  # type: ignore
@@ -207,6 +205,5 @@ class OpenAIModel(Model):
 
     def list_models(self) -> List[str]:
         """Return a list of available models."""
-        self._authenticate()
         response = self.client.models.list()  # type: ignore
         return [model.id for model in response.data]  # type: ignore

@@ -30,20 +30,20 @@ def mock_model():
 def test_validate_session(mock_model):
     # Test malformed sessions
     run_malformed_sessions_test(
-        mock_model, mock_model.configuration, supports_tool_result=False
+        mock_model, mock_model.config, supports_tool_result=False
     )
 
 
 def test_basic_message(mock_model):
     # Basic message handling
-    run_basic_message_test(mock_model, mock_model.configuration, "mock response")
+    run_basic_message_test(mock_model, mock_model.config, "mock response")
 
 
 def test_system_message(mock_model):
     # System message handling
     run_system_message_test(
         mock_model,
-        mock_model.configuration,
+        mock_model.config,
         "mock response",
         user_message="Calculate 14+13",
     )

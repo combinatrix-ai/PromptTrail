@@ -174,7 +174,7 @@ def test_subroutine_template_execution():
 
     runner = CommandLineRunner(
         model=OpenAIModel(
-            configuration=OpenAIConfig(
+            OpenAIConfig(
                 api_key="dummy",
             ),
         ),

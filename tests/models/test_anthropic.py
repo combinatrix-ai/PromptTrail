@@ -21,7 +21,7 @@ class TestAnthropic(unittest.TestCase):
             max_tokens=100,
             temperature=0,
         )
-        self.model = AnthropicModel(configuration=self.config)
+        self.model = AnthropicModel(config=self.config)
 
     def test_model_send(self):
         # Basic message handling

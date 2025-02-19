@@ -77,7 +77,7 @@ def create_weather_api():
         temperature=0,
         tools=[weather_tool],
     )
-    model = OpenAIModel(configuration=config)
+    model = OpenAIModel(config)
 
     # Create templates
     system = SystemTemplate(

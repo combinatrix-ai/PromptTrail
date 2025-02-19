@@ -18,7 +18,7 @@ config = OpenAIConfig(
     ),
 )
 
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 
 session = Session(
     messages=[

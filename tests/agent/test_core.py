@@ -31,7 +31,7 @@ config = OpenAIConfig(
     model_name="gpt-4o-mini",
     mock_provider=EchoMockProvider(role="assistant"),
 )
-echo_mock_model = OpenAIModel(configuration=config)
+echo_mock_model = OpenAIModel(config)
 
 
 def test_linear_template():

@@ -77,7 +77,7 @@ def write_release_note(
         )
 
     model = GoogleModel(
-        configuration=GoogleConfig(
+        GoogleConfig(
             # As changes are long, gemini is best suited for this task
             model_name="gemini-2.0-flash-thinking-exp-01-21",
             api_key=os.environ["GOOGLE_CLOUD_API_KEY"],

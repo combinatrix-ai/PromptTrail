@@ -82,7 +82,7 @@ configuration = AnthropicConfig(
     max_tokens=4096,
     tools=tools_to_use,
 )
-model = AnthropicModel(configuration=configuration)
+model = AnthropicModel(configuration)
 
 runner = CommandLineRunner(
     model=model,
