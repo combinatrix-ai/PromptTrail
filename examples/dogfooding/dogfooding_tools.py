@@ -7,16 +7,15 @@ from typing import Any, Dict
 
 from tqdm import tqdm
 
-from prompttrail.agent.subroutine.session_init_strategy import CleanSessionStrategy
-from prompttrail.agent.subroutine.squash_strategy import LastMessageStrategy
 from prompttrail.agent.templates import (
+    AssistantTemplate,
     ExecuteToolTemplate,
     LinearTemplate,
     SystemTemplate,
 )
-from prompttrail.agent.templates._core import AssistantTemplate
-from prompttrail.agent.tools import SubroutineTool, Tool, ToolArgument, ToolResult
+from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.tools.builtin import ExecuteCommand
+from prompttrail.core import Session
 
 
 def disable_noisy_loggers():
@@ -66,7 +65,7 @@ class ReadImportantFiles(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         return ToolResult(content={"result": load_all_important_files()})
 
 
@@ -82,8 +81,8 @@ class RunTest(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
-        return ExecuteCommand().execute(command="rye run test")
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
+        return ExecuteCommand().execute(session=session, command="rye run test")
 
 
 class RunAllTests(Tool):
@@ -100,7 +99,7 @@ class RunAllTests(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         try:
             # Run rye run all
             result = subprocess.run(
@@ -200,12 +199,4 @@ If everything is okay, you can just say "All tests passed successfully."
         ),
         AssistantTemplate(),
     ]
-)
-
-RunAllTestsWithSummary = SubroutineTool(
-    name="run_all_tests_with_summary",
-    description="Run all tests and checks and extract failed test results",
-    template=RunAllTestsWithSummaryTemplate,
-    session_init_strategy=CleanSessionStrategy(),
-    squash_strategy=LastMessageStrategy(),
 )

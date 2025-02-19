@@ -75,7 +75,7 @@ class WeatherForecastTool(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         """Execute weather forecast tool
 
         This is a mock implementation that always returns the same data.

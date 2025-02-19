@@ -47,7 +47,9 @@ class EndConversationTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(
+        self, args: Dict[str, Any], session: Session
+    ) -> ToolResult:
         message = args.get("message", "Conversation ended.")
         result = ToolResult(
             content=json.dumps({

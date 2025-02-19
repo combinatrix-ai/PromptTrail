@@ -172,7 +172,6 @@ curl http://localhost:8000/sessions/{session_id}
 All runners share these core capabilities:
 
 - **Session Management**: Continue conversations by passing existing sessions
-- **Template Search**: Find templates by ID using `runner.search_template()`
 - **Debug Mode**: Enable detailed logging with `debug_mode=True`
 - **Message Limits**: Control conversation length with `max_messages`
 
@@ -489,7 +488,7 @@ class Session(BaseModel):
 
 Other attributes can also be accessed:
 
-- `runner`: You can access the runner itself. If you want to search templates passed to the runner, you can use `session.runner.search_template`.
+- `runner`: You can access the runner itself.
 
 - `stack`: You can access the template stack. This is used for template control flow.
 
@@ -573,7 +572,9 @@ class WeatherForecastTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(
+        self, args: Dict[str, Any], session: Session
+    ) -> ToolResult:
         """Execute the weather forecast tool
         
         This is where the actual weather data fetching would happen.

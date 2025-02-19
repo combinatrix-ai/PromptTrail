@@ -2,6 +2,7 @@ import json
 from unittest.mock import Mock, patch
 
 from examples.dogfooding.dogfooding_tools import RunAllTests
+from prompttrail.core import Session
 
 
 def test_run_all_tests_success():
@@ -13,7 +14,9 @@ def test_run_all_tests_success():
 
     with patch("subprocess.run", return_value=mock_process):
         tool = RunAllTests()
-        result = tool.execute()
+        result = tool.execute(
+            Session(),
+        )
         result_data = json.loads(result.content)
 
         assert result_data["status"] == "success"
@@ -36,7 +39,9 @@ FAILED tests/test_other.py::test_other - ValueError: invalid value
 
     with patch("subprocess.run", return_value=mock_process):
         tool = RunAllTests()
-        result = tool.execute()
+        result = tool.execute(
+            Session(),
+        )
         result_data = json.loads(result.content)
 
         assert result_data["status"] == "error"
@@ -70,7 +75,9 @@ src/other.py:20: error: Name 'undefined_var' is not defined
 
     with patch("subprocess.run", return_value=mock_process):
         tool = RunAllTests()
-        result = tool.execute()
+        result = tool.execute(
+            Session(),
+        )
         result_data = json.loads(result.content)
 
         assert result_data["status"] == "error"
@@ -107,7 +114,9 @@ src/other.py:25:80: E501 line too long (100 > 79 characters)
 
     with patch("subprocess.run", return_value=mock_process):
         tool = RunAllTests()
-        result = tool.execute()
+        result = tool.execute(
+            Session(),
+        )
         result_data = json.loads(result.content)
 
         assert result_data["status"] == "error"
@@ -139,7 +148,9 @@ def test_run_all_tests_execution_error():
     # Mock execution error
     with patch("subprocess.run", side_effect=Exception("Command execution failed")):
         tool = RunAllTests()
-        result = tool.execute()
+        result = tool.execute(
+            Session(),
+        )
         result_data = json.loads(result.content)
 
         assert result_data["status"] == "error"

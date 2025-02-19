@@ -293,7 +293,9 @@ class WeatherForecastTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(
+        self, args: Dict[str, Any], session: Session
+    ) -> ToolResult:
         """Execute the weather forecast tool"""
         # Implement real API call here
         return WeatherForecastResult(

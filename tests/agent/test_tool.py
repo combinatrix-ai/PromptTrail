@@ -8,6 +8,7 @@ import pytest
 
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.tools.builtin import EditFile
+from prompttrail.core import Session
 from prompttrail.core.errors import ParameterValidationError
 
 
@@ -49,7 +50,7 @@ class SampleTool(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         return SampleResult(result="test")
 
 
@@ -71,22 +72,22 @@ def test_tool_validation():
     with pytest.raises(
         ParameterValidationError, match="Missing required argument: arg1"
     ):
-        tool.execute()
+        tool.execute(Session())
 
     # Test invalid argument type
     with pytest.raises(
         ParameterValidationError, match="Invalid type for argument arg2"
     ):
-        tool.execute(arg1="test", arg2="invalid")
+        tool.execute(Session(), arg1="test", arg2="invalid")
 
     # Test invalid enum value
     with pytest.raises(
         ParameterValidationError, match="Invalid type for argument arg3"
     ):
-        tool.execute(arg1="test", arg3="invalid")
+        tool.execute(Session(), arg1="test", arg3="invalid")
 
     # Test valid arguments
-    result = tool.execute(arg1="test", arg2=1, arg3=SampleEnumType.A)
+    result = tool.execute(Session(), arg1="test", arg2=1, arg3=SampleEnumType.A)
     assert isinstance(result, ToolResult)
     assert isinstance(result.content, str)
 
@@ -102,6 +103,7 @@ def test_edit_file_with_diff(test_file: Path):
 
     # Test successful diff application
     result = tool.execute(
+        session=Session(),
         path=str(test_file),
         diff="""<<<<<<< SEARCH
 Hello World!
@@ -114,13 +116,14 @@ Hi Universe!
     assert "Hi Universe!" in test_file.read_text()
 
     # Test invalid diff format
-    result = tool.execute(path=str(test_file), diff="Invalid diff format")
+    result = tool.execute(Session(), path=str(test_file), diff="Invalid diff format")
     result_dict = eval(result.content)
     assert result_dict["status"] == "error"
     assert "Invalid diff format" in result_dict["reason"]
 
     # Test non-matching search block
     result = tool.execute(
+        Session(),
         path=str(test_file),
         diff="""<<<<<<< SEARCH
 This text does not exist

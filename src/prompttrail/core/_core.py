@@ -270,6 +270,7 @@ class Session(BaseModel):
 
     # Runner and template related fields
     runner: Optional["Runner"] = Field(default=None, exclude=True)
+    available_tools: Optional[List["Tool"]] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
     jump_to_id: Optional[str] = Field(default=None)
@@ -298,6 +299,7 @@ class Session(BaseModel):
             stack=stack,
             jump_to_id=jump_to_id,
         )
+        self.available_tools = []
 
     def __hash__(self) -> int:
         return hash(tuple(self.messages))

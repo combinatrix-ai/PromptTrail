@@ -3,7 +3,7 @@ import json
 import logging
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Set, cast
+from typing import Any, Dict, Optional, cast
 from uuid import uuid4
 
 import uvicorn
@@ -32,15 +32,8 @@ class Runner(Debuggable, metaclass=ABCMeta):
         super().__init__()
         self.model = model
         self.user_interface = user_interface
+        # template must be set in order to check which template is using, like in tooling, you need to know the tools to use but unable to pass it through session
         self.template = template
-        self.template_dict: Dict[str, Template] = {}
-        visited_templates: Set[Template] = set()
-        for next_template in template.walk(visited_templates):
-            if next_template.template_id in self.template_dict:
-                raise ValueError(
-                    f"Template id {next_template.template_id} is duplicated."
-                )
-            self.template_dict[next_template.template_id] = next_template
 
     @abstractmethod
     def run(
@@ -51,14 +44,6 @@ class Runner(Debuggable, metaclass=ABCMeta):
     ) -> "Session":
         """All runners should implement this method. This method should run the templates and return the final session."""
         raise NotImplementedError("run method is not implemented")
-
-    def search_template(self, template_like: str) -> "Template":
-        """Search template by template id. If template id is not found, raise ValueError."""
-        if template_like == EndTemplate.template_id:
-            return EndTemplate()
-        if template_like not in self.template_dict:
-            raise ValueError(f"Template id {template_like} is not found.")
-        return self.template_dict[template_like]
 
 
 def cutify_role(role: MessageRoleType) -> str:

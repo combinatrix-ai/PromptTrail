@@ -1,22 +1,26 @@
 import copy
-from typing import Generator, List
+from typing import Generator, List, Optional
+from unittest.mock import Mock
 
 import pytest
 
-from prompttrail.agent.runners import Runner
+from prompttrail.agent.runners import CommandLineRunner, Runner
 from prompttrail.agent.subroutine import SubroutineTemplate
 from prompttrail.agent.subroutine.session_init_strategy import (
-    CleanSessionStrategy,
     FilteredInheritStrategy,
+    InheritMetadataStrategy,
     InheritSystemStrategy,
     LastNMessagesStrategy,
 )
 from prompttrail.agent.subroutine.squash_strategy import (
     FilterByRoleStrategy,
     LastMessageStrategy,
+    LLMFilteringStrategy,
+    LLMSummarizingStrategy,
 )
 from prompttrail.agent.templates import Stack, Template
 from prompttrail.core import Message, Model, Session
+from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 
 class MockTemplate(Template):
@@ -55,7 +59,7 @@ def test_clean_session_strategy():
     parent_session = Session()
     parent_session.append(Message(role="user", content="test"))
 
-    strategy = CleanSessionStrategy()
+    strategy = InheritMetadataStrategy()
     new_session = strategy.initialize(parent_session)
 
     assert len(new_session.messages) == 0
@@ -164,11 +168,21 @@ def test_subroutine_template_execution():
 
     subroutine = SubroutineTemplate(
         template=mock_template,
-        session_init_strategy=CleanSessionStrategy(),
+        session_init_strategy=InheritMetadataStrategy(),
         squash_strategy=LastMessageStrategy(),
     )
 
-    messages = list(subroutine.render(parent_session))
+    runner = CommandLineRunner(
+        model=OpenAIModel(
+            configuration=OpenAIConfig(
+                api_key="dummy",
+            ),
+        ),
+        template=subroutine,
+        user_interface=None,
+    )
+
+    messages = list(runner.run(parent_session).messages)
 
     assert len(messages) == 2
     assert len(parent_session.messages) == 2  # system + last message
@@ -284,3 +298,131 @@ def test_subroutine_environment_isolation():
     # Verify that parent session's runner is unchanged
     assert parent_session.runner.model.send(parent_session).content == "parent response"
     assert temp_session.runner.model.send(temp_session).content == "modified response"
+
+
+class SimpleTemplate(Template):
+    """Simple template for testing that echoes input with prefix"""
+
+    def __init__(self, template_id: Optional[str] = None):
+        super().__init__(template_id=template_id)
+
+    def _render(self, session: Session) -> Generator[Message, None, Session]:
+        # Debug log session state
+        self.debug(f"SimpleTemplate._render session messages: {session.messages}")
+
+        # Find user message
+        for msg in reversed(session.messages):
+            if msg.role == "user":
+                yield Message(role="assistant", content=f"Echo: {msg.content}")
+                return session
+
+        # Handle case where no user message is found
+        yield Message(role="assistant", content="No input message found")
+        return session
+
+    def create_stack(self, session: Session):
+        return super().create_stack(session)
+
+
+def test_llm_filtering_strategy():
+    # Set up mock
+    mock_model = Mock()
+    mock_model.send.return_value = Message(
+        role="assistant", content="0,2"
+    )  # Keep first and third messages
+
+    # Test messages
+    messages = [
+        Message(role="user", content="Hello"),
+        Message(role="assistant", content="Hi there"),
+        Message(role="user", content="What's the weather today?"),
+        Message(role="assistant", content="It's sunny"),
+    ]
+
+    # Custom prompt
+    prompt = """
+Select important message indices from the conversation below (comma-separated):
+
+{conversation}
+
+Selected indices (0-based):
+"""
+
+    # Create strategy and test
+    strategy = LLMFilteringStrategy(model=mock_model, prompt=prompt)
+    result = strategy.squash(messages)
+
+    # Assertions
+    assert len(result) == 2
+    assert result[0].content == "Hello"
+    assert result[1].content == "What's the weather today?"
+
+    # Verify mock calls
+    mock_model.send.assert_called_once()
+    call_args = mock_model.send.call_args[0][0].messages[0].content
+    assert "conversation" in prompt
+    assert "Hello" in call_args
+    assert "What's the weather today?" in call_args
+
+
+def test_llm_summarizing_strategy():
+    # Set up mock
+    mock_model = Mock()
+    mock_model.send.return_value = Message(
+        role="assistant", content="User greeted and asked about the weather"
+    )
+
+    # Test messages
+    messages = [
+        Message(role="user", content="Hello"),
+        Message(role="assistant", content="Hi there"),
+        Message(role="user", content="What's the weather today?"),
+        Message(role="assistant", content="It's sunny"),
+    ]
+
+    # Custom prompt
+    prompt = """
+Summarize the conversation below:
+
+{conversation}
+
+Summary:
+"""
+
+    # Create strategy and test
+    strategy = LLMSummarizingStrategy(model=mock_model, prompt=prompt)
+    result = strategy.squash(messages)
+
+    # Assertions
+    assert len(result) == 1
+    assert result[0].role == "assistant"
+    assert result[0].content == "User greeted and asked about the weather"
+
+    # Verify mock calls
+    mock_model.send.assert_called_once()
+    call_args = mock_model.send.call_args[0][0].messages[0].content
+    assert "conversation" in prompt
+    assert "Hello" in call_args
+    assert "What's the weather today?" in call_args
+
+
+def test_llm_filtering_strategy_empty_messages():
+    # Test empty message list
+    mock_model = Mock()
+    strategy = LLMFilteringStrategy(model=mock_model, prompt="")
+    result = strategy.squash([])
+
+    # Assertions
+    assert len(result) == 0
+    mock_model.send.assert_not_called()
+
+
+def test_llm_summarizing_strategy_empty_messages():
+    # Test empty message list
+    mock_model = Mock()
+    strategy = LLMSummarizingStrategy(model=mock_model, prompt="")
+    result = strategy.squash([])
+
+    # Assertions
+    assert len(result) == 0
+    mock_model.send.assert_not_called()

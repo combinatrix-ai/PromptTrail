@@ -97,7 +97,7 @@ class AnthropicModel(Model):
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to Anthropic format"""
-        schema = tool.to_schema()
+        schema = tool.to_openai_schema()
         properties = {}
         for name, arg in tool.arguments.items():
             properties[name] = {
@@ -145,6 +145,12 @@ class AnthropicModel(Model):
         self._authenticate()
         messages, system_prompt = self._session_to_anthropic_messages(session)
 
+        # TODO: Structured check
+        if not messages:
+            raise ValueError(
+                "Anthropic requires at least one user message except system"
+            )
+
         # Convert AnthropicMessageDict to MessageDict for tool use check
         [dict(msg) for msg in messages]
 
@@ -165,9 +171,9 @@ class AnthropicModel(Model):
             create_params["system"] = system_prompt
 
         # Add tools if present
-        if self.configuration.tools:
+        if session.available_tools:
             create_params["tools"] = [
-                self.format_tool(tool) for tool in self.configuration.tools
+                self.format_tool(tool) for tool in session.available_tools
             ]
 
         if self.client is None:

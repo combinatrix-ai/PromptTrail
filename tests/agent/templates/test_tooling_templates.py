@@ -28,8 +28,8 @@ class WeatherTool(Tool):
             },
         )
 
-    def execute(self, **kwargs) -> ToolResult:
-        city = kwargs["city"]
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
+        city = args["city"]
         return ToolResult(
             content={"temperature": 20, "condition": "sunny", "city": city}
         )
@@ -57,7 +57,7 @@ class MockTool(Tool):
         ),
     }
 
-    def _execute(self, args: "Dict[str, Any]") -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         return ToolResult(content={"result": f"Executed with args: {args}"})
 
 

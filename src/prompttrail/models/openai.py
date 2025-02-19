@@ -1,8 +1,10 @@
+import json
 import logging
 from pprint import pformat
 from typing import Any, Dict, Generator, List, Literal, Optional
 
 import openai
+from openai import OpenAI
 from pydantic import ConfigDict
 
 from prompttrail.agent.tools import Tool
@@ -54,20 +56,19 @@ class OpenAIModel(Model):
 
     configuration: OpenAIConfig
     model_config = ConfigDict(arbitrary_types_allowed=True)
+    client: Optional[OpenAI] = None
 
     def _authenticate(self) -> None:
         """Configure OpenAI API authentication."""
-        openai.api_key = self.configuration.api_key
-        if self.configuration.organization_id:
-            openai.organization = self.configuration.organization_id
-        if self.configuration.api_base:
-            openai.base_url = self.configuration.api_base
-        if self.configuration.api_version:
-            openai.api_version = self.configuration.api_version
+        self.client = OpenAI(
+            api_key=self.configuration.api_key,
+            organization=self.configuration.organization_id,
+            base_url=self.configuration.api_base,
+        )
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to OpenAI format."""
-        schema = tool.to_schema()
+        schema = tool.to_openai_schema()
         return {
             "name": schema["name"],
             "description": schema["description"],
@@ -89,41 +90,21 @@ class OpenAIModel(Model):
             elif message.role == "user":
                 result.append({"content": message.content, "role": "user"})
             elif message.role == "assistant":
-                if "function_call" in message.metadata:
-                    result.append(
-                        {
-                            "content": message.content,
-                            "role": "assistant",
-                            "function_call": message.metadata["function_call"],
-                        }
-                    )
+                if message.tool_use:
+                    result.append(message.tool_use)
                 else:
                     result.append({"content": message.content, "role": "assistant"})
             elif message.role == "tool_result":
-                # Convert tool_result to function for OpenAI API
-                for j in range(i - 1, -1, -1):
-                    prev_message = messages[j]
-                    if (
-                        prev_message.role == "assistant"
-                        and "function_call" in prev_message.metadata
-                    ):
-                        name = prev_message.metadata["function_call"].get("name")
-                        if name:
-                            result.append(
-                                {
-                                    "content": str(message.content),
-                                    "role": "function",
-                                    "name": name,
-                                }
-                            )
-                            break
-                else:
-                    result.append(
-                        {
-                            "content": str(message.content),
-                            "role": "assistant",
-                        }
-                    )
+                # unpack content
+                content = json.loads(message.content)
+                result.append(
+                    {
+                        "content": json.dumps(content["content"]),
+                        # TODO: decide how to handle tool call id
+                        "tool_call_id": content["tool_call_id"],
+                        "role": "tool",
+                    }
+                )
             else:
                 raise ValueError(f"Unsupported role: {message.role}")
         return result
@@ -144,29 +125,37 @@ class OpenAIModel(Model):
         if self.configuration.max_tokens is not None:
             create_params["max_tokens"] = self.configuration.max_tokens
 
-        if self.configuration.tools:
-            create_params["tools"] = [
-                {"type": "function", "function": self.format_tool(tool)}
-                for tool in self.configuration.tools
-            ]
-
-        response = openai.chat.completions.create(**create_params)  # type: ignore
+        if session.available_tools or self.configuration.tools:
+            if session.available_tools and self.configuration.tools:
+                self.info(
+                    "Both template tools and model tools are present. Using template tools."
+                )
+            if session.available_tools:
+                create_params["tools"] = [
+                    {"type": "function", "function": self.format_tool(tool)}
+                    for tool in session.available_tools
+                ]
+            else:
+                if self.configuration.tools:
+                    create_params["tools"] = [
+                        {"type": "function", "function": self.format_tool(tool)}
+                        for tool in self.configuration.tools
+                    ]
+        response = self.client.chat.completions.create(**create_params)  # type: ignore
         self.debug("Response: %s", pformat(response))
 
         message = response.choices[0].message  # type: ignore
         content = message.content  # type: ignore
         if content is None:
-            content = ""
-
-        result = Message(content=content, role=message.role)  # type: ignore
-
-        # Process tool call results
-        if message.tool_calls:
-            tool_call = message.tool_calls[0]  # Currently handle only first call
-            result.metadata["function_call"] = {
-                "name": tool_call.function.name,
-                "arguments": tool_call.function.arguments,
-            }
+            content = "Tool Call Request"
+            # TODO: handle multiple tool calls
+            assert len(message.tool_calls) == 1, "Only one tool call is supported"
+            # Save whole message as tool use to send it later
+            result = Message(
+                content=content, role=message.role, tool_use=message.to_dict()
+            )
+        else:
+            result = Message(content=content, role=message.role)
 
         return result
 
@@ -197,7 +186,7 @@ class OpenAIModel(Model):
                 for tool in self.configuration.tools
             ]
 
-        response: openai.Stream = openai.chat.completions.create(**create_params)  # type: ignore
+        response: openai.Stream = self.client.chat.completions.create(**create_params)  # type: ignore
         self.debug("Response: %s", pformat(response))
 
         all_text: str = ""
@@ -219,5 +208,5 @@ class OpenAIModel(Model):
     def list_models(self) -> List[str]:
         """Return a list of available models."""
         self._authenticate()
-        response = openai.models.list()
+        response = self.client.models.list()  # type: ignore
         return [model.id for model in response.data]  # type: ignore
