@@ -9,6 +9,7 @@ from prompttrail.agent.templates import SystemTemplate, ToolingTemplate, UserTem
 from prompttrail.agent.templates._control import LinearTemplate
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interface import DefaultOrEchoMockInterface
+from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 
@@ -59,7 +60,7 @@ class WeatherForecastTool(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> WeatherForecastResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         """Execute weather forecast tool
 
         This is a mock implementation that always returns the same data.
@@ -87,7 +88,7 @@ def main():
         temperature=0,
         tools=[weather_tool],  # Set tools in configuration
     )
-    model = AnthropicModel(configuration=config)
+    model = AnthropicModel(config)
 
     # Create template with tools
     template = LinearTemplate(

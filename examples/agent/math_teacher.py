@@ -52,7 +52,7 @@ config = OpenAIConfig(
 )
 
 runner = CommandLineRunner(
-    model=OpenAIModel(configuration=config),
+    model=OpenAIModel(config),
     template=template,
     user_interface=CLIInterface(),
 )

@@ -22,7 +22,7 @@ transformers_model = TransformersModel(
 session = Session(messages=[Message(content="Hello", role="user")])
 
 # Send the message to the model and get the response
-response = transformers_model.send(session=session)
+response = transformers_model.send(session)
 
 # Print the assistant's response
 print(f"Assistant: {response.content}")

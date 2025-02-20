@@ -26,7 +26,7 @@ class TestOpenAI(unittest.TestCase):
             temperature=0.0,
             max_tokens=100,
         )
-        self.model = OpenAIModel(configuration=self.config)
+        self.model = OpenAIModel(config=self.config)
 
     def test_model_list(self):
         model_list = self.model.list_models()

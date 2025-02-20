@@ -43,16 +43,19 @@ class UserInteractionEvent(Event):
 
     instruction: Optional[str] = None
     default: Optional[str] = None
+    role: MessageRoleType = "user"
 
     def __init__(
         self,
         payload: Dict[str, Any] = {},
         instruction: Optional[str] = None,
         default: Optional[str] = None,
+        role: MessageRoleType = "user",
     ):
         super().__init__(event_type="user_interaction", payload=payload)
         self.instruction = instruction
         self.default = default
+        self.role = role
 
 
 def check_template_id(template_id: str) -> None:
@@ -371,6 +374,7 @@ class UserTemplate(MessageTemplate):
             yield UserInteractionEvent(
                 instruction=self.description,
                 default=self.default,
+                role=self.role,
             )
             return session
         else:

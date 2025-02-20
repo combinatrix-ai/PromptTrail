@@ -27,7 +27,6 @@ sys.path.append(os.path.abspath("."))
 
 from examples.dogfooding.dogfooding_tools import (
     ReadImportantFiles,
-    RunAllTestsWithSummary,
 )
 
 tools_to_use = [
@@ -38,7 +37,6 @@ tools_to_use = [
     CreateOrOverwriteFile(),
     EditFile(),
     # RunTest(),
-    RunAllTestsWithSummary,
 ]
 
 templates = LinearTemplate(
@@ -84,7 +82,7 @@ configuration = AnthropicConfig(
     max_tokens=4096,
     tools=tools_to_use,
 )
-model = AnthropicModel(configuration=configuration)
+model = AnthropicModel(configuration)
 
 runner = CommandLineRunner(
     model=model,

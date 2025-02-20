@@ -89,7 +89,7 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 >     Message(content="Hey", role="user"),
 >   ]
 > )
-> message = model.send(session=session)
+> message = model.send(session)
 
 Message(content="Hello! How can I assist you today?", role="assistant")
 ```
@@ -126,7 +126,7 @@ For example, you can mock LLMs for testing.
 > session = Session(
 >     messages=[Message(content="Hello", role="user")]
 > )
-> message = model.send(session=session)
+> message = model.send(session)
 > print(message)
 
 Message(content="Hello", role="assistant")  # EchoMockProvider simply returns the same content
@@ -293,7 +293,9 @@ class WeatherForecastTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(
+        self, args: Dict[str, Any], session: Session
+    ) -> ToolResult:
         """Execute the weather forecast tool"""
         # Implement real API call here
         return WeatherForecastResult(

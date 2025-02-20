@@ -68,9 +68,9 @@ session = Session(
     messages = [Message(content="Hello, I'm a human.", role="user")]
 )
 # This time, the model calls the API
-message_1 = model.send(session=session)
+message_1 = model.send(session)
 # This time, the model returns the cached message
-message_2 = model.send(session=session)
+message_2 = model.send(session)
 ```
 
 Internally, `CacheProvider` has two methods:
@@ -121,7 +121,7 @@ from prompttrail.core import Session, Message
 session = Session(
     messages = [Message(content="Hello", role="user")]
 )
-message = model.send(session=session)
+message = model.send(session)
 assert message.content == "Hi"
 ```
 

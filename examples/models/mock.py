@@ -18,7 +18,7 @@ config = OpenAIConfig(
     ),
 )
 
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 
 session = Session(
     messages=[
@@ -26,7 +26,7 @@ session = Session(
     ]
 )
 
-message = model.send(session=session)
+message = model.send(session)
 
 print("message should be: 1215973652716, as defined in the mock!")
 print(message)
@@ -39,7 +39,7 @@ session = Session(
 
 try:
     # This will raise an error because the mock provider is not defined for the message "1+2"
-    message = model.send(session=session)
+    message = model.send(session)
 except ValueError as e:
     assert str(e) == "Unexpected message is passed to mock provider: 1+2"
     print("Error:", e)

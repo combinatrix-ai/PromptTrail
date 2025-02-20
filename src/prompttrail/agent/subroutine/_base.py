@@ -1,11 +1,10 @@
 """Base classes for subroutine functionality."""
 
-import copy
 from typing import TYPE_CHECKING, Generator, List, Optional, Union
 
 from prompttrail.agent.session_transformers import SessionTransformer
 from prompttrail.agent.subroutine.session_init_strategy import (
-    CleanSessionStrategy,
+    InheritMetadataStrategy,
     SessionInitStrategy,
 )
 from prompttrail.agent.subroutine.squash_strategy import (
@@ -78,7 +77,7 @@ class SubroutineTemplate(Template):
             after_transform=after_transform,
         )
         self.template = template
-        self.session_init_strategy = session_init_strategy or CleanSessionStrategy()
+        self.session_init_strategy = session_init_strategy or InheritMetadataStrategy()
         self.squash_strategy = squash_strategy or LastMessageStrategy()
         self.runner = runner
         self.model = model
@@ -101,24 +100,37 @@ class SubroutineTemplate(Template):
             ValueError: If runner is required but not set
         """
         # Initialize subroutine session
-        temp_session = self.session_init_strategy.initialize(session)
-        self.squash_strategy.initialize(session, temp_session)
+        parent_session = session
+        del session  # For safety
+        temp_session = self.session_init_strategy.initialize(parent_session)
 
         # Set up isolated environment
         if self.runner:
+            # TODO: Should we allow model override with runner? This will break Template search etc.
             temp_session.runner = self.runner
-        elif self.model:
-            if not session.runner:
-                raise ValueError("Parent runner is required when using model override")
-            # Create new runner with overridden model but inherit other settings
-            temp_session.runner = type(session.runner)(
-                model=self.model,
-                template=session.runner.template,
-                user_interface=session.runner.user_interface,
-            )
-        elif session.runner:
-            # Create copy of parent runner for isolation
-            temp_session.runner = copy.deepcopy(session.runner)
+        else:
+            if self.model:
+                if not parent_session.runner:
+                    raise ValueError(
+                        "Parent runner is required when using model override"
+                    )
+                # Create new runner with overridden model but inherit other settings
+                temp_session.runner = type(parent_session.runner)(
+                    model=self.model,
+                    # This template is parent template
+                    template=parent_session.runner.template,
+                    user_interface=parent_session.runner.user_interface,
+                )
+            else:
+                if not parent_session.runner:
+                    raise ValueError("Runner is required for subroutine execution")
+                # Create copy of parent runner for isolation
+                temp_session.runner = type(parent_session.runner)(
+                    model=parent_session.runner.model,
+                    # This template is parent template
+                    template=parent_session.runner.template,
+                    user_interface=parent_session.runner.user_interface,
+                )
 
         messages: List[Message] = []
         try:
@@ -132,15 +144,16 @@ class SubroutineTemplate(Template):
                 yield message
 
             # Apply squash strategy
-            selected_messages = self.squash_strategy.squash(messages)
-            for msg in selected_messages:
-                session.append(msg)
-
+            squashed_messages = self.squash_strategy.squash(messages)
+            for msg in squashed_messages:
+                parent_session.append(msg)
+        except Exception as e:
+            raise e
         finally:
             # Temporary session will be garbage collected
             pass
 
-        return session
+        return parent_session
 
     def create_stack(self, session: Session) -> Stack:
         """Create stack frame for this template.

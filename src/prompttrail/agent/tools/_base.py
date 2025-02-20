@@ -3,6 +3,7 @@ from typing import Any, Dict, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from prompttrail.core import Session
 from prompttrail.core.errors import ParameterValidationError
 from prompttrail.core.utils import Debuggable
 
@@ -72,16 +73,17 @@ class Tool(BaseModel, Debuggable):
                     f"Invalid type for argument {name}: expected {arg.value_type.__name__}, got {type(value).__name__}"
                 )
 
-    def execute(self, **kwargs) -> ToolResult:
+    def execute(self, session: Session, **kwargs) -> ToolResult:
         """Execute the tool after validating arguments."""
         self.validate_arguments(kwargs)
-        return self._execute(kwargs)
+        return self._execute(session, kwargs)
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         """Execute tool implementation with validated arguments.
 
         Args:
             args: Dictionary of validated argument values
+            session: The session context
 
         Returns:
             ToolResult containing the execution result
@@ -91,7 +93,7 @@ class Tool(BaseModel, Debuggable):
         """
         raise NotImplementedError("Tool._execute() must be implemented by subclass")
 
-    def to_schema(self) -> Dict[str, Any]:
+    def to_openai_schema(self) -> Dict[str, Any]:
         """Generate function calling schema for this tool."""
         return {
             "name": self.name,

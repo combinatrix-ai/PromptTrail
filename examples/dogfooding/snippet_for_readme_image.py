@@ -15,7 +15,7 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 # 🤖 Multiple LLM models are supported through a unified API
 model = AnthropicModel(
-  configuration=AnthropicConfig(
+  AnthropicConfig(
     api_key=os.environ["ANTHROPIC_API_KEY"],
     model_name="claude-3-5-sonnet-latest",
     max_tokens=4096,

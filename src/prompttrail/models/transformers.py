@@ -67,18 +67,13 @@ class TransformersModel(Model):
         tokenizer: Tokenizer for the model.
     """
 
-    model: Optional[AutoModelForCausalLM] = None
-    tokenizer: Optional[AutoTokenizer] = None
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     def __init__(
         self,
         configuration: TransformersConfig,
         model: "AutoModelForCausalLM",
         tokenizer: "AutoTokenizer",
     ):
-        super().__init__(configuration=configuration)
+        super().__init__(configuration)
         self.model = model
         self.tokenizer = tokenizer
 
@@ -118,11 +113,11 @@ class TransformersModel(Model):
     ) -> dict:
         """Create parameters for text generation."""
         kwargs = {
-            "max_new_tokens": self.configuration.max_tokens,
-            "temperature": self.configuration.temperature,
-            "top_p": self.configuration.top_p,
-            "top_k": self.configuration.top_k,
-            "repetition_penalty": self.configuration.repetition_penalty,
+            "max_new_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
+            "top_p": self.config.top_p,
+            "top_k": self.config.top_k,
+            "repetition_penalty": self.config.repetition_penalty,
             "do_sample": True,
         }
         if streamer is not None:

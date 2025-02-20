@@ -1,3 +1,4 @@
+import copy
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -19,7 +20,33 @@ class SessionInitStrategy(ABC):
         """
 
 
+class GeneralSessionInitStrategy(SessionInitStrategy):
+    def __init__(
+        self,
+        copy_metadata: bool = True,
+        copy_messages: bool = True,
+    ):
+        self.copy_metadata = copy_metadata
+        self.copy_messages = copy_messages
+
+    def initialize(self, parent_session: Session) -> Session:
+        metadata = (
+            copy.deepcopy(parent_session.metadata) if self.copy_metadata else None
+        )
+        messages = copy.deepcopy(parent_session.messages) if self.copy_messages else []
+        return Session(
+            metadata=metadata, messages=messages, runner=parent_session.runner
+        )
+
+
 class CleanSessionStrategy(SessionInitStrategy):
+    """Strategy to create a clean session with no messages"""
+
+    def initialize(self, parent_session: Session) -> Session:
+        return Session(metadata=None, runner=parent_session.runner)
+
+
+class InheritMetadataStrategy(SessionInitStrategy):
     """Strategy to create a clean session with no messages"""
 
     def initialize(self, parent_session: Session) -> Session:

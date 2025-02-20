@@ -28,8 +28,8 @@ class WeatherTool(Tool):
             },
         )
 
-    def execute(self, **kwargs) -> ToolResult:
-        city = kwargs["city"]
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
+        city = args["city"]
         return ToolResult(
             content={"temperature": 20, "condition": "sunny", "city": city}
         )
@@ -57,7 +57,7 @@ class MockTool(Tool):
         ),
     }
 
-    def _execute(self, args: "Dict[str, Any]") -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         return ToolResult(content={"result": f"Executed with args: {args}"})
 
 
@@ -158,7 +158,7 @@ class TestAnthoropicToolingTemplate(unittest.TestCase):
             tools=[self.tool],
             mock_provider=EchoMockProvider(role="assistant"),
         )
-        self.model = AnthropicModel(configuration=config)
+        self.model = AnthropicModel(config)
         self.template = LinearTemplate(
             [
                 MessageTemplate(role="user", content="What's the weather in Tokyo?"),
@@ -222,7 +222,7 @@ class TestOpenAIToolingTemplate(unittest.TestCase):
             tools=[self.tool],
             mock_provider=EchoMockProvider(role="assistant"),
         )
-        self.model = OpenAIModel(configuration=config)
+        self.model = OpenAIModel(config)
         self.template = LinearTemplate(
             [
                 MessageTemplate(role="user", content="What's the weather in Tokyo?"),
@@ -283,7 +283,7 @@ class TestModelOverride(unittest.TestCase):
             tools=[self.tool],
             mock_provider=openai_mock,
         )
-        self.openai_model = OpenAIModel(configuration=openai_config)
+        self.openai_model = OpenAIModel(openai_config)
 
         # Setup Anthropic model
         anthropic_config = AnthropicConfig(
@@ -292,7 +292,7 @@ class TestModelOverride(unittest.TestCase):
             tools=[self.tool],
             mock_provider=anthropic_mock,
         )
-        self.anthropic_model = AnthropicModel(configuration=anthropic_config)
+        self.anthropic_model = AnthropicModel(anthropic_config)
 
     def test_generate_template_model_override(self):
         """Test that GenerateTemplate can override runner's model"""

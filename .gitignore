@@ -28,8 +28,7 @@ tmp
 lib
 .DS_Store
 
-# Tests
+# Tests and etc
 
 package-test
-
-coding-agent
+questions.json5

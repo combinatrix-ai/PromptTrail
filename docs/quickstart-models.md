@@ -32,7 +32,7 @@ session = Session(
     Message(content="Hey", role="user"),
   ]
 )
-model.send(session=session)
+model.send(session)
 ```
 
 You can see the response from the model like this:
@@ -85,7 +85,7 @@ If you want to use non-chat models as traditional language models, you can just 
 ```python
 config = OpenAIConfig(api_key=api_key, model_name="gpt-4o-mini")
 model = OpenAIModel(configuration=config)
-message = model.send(session=session)
+message = model.send(session)
 ```
 
 We call the interface to access LLM models `Model`.
@@ -128,7 +128,7 @@ session = Session(
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(session=session)
+message = model.send(session)
 ```
 
 You will get the following response:
@@ -172,7 +172,7 @@ session = Session(
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(session=session)
+message = model.send(session)
 ```
 
 You will get the following response:

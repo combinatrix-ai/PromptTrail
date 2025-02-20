@@ -89,7 +89,7 @@ configuration = OpenAIConfig(
     temperature=0.0,
     max_tokens=5000,
 )
-model = OpenAIModel(configuration=configuration)
+model = OpenAIModel(configuration)
 
 runner = CommandLineRunner(
     model=model,

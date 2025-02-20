@@ -18,7 +18,7 @@ class TestGoogleCloud(unittest.TestCase):
             max_tokens=100,
             temperature=0,
         )
-        self.model = GoogleModel(configuration=self.config)
+        self.model = GoogleModel(self.config)
 
     def test_model_send(self):
         # Basic message handling

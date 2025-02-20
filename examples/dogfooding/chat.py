@@ -49,7 +49,7 @@ configuration = AnthropicConfig(
     temperature=1,
     max_tokens=4096,
 )
-model = AnthropicModel(configuration=configuration)
+model = AnthropicModel(configuration)
 
 content = load_all_important_files()
 

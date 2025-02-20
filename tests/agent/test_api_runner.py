@@ -23,8 +23,7 @@ class MockUserInterface(UserInterface):
 @pytest.fixture
 def api_runner():
     model = OpenAIModel(
-        configuration=OpenAIConfig(api_key="mock", model_name="mock"),
-        user_interface=MockUserInterface(),
+        OpenAIConfig(api_key="mock", model_name="mock"),
     )
     template = LinearTemplate(
         [

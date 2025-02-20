@@ -93,3 +93,21 @@ class EchoMockProvider(FunctionalMockProvider):
             lambda session: Message(content=session.messages[-1].content, role=role)
         )
         self.role = role
+
+
+class ListMockProvider(MockProvider):
+    """Mock provider that returns predefined responses in order.
+
+    Parameters
+    ----------
+    responses : List[Message]
+        List of predefined response messages
+    """
+
+    def __init__(self, responses: list["Message"]):
+        self.responses = responses
+
+    def call(self, session: "Session") -> "Message":
+        if not self.responses:
+            raise ValueError("No responses left in list")
+        return self.responses.pop(0)

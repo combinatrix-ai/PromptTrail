@@ -87,17 +87,14 @@ class AnthropicConfig(Config):
 class AnthropicModel(Model):
     """Model class for Anthropic Claude API."""
 
-    configuration: AnthropicConfig
-    client: Optional[anthropic.Anthropic] = None
-    model_config = ConfigDict(arbitrary_types_allowed=True, protected_namespaces=())
-
-    def _authenticate(self) -> None:
-        if self.client is None:
-            self.client = anthropic.Anthropic(api_key=self.configuration.api_key)
+    def __init__(self, config: AnthropicConfig) -> None:
+        super().__init__(config)
+        self.config: AnthropicConfig = config
+        self.client = anthropic.Anthropic(api_key=config.api_key)
 
     def format_tool(self, tool: "Tool") -> Dict[str, Any]:
         """Convert tool to Anthropic format"""
-        schema = tool.to_schema()
+        schema = tool.to_openai_schema()
         properties = {}
         for name, arg in tool.arguments.items():
             properties[name] = {
@@ -142,32 +139,37 @@ class AnthropicModel(Model):
 
     def _send(self, session: Session) -> Message:
         """Send messages and return the response."""
-        self._authenticate()
         messages, system_prompt = self._session_to_anthropic_messages(session)
+
+        # TODO: Structured check
+        if not messages:
+            raise ValueError(
+                "Anthropic requires at least one user message except system"
+            )
 
         # Convert AnthropicMessageDict to MessageDict for tool use check
         [dict(msg) for msg in messages]
 
         create_params: Dict[str, Any] = {
-            "model": self.configuration.model_name,
+            "model": self.config.model_name,
             "messages": messages,
         }
 
-        if self.configuration.max_tokens is not None:
-            create_params["max_tokens"] = self.configuration.max_tokens
-        if self.configuration.temperature is not None:
-            create_params["temperature"] = self.configuration.temperature
-        if self.configuration.top_p is not None:
-            create_params["top_p"] = self.configuration.top_p
-        if self.configuration.top_k is not None:
-            create_params["top_k"] = self.configuration.top_k
+        if self.config.max_tokens is not None:
+            create_params["max_tokens"] = self.config.max_tokens
+        if self.config.temperature is not None:
+            create_params["temperature"] = self.config.temperature
+        if self.config.top_p is not None:
+            create_params["top_p"] = self.config.top_p
+        if self.config.top_k is not None:
+            create_params["top_k"] = self.config.top_k
         if system_prompt is not None:
             create_params["system"] = system_prompt
 
         # Add tools if present
-        if self.configuration.tools:
+        if session.available_tools:
             create_params["tools"] = [
-                self.format_tool(tool) for tool in self.configuration.tools
+                self.format_tool(tool) for tool in session.available_tools
             ]
 
         if self.client is None:
@@ -268,7 +270,6 @@ class AnthropicModel(Model):
 
     def list_models(self) -> List[str]:
         """Return a list of available models."""
-        self._authenticate()
         if self.client is None:
             raise RuntimeError("Failed to initialize Anthropic client")
         models = self.client.models.list()

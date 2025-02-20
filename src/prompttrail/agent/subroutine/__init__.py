@@ -2,8 +2,9 @@
 
 from ._base import SubroutineTemplate
 from .session_init_strategy import (
-    CleanSessionStrategy,
     FilteredInheritStrategy,
+    GeneralSessionInitStrategy,
+    InheritMetadataStrategy,
     InheritSystemStrategy,
     SessionInitStrategy,
 )
@@ -18,7 +19,8 @@ from .squash_strategy import (
 __all__ = [
     "SubroutineTemplate",
     "SessionInitStrategy",
-    "CleanSessionStrategy",
+    "GeneralSessionInitStrategy",
+    "InheritMetadataStrategy",
     "InheritSystemStrategy",
     "FilteredInheritStrategy",
     "SquashStrategy",

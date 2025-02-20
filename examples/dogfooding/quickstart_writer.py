@@ -30,7 +30,7 @@ configuration = AnthropicConfig(
     temperature=1,
     max_tokens=8192,
 )
-model = AnthropicModel(configuration=configuration)
+model = AnthropicModel(configuration)
 
 # load all files in examples and tests with its name in text
 text = ""
