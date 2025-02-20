@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ToolCallRequest:
-    id: str
+    id: Optional[str]  # Anthropic doesnt have this
     name: str
     arguments: Dict[str, Any]
 
@@ -133,9 +133,7 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
             tool_use = message.tool_use
             self.debug("Found tool call: %s", tool_use)
             return ToolCallRequest(
-                id=tool_use["id"],
-                name=tool_use["tool_calls"][0]["name"],
-                arguments=tool_use["tool_calls"][0]["arguments"],
+                id=None, name=tool_use["name"], arguments=tool_use["input"]
             )
         self.debug("No tool call found")
         return None
@@ -194,6 +192,8 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
             )
 
         # Generate initial message
+        old_available_tools = session.available_tools
+        session.available_tools = list(self.tools.values())
         session = yield from GenerateTemplate(role=self.role, model=model).render(
             session
         )
@@ -244,6 +244,7 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
                 raise
 
         self.debug("No tool call found, returning message: %s", session)
+        session.available_tools = old_available_tools
         return session
 
 
@@ -366,6 +367,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 "You must pass an OpenAIModel to use OpenAIToolingTemplate."
             )
 
+        old_available_tools = session.available_tools
         session.available_tools = list(self.tools.values())
 
         # Generate initial message with function calling capability
@@ -407,6 +409,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 self.error("Error executing tool %s: %s", tool_call.name, str(e))
                 raise
 
+        session.available_tools = old_available_tools
         return session
 
 

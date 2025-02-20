@@ -1,5 +1,6 @@
 # flake8: noqa: E402
 
+import logging
 import os
 import sys
 
@@ -21,6 +22,8 @@ from prompttrail.agent.tools.builtin import (
 from prompttrail.agent.user_interface import CLIInterface
 from prompttrail.core import Session
 from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
+
+logging.basicConfig(level=logging.WARNING)
 
 sys.path.append(os.path.abspath("."))
 

@@ -66,12 +66,19 @@ class Tool(BaseModel, Debuggable):
                 raise ParameterValidationError(f"Missing required argument: {name}")
 
         # Validate argument types
+        # Try to fix the type of the argument
         for name, value in args.items():
             arg = self.arguments[name]
             if not isinstance(value, arg.value_type):
-                raise ParameterValidationError(
-                    f"Invalid type for argument {name}: expected {arg.value_type.__name__}, got {type(value).__name__}"
+                self.warning(
+                    f"Invalid type for argument {name}: expected {arg.value_type.__name__}, got {type(value).__name__}. Trying to fix it."
                 )
+                try:
+                    args[name] = arg.value_type(value)
+                except Exception:
+                    raise ParameterValidationError(
+                        f"Invalid type for argument {name}: expected {arg.value_type.__name__}, got {type(value).__name__}"
+                    )
 
     def execute(self, session: Session, **kwargs) -> ToolResult:
         """Execute the tool after validating arguments."""
