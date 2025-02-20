@@ -13,6 +13,6 @@ session = Session(
 
 config = GoogleConfig(api_key=api_key, model_name="models/gemini-1.5-flash")
 model = GoogleModel(config)
-message = model.send(session=session)
+message = model.send(session)
 
 print(message)

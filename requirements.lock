@@ -91,7 +91,7 @@ jiter==0.8.2
     # via openai
 json5==0.10.0
     # via prompttrail
-markupsafe==3.0.2
+markupsafe==2.1.5
     # via jinja2
 mypy-extensions==1.0.0
     # via typing-inspect

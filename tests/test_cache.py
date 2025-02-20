@@ -49,7 +49,7 @@ class TestLRUCacheProvider(unittest.TestCase):
         )
         model = OpenAIModel(config)
 
-        message = model.send(session=session)
+        message = model.send(session)
         self.assertEqual(message.content, message_out.content)
 
     def test_mock_in_models(self):
@@ -70,7 +70,7 @@ class TestLRUCacheProvider(unittest.TestCase):
         )
         model = OpenAIModel(config)
 
-        message = model.send(session=session)
+        message = model.send(session)
         self.assertEqual(message.content, "MockResponse")
 
 

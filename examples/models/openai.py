@@ -17,6 +17,6 @@ session = Session(
     ]
 )
 
-message = model.send(session=session)
+message = model.send(session)
 
 print(message)
