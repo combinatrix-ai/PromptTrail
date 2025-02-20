@@ -83,7 +83,7 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 >     max_tokens=100,
 >     temperature=0
 > )
-> model = OpenAIModel(configuration=config)
+> model = OpenAIModel(config)
 > session = Session(
 >   messages=[
 >     Message(content="Hey", role="user"),
@@ -120,7 +120,7 @@ For example, you can mock LLMs for testing.
 >     model_name="gpt-4o-mini",
 >     mock_provider=EchoMockProvider()  # Simply echoes back the last message
 > )
-> model = OpenAIModel(configuration=config)
+> model = OpenAIModel(config)
 >
 > # Use the model as usual - it will echo back the messages
 > session = Session(
@@ -170,7 +170,7 @@ template = LinearTemplate(
 
 runner = CommandLineRunner(
     model=OpenAIModel(
-        configuration=OpenAIConfig(
+        OpenAIConfig(
             api_key=os.environ["OPENAI_API_KEY"],
             model_name="gpt-4o"
         )

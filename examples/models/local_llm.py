@@ -14,9 +14,7 @@ model = AutoModelForCausalLM.from_pretrained(
 config = TransformersConfig(device="cpu", model_name=model_name, max_tokens=5)
 
 # Initialize the TransformersModel with the configuration, model, and tokenizer
-transformers_model = TransformersModel(
-    configuration=config, model=model, tokenizer=tokenizer
-)
+transformers_model = TransformersModel(config, model, tokenizer)
 
 # Create a new session
 session = Session(messages=[Message(content="Hello", role="user")])

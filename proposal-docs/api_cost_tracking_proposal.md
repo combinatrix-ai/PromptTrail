@@ -190,7 +190,7 @@ class AnthropicModel(Model):
 ```python
 # Configure model with pricing
 model = OpenAIModel(
-    configuration=OpenAIConfig(
+    OpenAIConfig(
         api_key="...",
         model_name="gpt-4",
         pricing=GPT4_PRICING

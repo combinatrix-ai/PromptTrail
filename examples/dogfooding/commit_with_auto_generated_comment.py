@@ -147,6 +147,7 @@ Please generate a commit message based on the following information:
 """,
             after_transform=ResetMetadata(),
         ),
+        UserTemplate(description="Additional Input: ", default="Please continue."),
         LoopTemplate(
             [
                 AssistantTemplate(

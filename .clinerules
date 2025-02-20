@@ -14,7 +14,7 @@ from prompttrail.models.anthropic import AnthropicConfig, AnthropicModel
 
 # 🤖 Multiple LLM models are supported through a unified API
 model = AnthropicModel(
-  configuration=AnthropicConfig(
+  AnthropicConfig(
     api_key=os.environ["ANTHROPIC_API_KEY"],
     model_name="claude-3-5-sonnet-latest",
     max_tokens=4096,
@@ -72,3 +72,6 @@ runner.run(session=initial_session)
 - To run tests for specific files, use `rye run pytest [test files]`. Always run `rye run all` after successfully passing related tests.
 - After your knowledge cutoff, there are new models. Use `gpt-4o-mini` or `claude-3-5-haiku-latest` for easy tasks or tests. Use `gpt-4o` or `claude-3-5-sonnet-latest` for complex tasks.
 - If you're writing a proposal, place it in proposal-docs
+
+# Coding rules
+- If you use gradio, use launch(share=False) to avoid sharing the link.

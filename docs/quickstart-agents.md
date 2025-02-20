@@ -196,7 +196,7 @@ config = OpenAIConfig(
     temperature=0.0,
     max_tokens=8000
 )
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 
 # Define runner
 runner = CommandLineRunner(
