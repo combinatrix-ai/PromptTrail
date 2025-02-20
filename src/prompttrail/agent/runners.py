@@ -158,21 +158,27 @@ class CommandLineRunner(Runner):
                     print("metadata: ", pretty_print_metadata(message.metadata))
                     n_messages += 1
             elif isinstance(obj, Event):
-                event = obj
-                if isinstance(event, UserInteractionEvent):
-                    instruction = event.instruction or "Input: "
-                    default = event.default or None
+                if isinstance(obj, UserInteractionEvent):
+                    print("From: " + cutify_role(obj.role))
+                    instruction = obj.instruction or "Input: "
+                    default = obj.default or None
                     content = self.user_interface.ask(session, instruction, default)
-                    session.messages.append(
-                        Message(
-                            role="user",
-                            content=content,
-                            metadata=session.metadata,
-                        )
+                    message = Message(
+                        role="user",
+                        content=content,
+                        metadata=session.metadata,
                     )
+                    session.messages.append(message)
+                    if message.content:
+                        print("message: ", message.content)
+                    if message.tool_use:
+                        print("tool_use: ", message.tool_use)
+                    if message.metadata:
+                        print("metadata: ", pretty_print_metadata(message.metadata))
+                        n_messages += 1
                 else:
-                    self.warning(f"Unknown event type: {type(event)}")
-                    raise ValueError(f"Unknown event type: {type(event)}")
+                    self.warning(f"Unknown event type: {type(obj)}")
+                    raise ValueError(f"Unknown event type: {type(obj)}")
             else:
                 self.warning(f"Unknown object type: {type(obj)}")
 
