@@ -5,6 +5,7 @@ import tempfile
 from typing import Any, Dict, Optional, Tuple, Union
 
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
+from prompttrail.core import Session
 from prompttrail.core.const import ReachedEndTemplateException
 
 
@@ -20,7 +21,7 @@ class ReadFile(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
         try:
             with open(path, "r") as f:
@@ -71,7 +72,7 @@ class TreeDirectory(Tool):
             text=True,
         ).strip()
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         # Convert max_depth to integer
         try:
             max_depth = int(args["max_depth"]) if "max_depth" in args else None
@@ -149,7 +150,7 @@ class CreateOrOverwriteFile(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
         content = args["content"]
         cwd = os.getcwd()
@@ -213,7 +214,7 @@ class EditFile(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         path = args["path"]
         diff = args["diff"]
 
@@ -569,7 +570,7 @@ class EndConversationTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         message = args.get("message", None)
         # TODO: Should this return tool_use message?
         raise ReachedEndTemplateException(farewell_message=message)
@@ -587,7 +588,7 @@ class ExecuteCommand(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         if "command" not in args:
             return ToolResult(
                 content=json.dumps(

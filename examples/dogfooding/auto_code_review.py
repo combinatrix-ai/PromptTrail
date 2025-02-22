@@ -548,7 +548,7 @@ Full file with line numbers:
 
     # Initialize model and runner
     model = AnthropicModel(
-        configuration=AnthropicConfig(
+        AnthropicConfig(
             api_key=os.getenv("ANTHROPIC_API_KEY"),
             temperature=0.0,
             max_tokens=1024,

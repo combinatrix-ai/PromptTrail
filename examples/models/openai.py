@@ -9,7 +9,7 @@ config = OpenAIConfig(
     api_key=api_key, model_name="gpt-4o-mini", max_tokens=1000, temperature=0
 )
 
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 
 session = Session(
     messages=[
@@ -17,6 +17,6 @@ session = Session(
     ]
 )
 
-message = model.send(session=session)
+message = model.send(session)
 
 print(message)

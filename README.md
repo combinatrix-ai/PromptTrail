@@ -83,13 +83,13 @@ This is the simplest example of how to use PromptTrail as a thin wrapper around 
 >     max_tokens=100,
 >     temperature=0
 > )
-> model = OpenAIModel(configuration=config)
+> model = OpenAIModel(config)
 > session = Session(
 >   messages=[
 >     Message(content="Hey", role="user"),
 >   ]
 > )
-> message = model.send(session=session)
+> message = model.send(session)
 
 Message(content="Hello! How can I assist you today?", role="assistant")
 ```
@@ -120,13 +120,13 @@ For example, you can mock LLMs for testing.
 >     model_name="gpt-4o-mini",
 >     mock_provider=EchoMockProvider()  # Simply echoes back the last message
 > )
-> model = OpenAIModel(configuration=config)
+> model = OpenAIModel(config)
 >
 > # Use the model as usual - it will echo back the messages
 > session = Session(
 >     messages=[Message(content="Hello", role="user")]
 > )
-> message = model.send(session=session)
+> message = model.send(session)
 > print(message)
 
 Message(content="Hello", role="assistant")  # EchoMockProvider simply returns the same content
@@ -170,7 +170,7 @@ template = LinearTemplate(
 
 runner = CommandLineRunner(
     model=OpenAIModel(
-        configuration=OpenAIConfig(
+        OpenAIConfig(
             api_key=os.environ["OPENAI_API_KEY"],
             model_name="gpt-4o"
         )
@@ -293,7 +293,9 @@ class WeatherForecastTool(Tool):
         )
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(
+        self, args: Dict[str, Any], session: Session
+    ) -> ToolResult:
         """Execute the weather forecast tool"""
         # Implement real API call here
         return WeatherForecastResult(

@@ -1,6 +1,7 @@
 import json
 import logging
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Union
 
 from prompttrail.agent.templates._core import Event, GenerateTemplate
@@ -13,6 +14,13 @@ if TYPE_CHECKING:
     from prompttrail.agent.tools import Tool, ToolResult
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ToolCallRequest:
+    id: Optional[str]  # Anthropic doesnt have this
+    name: str
+    arguments: Dict[str, Any]
 
 
 class ToolingTemplateBase(GenerateTemplate):
@@ -28,7 +36,7 @@ class ToolingTemplateBase(GenerateTemplate):
 
     def __init__(
         self,
-        tools: List["Tool"],
+        tools: List["Tool"] | "Tool",
         role: MessageRoleType = "assistant",
         template_id: Optional[str] = None,
         model: Optional["Model"] = None,
@@ -43,6 +51,7 @@ class ToolingTemplateBase(GenerateTemplate):
             **kwargs: Additional arguments passed to parent class
         """
         super().__init__(role=role, template_id=template_id, model=model, **kwargs)
+        tools = tools if isinstance(tools, list) else [tools]
         self.tools = {tool.name: tool for tool in tools}
 
     def get_tool(self, name: str) -> "Tool":
@@ -102,7 +111,7 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
 
     def format_tool_call(
         self, message: Union[Message, Session]
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[ToolCallRequest]:
         """Extract tool call information from Anthropic message format.
 
         Args:
@@ -123,7 +132,9 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         if message.tool_use:
             tool_use = message.tool_use
             self.debug("Found tool call: %s", tool_use)
-            return {"name": tool_use["name"], "arguments": tool_use["input"]}
+            return ToolCallRequest(
+                id=None, name=tool_use["name"], arguments=tool_use["input"]
+            )
         self.debug("No tool call found")
         return None
 
@@ -181,6 +192,8 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
             )
 
         # Generate initial message
+        old_available_tools = session.available_tools
+        session.available_tools = list(self.tools.values())
         session = yield from GenerateTemplate(role=self.role, model=model).render(
             session
         )
@@ -190,10 +203,10 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
         while tool_call := self.format_tool_call(session):
             try:
                 # Get and execute tool
-                tool = self.get_tool(tool_call["name"])
+                tool = self.get_tool(tool_call.name)
                 self.info("Executing tool: %s", tool.name)
                 try:
-                    result = tool.execute(**tool_call["arguments"])
+                    result = tool.execute(session, **tool_call.arguments)
                 except ReachedEndTemplateException as e:
                     if e.farewell_message:
                         self.debug(
@@ -227,10 +240,11 @@ class AnthropicToolingTemplate(ToolingTemplateBase):
 
                 self.debug("Generated final message: %s", final_message)
             except Exception as e:
-                self.error("Error executing tool %s: %s", tool_call["name"], str(e))
+                self.error("Error executing tool %s: %s", tool_call.name, str(e))
                 raise
 
         self.debug("No tool call found, returning message: %s", session)
+        session.available_tools = old_available_tools
         return session
 
 
@@ -294,7 +308,7 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
 
         return result
 
-    def format_tool_call(self, message: Message) -> Optional[Dict[str, Any]]:
+    def format_tool_call(self, message: Message) -> Optional[ToolCallRequest]:
         """Extract tool call information from OpenAI message format.
 
         Args:
@@ -303,18 +317,21 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
         Returns:
             Optional dictionary containing tool call details, or None if no tool call present
         """
-        if "function_call" in message.metadata:
-            function_call = message.metadata["function_call"]
-            return {
-                "name": function_call["name"],
-                "arguments": self.check_tool_arguments(
-                    function_call["arguments"], self.get_tool(function_call["name"])
+        if message.tool_use:
+            # TODO: handle multiple tool calls
+            function_call = message.tool_use["tool_calls"][0]
+            return ToolCallRequest(
+                id=function_call["id"],
+                name=function_call["function"]["name"],
+                arguments=self.check_tool_arguments(
+                    function_call["function"]["arguments"],
+                    self.get_tool(function_call["function"]["name"]),
                 ),
-            }
+            )
         return None
 
     @staticmethod
-    def format_tool_result(result: "ToolResult") -> Message:
+    def format_tool_result(tool_call: ToolCallRequest, result: "ToolResult") -> Message:
         """Format tool result for OpenAI message format.
 
         Args:
@@ -323,12 +340,14 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
         Returns:
             Formatted message containing the tool result
         """
+        content = {
+            "content": result.content,
+            "tool_call_id": tool_call.id,
+        }
+
         return Message(
             role="tool_result",
-            content=json.dumps(result.content),
-            metadata={"function_call": {"name": result.metadata.get("tool_name")}}
-            if result.metadata.get("tool_name")
-            else {},
+            content=json.dumps(content),
         )
 
     def _render(self, session: Session) -> Generator[Message, None, Session]:
@@ -348,29 +367,29 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 "You must pass an OpenAIModel to use OpenAIToolingTemplate."
             )
 
+        old_available_tools = session.available_tools
+        session.available_tools = list(self.tools.values())
+
         # Generate initial message with function calling capability
         rendered_message = model.send(session)
-        message = Message(
-            content=rendered_message.content or "Processing your request...",
-            role=self.role,
-            metadata={"template_id": self.template_id, **rendered_message.metadata},
-        )
-        session.append(message)
-        yield message
+        if rendered_message.tool_use and not rendered_message.content:
+            rendered_message.content = "OpenAI Function Calling"
+        session.append(rendered_message)
+        yield rendered_message
 
         # Check for tool call
         tool_call = self.format_tool_call(rendered_message)
         if tool_call:
             try:
                 # Get and execute tool
-                tool = self.get_tool(tool_call["name"])
+                tool = self.get_tool(tool_call.name)
                 self.info("Executing tool: %s", tool.name)
-                result = tool.execute(**tool_call["arguments"])
+                result = tool.execute(session, **tool_call.arguments)
                 result.metadata["tool_name"] = tool.name  # Set tool name for metadata
                 self.debug("Tool execution result: %s", result)
 
                 # Format and append result
-                result_message = self.format_tool_result(result)
+                result_message = self.format_tool_result(tool_call, result)
                 self.debug("Appended result message to session: %s", result_message)
                 session.append(result_message)
                 yield result_message
@@ -387,9 +406,10 @@ class OpenAIToolingTemplate(ToolingTemplateBase):
                 yield message
 
             except Exception as e:
-                self.error("Error executing tool %s: %s", tool_call["name"], str(e))
+                self.error("Error executing tool %s: %s", tool_call.name, str(e))
                 raise
 
+        session.available_tools = old_available_tools
         return session
 
 
@@ -398,7 +418,7 @@ class ToolingTemplate(ToolingTemplateBase):
 
     def __init__(
         self,
-        tools: List["Tool"],
+        tools: List["Tool"] | "Tool",
         role: MessageRoleType = "assistant",
         template_id: Optional[str] = None,
         model: Optional[Model] = None,
@@ -498,7 +518,7 @@ class ExecuteToolTemplate(GenerateTemplate):
 
         # Execute tool with allow_redundant=True
         self.tool.validate_arguments(valid_args, allow_redundant=True)
-        result = self.tool.execute(**valid_args)
+        result = self.tool.execute(session, **valid_args)
 
         message = Message(
             role="tool_result",

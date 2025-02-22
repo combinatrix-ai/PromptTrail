@@ -270,6 +270,7 @@ class Session(BaseModel):
 
     # Runner and template related fields
     runner: Optional["Runner"] = Field(default=None, exclude=True)
+    available_tools: Optional[List["Tool"]] = Field(default=None, exclude=True)
     debug_mode: bool = Field(default=False)
     stack: List["Stack"] = Field(default_factory=list)
     jump_to_id: Optional[str] = Field(default=None)
@@ -298,6 +299,7 @@ class Session(BaseModel):
             stack=stack,
             jump_to_id=jump_to_id,
         )
+        self.available_tools = []
 
     def __hash__(self) -> int:
         return hash(tuple(self.messages))
@@ -398,25 +400,23 @@ class Session(BaseModel):
         )
 
 
-class Model(BaseModel, ABC, Debuggable):
+class Model(ABC, Debuggable):
     """Class defining the interface for interaction with LLM models."""
 
-    configuration: Config
-    logger: Optional[logging.Logger] = None
-    enable_logging: bool = True
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    def model_post_init(self, *args, **kwargs):
-        super().model_post_init(*args, **kwargs)
-        self.setup_logger_for_pydantic()
+    def __init__(
+        self,
+        config: Config,
+    ) -> None:
+        super().__init__()
+        self.config = config
 
     def is_mocked(self) -> bool:
         """Return whether the model is mocked."""
-        return self.configuration.mock_provider is not None
+        return self.config.mock_provider is not None
 
     def is_cached(self) -> bool:
         """Return whether the model is using cache."""
-        return self.configuration.cache_provider is not None
+        return self.config.cache_provider is not None
 
     @abstractmethod
     def _send(self, session: Session) -> Message:
@@ -441,22 +441,20 @@ class Model(BaseModel, ABC, Debuggable):
             session = Session()
 
         # 統合されたバリデーション
-        self.configuration.validate_all(session)
+        self.config.validate_all(session)
         return session
 
     def send(self, session: Session) -> Message:
         """Define standard procedure for sending messages to the model."""
-        if self.configuration.mock_provider is not None:
-            self.configuration.validate_all(session)
-            return self.configuration.mock_provider.call(session)
+        if self.config.mock_provider is not None:
+            self.config.validate_all(session)
+            return self.config.mock_provider.call(session)
 
         session = self.prepare(session)
         self.debug("Communications %s", session)
 
-        if self.configuration.cache_provider is not None:
-            message = self.configuration.cache_provider.search(
-                self.configuration, session
-            )
+        if self.config.cache_provider is not None:
+            message = self.config.cache_provider.search(self.config, session)
             if message is not None:
                 return message
 
@@ -478,12 +476,10 @@ class Model(BaseModel, ABC, Debuggable):
     ) -> Generator[Message, None, None]:
         """Define standard procedure for sending messages asynchronously."""
         message: Optional[Message] = None
-        if self.configuration.cache_provider is not None:
-            message = self.configuration.cache_provider.search(
-                self.configuration, session
-            )
-        if self.configuration.mock_provider is not None:
-            message = self.configuration.mock_provider.call(session)
+        if self.config.cache_provider is not None:
+            message = self.config.cache_provider.search(self.config, session)
+        if self.config.mock_provider is not None:
+            message = self.config.mock_provider.call(session)
         if message is not None:
             if yield_type == "all":
                 seq = ""

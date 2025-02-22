@@ -147,6 +147,7 @@ Please generate a commit message based on the following information:
 """,
             after_transform=ResetMetadata(),
         ),
+        UserTemplate(description="Additional Input: ", default="Please continue."),
         LoopTemplate(
             [
                 AssistantTemplate(
@@ -225,7 +226,7 @@ def main(
         temperature=0.7,
         max_tokens=1000,
     )
-    model = AnthropicModel(configuration=configuration)
+    model = AnthropicModel(configuration)
 
     runner = CommandLineRunner(
         model=model,

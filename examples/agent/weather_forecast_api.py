@@ -25,6 +25,7 @@ from prompttrail.agent.templates import (
 )
 from prompttrail.agent.tools import Tool, ToolArgument, ToolResult
 from prompttrail.agent.user_interface import CLIInterface
+from prompttrail.core import Session
 from prompttrail.models.openai import OpenAIConfig, OpenAIModel
 
 
@@ -61,7 +62,7 @@ class WeatherForecastTool(Tool):
         ),
     }
 
-    def _execute(self, args: Dict[str, Any]) -> ToolResult:
+    def _execute(self, session: Session, args: Dict[str, Any]) -> ToolResult:
         """Mock weather forecast implementation"""
         return WeatherForecastResult(content={"temperature": 0.0, "weather": "sunny"})
 
@@ -76,7 +77,7 @@ def create_weather_api():
         temperature=0,
         tools=[weather_tool],
     )
-    model = OpenAIModel(configuration=config)
+    model = OpenAIModel(config)
 
     # Create templates
     system = SystemTemplate(

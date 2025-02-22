@@ -1,7 +1,9 @@
+import copy
 from abc import ABC, abstractmethod
 from typing import List
 
 from prompttrail.core import Message, Model, Session
+from prompttrail.core._core import MessageRoleType
 
 
 class SquashStrategy(ABC):
@@ -27,8 +29,14 @@ class SquashStrategy(ABC):
 class LastMessageStrategy(SquashStrategy):
     """Strategy to retain only the last message"""
 
+    def __init__(self, role: MessageRoleType | None = None):
+        self.role = role
+
     def squash(self, messages: List[Message]) -> List[Message]:
-        return [messages[-1]] if messages else []
+        m = copy.deepcopy(messages[-1])
+        if self.role is not None:
+            m.role = self.role
+        return [m]
 
 
 class FilterByRoleStrategy(SquashStrategy):

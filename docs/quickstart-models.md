@@ -26,13 +26,13 @@ config = OpenAIConfig(
     max_tokens=100,
     temperature=0
 )
-model = OpenAIModel(configuration=config)
+model = OpenAIModel(config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-model.send(session=session)
+model.send(session)
 ```
 
 You can see the response from the model like this:
@@ -84,8 +84,8 @@ If you want to use non-chat models as traditional language models, you can just 
 
 ```python
 config = OpenAIConfig(api_key=api_key, model_name="gpt-4o-mini")
-model = OpenAIModel(configuration=config)
-message = model.send(session=session)
+model = OpenAIModel(config)
+message = model.send(session)
 ```
 
 We call the interface to access LLM models `Model`.
@@ -122,13 +122,13 @@ config = GoogleConfig(
     max_tokens=100,
     temperature=0
 )
-model = GoogleModel(configuration=config)
+model = GoogleModel(config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(session=session)
+message = model.send(session)
 ```
 
 You will get the following response:
@@ -166,13 +166,13 @@ config = AnthropicConfig(
     max_tokens=100,
     temperature=0
 )
-model = AnthropicModel(configuration=config)
+model = AnthropicModel(config)
 session = Session(
   messages=[
     Message(content="Hey", role="user"),
   ]
 )
-message = model.send(session=session)
+message = model.send(session)
 ```
 
 You will get the following response:
@@ -202,7 +202,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Create TransformersModel instance
 llm = TransformersModel(
-    configuration=TransformersConfig(
+    TransformersConfig(
         device="cuda",  # Use "cpu" if you don't have GPU
         model_name=model_name,
         temperature=0.7,

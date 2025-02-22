@@ -28,7 +28,7 @@ configuration = AnthropicConfig(
     temperature=1,
     max_tokens=4096,
 )
-model = AnthropicModel(configuration=configuration)
+model = AnthropicModel(configuration)
 
 
 paths = list(glob.glob("src/**/*.py", recursive=True))
@@ -93,13 +93,19 @@ for path in paths:
 
     initial_session = Session(
         metadata={
-            "important_files": ReadImportantFiles().execute().content["result"],
+            "important_files": ReadImportantFiles()
+            .execute(
+                Session(),
+            )
+            .content["result"],
             # all python files in src directory
             "content": "filepath: " + path + "\n\n" + open(path).read(),
         }
     )
 
-    backup_content = json.loads(ReadFile().execute(path=path).content)["content"]
+    backup_content = json.loads(ReadFile().execute(Session(), path=path).content)[
+        "content"
+    ]
     session = runner.run(session=initial_session)
     # write the content to the file
     content = session.messages[-1].content.strip()
@@ -115,10 +121,12 @@ for path in paths:
         print("No changes made to the file.")
         continue
     print("Writing the new content to the file.")
-    CreateOrOverwriteFile().execute(path=path, content=content)
+    CreateOrOverwriteFile().execute(Session(), path=path, content=content)
     # run test
-    test_result = RunTest().execute()
+    test_result = RunTest().execute(
+        Session(),
+    )
     print(test_result)
     if not json.loads(test_result.content)["status"] == "success":
         print("Test failed. Restoring the file.")
-        CreateOrOverwriteFile().execute(path=path, content=backup_content)
+        CreateOrOverwriteFile().execute(Session(), path=path, content=backup_content)

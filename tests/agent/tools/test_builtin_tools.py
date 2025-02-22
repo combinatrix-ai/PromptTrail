@@ -52,13 +52,13 @@ def test_read_file(test_file: Path):
     tool = ReadFile()
 
     # Test successful read
-    result = tool.execute(path=str(test_file))
+    result = tool.execute(Session(), path=str(test_file))
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "success"
     assert "Hello, World!" in result_dict["content"]
 
     # Test non-existent file
-    result = tool.execute(path=str(test_file.parent / "nonexistent.txt"))
+    result = tool.execute(Session(), path=str(test_file.parent / "nonexistent.txt"))
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "error"
     assert "No such file or directory" in result_dict["reason"]
@@ -92,7 +92,7 @@ def test_tree_directory_with_system_tree(temp_dir: Path, gitignore: Path):
     tool = TreeDirectory()
 
     # Test complete directory structure
-    result = tool.execute(root_dir=str(temp_dir))
+    result = tool.execute(Session(), root_dir=str(temp_dir))
     result_dict = json.loads(result.content)
     print(result_dict)
     assert result_dict["status"] == "success"
@@ -111,7 +111,7 @@ def test_tree_directory_with_system_tree(temp_dir: Path, gitignore: Path):
     assert "ignored-g.py" not in tree
 
     # Test depth limit
-    result = tool.execute(root_dir=str(temp_dir), max_depth=1)
+    result = tool.execute(Session(), root_dir=str(temp_dir), max_depth=1)
     result_dict = json.loads(result.content)
     print(result_dict)
     assert result_dict["status"] == "success"
@@ -125,7 +125,7 @@ def test_tree_directory_with_system_tree(temp_dir: Path, gitignore: Path):
     assert "ignored-f" not in tree
 
     # エラーケースのテスト
-    result = tool.execute(root_dir="/nonexistent/path")
+    result = tool.execute(Session(), root_dir="/nonexistent/path")
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "error"
     assert "Error opening directory." in result_dict["reason"]
@@ -138,14 +138,14 @@ def test_create_or_overwrite_file(temp_dir: Path):
 
     # Test file creation
     content = "Test content"
-    result = tool.execute(path=test_path, content=content)
+    result = tool.execute(Session(), path=test_path, content=content)
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "success"
     assert Path(test_path).read_text() == content
 
     # Test file overwrite
     new_content = "New content"
-    result = tool.execute(path=test_path, content=new_content)
+    result = tool.execute(Session(), path=test_path, content=new_content)
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "success"
     assert Path(test_path).read_text() == new_content
@@ -202,7 +202,7 @@ def test_edit_file_tool(temp_dir: Path):
     # Test successful edit
     diff = "<<<<<<< SEARCH\ndef hello():\n    print('Hello')\n    return True\n=======\ndef hello():\n    print('Hello, World!')\n    return False\n>>>>>>> REPLACE"
 
-    result = tool.execute(path=str(file_path), diff=diff)
+    result = tool.execute(Session(), path=str(file_path), diff=diff)
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "success"
     assert (
@@ -213,13 +213,13 @@ def test_edit_file_tool(temp_dir: Path):
     # Test non-matching search block
     diff = "<<<<<<< SEARCH\ndef nonexistent():\n    pass\n=======\ndef hello():\n    print('Hi!')\n    return None\n>>>>>>> REPLACE"
 
-    result = tool.execute(path=str(file_path), diff=diff)
+    result = tool.execute(Session(), path=str(file_path), diff=diff)
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "error"
     assert "does not match anything in the file" in result_dict["reason"]
 
     # Test invalid diff format
-    result = tool.execute(path=str(file_path), diff="Invalid diff content")
+    result = tool.execute(Session(), path=str(file_path), diff="Invalid diff content")
     result_dict = json.loads(result.content)
     assert result_dict["status"] == "error"
 
@@ -230,12 +230,12 @@ def test_end_conversation_tool():
 
     # Test default message
     with pytest.raises(ReachedEndTemplateException) as exc_info:
-        _ = tool.execute(**{})
+        _ = tool.execute(Session(), **{})
     assert exc_info.value.farewell_message is None
 
     # Test custom message
     with pytest.raises(ReachedEndTemplateException) as exc_info:
-        _ = tool.execute(**{"message": "Goodbye!"})
+        _ = tool.execute(Session(), **{"message": "Goodbye!"})
     assert exc_info.value.farewell_message == "Goodbye!"
 
 
@@ -287,7 +287,7 @@ def test_end_conversation_with_llm():
             }
         ),
     )
-    mock_model = OpenAIModel(configuration=config)
+    mock_model = OpenAIModel(config)
 
     # Create template with system instruction and tool
     template = LinearTemplate(
